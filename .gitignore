@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Databases
+retail.db
+*.sqlite3
+*.db
+
+# Environment variables
+.env
+.venv
+venv/
+ENV/
+env/
+
+# Node / frontend build folders
+node_modules/
+dist/
+build/
+.svelte-kit/
+.next/
+
+# IDE files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Temporary uploads / PDFs
+uploads/
+*.pdf

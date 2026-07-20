@@ -1,0 +1,9 @@
+- [x] Create automatic dynamic pricing fluctuation simulator in `app.py`
+- [x] Implement AI ordering endpoint and PDF export route in `app.py`
+- [x] Implement Groq API notification summary endpoint in `app.py`
+- [x] Implement reviews retrieve API in `app.py`
+- [x] Create `ReviewsList.jsx` in frontend
+- [x] Add notification bell and dropdown with Groq summaries in `App.jsx`
+- [x] Integrate Reviews tab in `App.jsx`
+- [x] Add ordering, PDF, and dynamic indicators in `MLForecast.jsx`
+- [x] Verify build and functionality

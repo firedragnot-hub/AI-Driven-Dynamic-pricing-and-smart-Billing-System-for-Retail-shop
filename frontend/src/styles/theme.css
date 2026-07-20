@@ -1,0 +1,104 @@
+:root {
+  /* Color Palette - Eco-friendly Home Goods Theme */
+  --primary: #F4F1EA; /* Matte Cream - Backgrounds */
+  --secondary: #2B2625; /* Deep Espresso - Typography, Headers */
+  --accent: #5F7D6B; /* Vibrant Sage - CTAs, Badges, Prices */
+  --accent-hover: #4a6354;
+  --white: #FFFFFF;
+  --gray-light: #E8E5E1;
+  --gray-dark: #6C6665;
+  --divider: #DCD8D3;
+
+  /* Typography */
+  --font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  
+  /* Layout */
+  --max-width: 1440px;
+  --border-radius: 4px;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--primary);
+  color: var(--secondary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Typography Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  text-transform: uppercase;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+}
+
+p {
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+/* Utilities */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.btn-accent {
+  background-color: var(--accent);
+  color: var(--white);
+}
+
+.btn-accent:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--primary);
+}
+
+/* Block-based UI */
+.card {
+  background-color: var(--white);
+  border: 1px solid var(--divider);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+}
+
+.divider {
+  height: 1px;
+  background-color: var(--divider);
+  width: 100%;
+}
+
+/* Inputs */
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--gray-light);
+  border-radius: var(--border-radius);
+  font-family: var(--font-family);
+  background-color: var(--white);
+  color: var(--secondary);
+  box-sizing: border-box;
+}
+
+.input-field:focus {
+  outline: 2px solid var(--accent);
+  border-color: transparent;
+}
