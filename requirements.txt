@@ -9,3 +9,4 @@ flask-cors
 PyJWT
 openpyxl
 python-dotenv
+gunicorn
