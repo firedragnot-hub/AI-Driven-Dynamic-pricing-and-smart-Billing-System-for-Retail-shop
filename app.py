@@ -61,21 +61,29 @@ from sqlalchemy import event
 def clear_dashboard_cache(session):
     dashboard_cache.clear()
 
-# Configure SQLite database
-if os.getenv('VERCEL') == '1':
-    db_path = '/tmp/retail.db'
+# Configure Database
+is_vercel = os.getenv('VERCEL') == '1'
+database_url = os.getenv('DATABASE_URL')
+
+if is_vercel:
+    if not database_url:
+        raise RuntimeError("DATABASE_URL must be configured in production (Vercel). Ephemeral SQLite fallback is disabled.")
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 else:
     db_path = os.path.join(os.path.dirname(__file__), 'retail.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url or f'sqlite:///{db_path}'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', f'sqlite:///{db_path}')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-
 db.init_app(app)
+
+from flask_migrate import Migrate
+migrate = Migrate(app, db)
+
 with app.app_context():
     db.create_all()
     
-    if os.getenv('VERCEL') == '1':
+    if is_vercel:
         try:
             from models import Product, Transaction
             if Product.query.count() == 0 or Transaction.query.count() == 0:
@@ -85,77 +93,30 @@ with app.app_context():
                 print("Vercel database seeded with products, transactions, and historical data!")
         except Exception as seed_err:
             print("Vercel seeding error:", str(seed_err))
-    # Migration helper to add missing columns to purchases
+            
+    # Startup Schema Validation
     try:
-        # Check if purchases table needs columns
-        import sqlite3
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("PRAGMA table_info(purchases)")
-        columns = [row[1] for row in cursor.fetchall()]
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        existing_tables = inspector.get_table_names()
         
-        # Add columns if they do not exist
-        if 'verification_status' not in columns:
-            cursor.execute("ALTER TABLE purchases ADD COLUMN verification_status VARCHAR(30) DEFAULT 'Pending Receipt'")
-        if 'verified_at' not in columns:
-            cursor.execute("ALTER TABLE purchases ADD COLUMN verified_at DATETIME")
-        if 'verified_by' not in columns:
-            cursor.execute("ALTER TABLE purchases ADD COLUMN verified_by VARCHAR(80)")
-        if 'discrepancy_count' not in columns:
-            cursor.execute("ALTER TABLE purchases ADD COLUMN discrepancy_count INTEGER DEFAULT 0")
-        # Check if orders table needs columns
-        cursor.execute("PRAGMA table_info(orders)")
-        order_columns = [row[1] for row in cursor.fetchall()]
-        if 'sale_type' not in order_columns:
-            cursor.execute("ALTER TABLE orders ADD COLUMN sale_type VARCHAR(20) DEFAULT 'online'")
-            
-        # Check if return_logs table needs columns
-        cursor.execute("PRAGMA table_info(return_logs)")
-        return_logs_columns = [row[1] for row in cursor.fetchall()]
-        if 'order_id' not in return_logs_columns:
-            try:
-                cursor.execute("DROP TABLE IF EXISTS return_logs_old")
-                cursor.execute("ALTER TABLE return_logs RENAME TO return_logs_old")
-                cursor.execute("""
-                    CREATE TABLE return_logs (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        transaction_id INTEGER REFERENCES transactions(id),
-                        order_id INTEGER REFERENCES orders(id),
-                        product_id INTEGER NOT NULL REFERENCES products(id),
-                        quantity INTEGER NOT NULL,
-                        refund_amount FLOAT NOT NULL,
-                        reason VARCHAR(255),
-                        timestamp DATETIME NOT NULL
-                    )
-                """)
-                # Try to copy existing rows
-                try:
-                    cursor.execute("""
-                        INSERT INTO return_logs (id, transaction_id, product_id, quantity, refund_amount, reason, timestamp)
-                        SELECT id, transaction_id, product_id, quantity, refund_amount, reason, timestamp FROM return_logs_old
-                    """)
-                except Exception as copy_err:
-                    print("Error copying old return_logs data:", str(copy_err))
-                cursor.execute("DROP TABLE return_logs_old")
-            except Exception as migrate_err:
-                print("Error creating return_logs table:", str(migrate_err))
-                cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS return_logs (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        transaction_id INTEGER REFERENCES transactions(id),
-                        order_id INTEGER REFERENCES orders(id),
-                        product_id INTEGER NOT NULL REFERENCES products(id),
-                        quantity INTEGER NOT NULL,
-                        refund_amount FLOAT NOT NULL,
-                        reason VARCHAR(255),
-                        timestamp DATETIME NOT NULL
-                    )
-                """)
-            
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print("Database migration error:", str(e))
+        required_tables = ['users', 'products', 'transactions', 'orders', 'purchases', 'return_logs']
+        for t in required_tables:
+            if t not in existing_tables:
+                print(f"WARNING: Required table '{t}' does not exist in the database. Please run: flask db upgrade")
+                
+        if 'orders' in existing_tables:
+            order_columns = [col['name'] for col in inspector.get_columns('orders')]
+            if 'sale_type' not in order_columns:
+                print("WARNING: Column 'sale_type' is missing in 'orders' table. Please run: flask db upgrade")
+                
+        if 'purchases' in existing_tables:
+            purchase_columns = [col['name'] for col in inspector.get_columns('purchases')]
+            if 'verification_status' not in purchase_columns:
+                print("WARNING: Column 'verification_status' is missing in 'purchases' table. Please run: flask db upgrade")
+    except Exception as validation_err:
+        print("Startup schema validation error:", str(validation_err))
+
 
 
 # --- Helper to check admin access ---
