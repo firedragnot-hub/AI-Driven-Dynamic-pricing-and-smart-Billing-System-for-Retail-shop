@@ -73,15 +73,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 with app.app_context():
-    db_exists = os.path.exists(db_path) if os.getenv('VERCEL') == '1' else True
     db.create_all()
     
-    if os.getenv('VERCEL') == '1' and not db_exists:
+    if os.getenv('VERCEL') == '1':
         try:
-            print("Seeding full demo database on Vercel (skipping model training)...")
-            from seed_data import seed_database_and_train
-            seed_database_and_train(drop_tables=False, train_models=False)
-            print("Vercel database seeded with products, transactions, and historical data!")
+            from models import Product, Transaction
+            if Product.query.count() == 0 or Transaction.query.count() == 0:
+                print("Seeding full demo database on Vercel (skipping model training)...")
+                from seed_data import seed_database_and_train
+                seed_database_and_train(drop_tables=False, train_models=False)
+                print("Vercel database seeded with products, transactions, and historical data!")
         except Exception as seed_err:
             print("Vercel seeding error:", str(seed_err))
     # Migration helper to add missing columns to purchases

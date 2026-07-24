@@ -20,145 +20,156 @@ def seed_database_and_train(drop_tables=True, train_models=True):
     db.create_all()
     
     print("Seeding default business config...")
-    config = BusinessConfig(
-        business_name="TEGL Supermart",
-        gstin="27ABCDE1234F1Z5",
-        pan="ABCDE1234F",
-        state="Maharashtra",
-        address="101, Galaxy Business Galleria, Hiranandani Link Road, Andheri East, Mumbai - 400072"
-    )
-    db.session.add(config)
+    if not BusinessConfig.query.first():
+        config = BusinessConfig(
+            business_name="TEGL Supermart",
+            gstin="27ABCDE1234F1Z5",
+            pan="ABCDE1234F",
+            state="Maharashtra",
+            address="101, Galaxy Business Galleria, Hiranandani Link Road, Andheri East, Mumbai - 400072"
+        )
+        db.session.add(config)
     
     print("Seeding default users...")
     from werkzeug.security import generate_password_hash
-    admin = User(
-        username='admin',
-        email='admin@retail.com',
-        password_hash=generate_password_hash('adminpassword'),
-        role='admin'
-    )
-    customer = User(
-        username='customer',
-        email='customer@retail.com',
-        password_hash=generate_password_hash('customerpassword'),
-        role='customer'
-    )
-    db.session.add(admin)
-    db.session.add(customer)
+    if not User.query.filter_by(username='admin').first():
+        admin = User(
+            username='admin',
+            email='admin@retail.com',
+            password_hash=generate_password_hash('adminpassword'),
+            role='admin'
+        )
+        db.session.add(admin)
+    if not User.query.filter_by(username='customer').first():
+        customer = User(
+            username='customer',
+            email='customer@retail.com',
+            password_hash=generate_password_hash('customerpassword'),
+            role='customer'
+        )
+        db.session.add(customer)
     db.session.commit()
     
     # 1. Parse products from amazon.csv
     print("Parsing products from amazon.csv...")
-    if not os.path.exists('amazon.csv'):
-        print("amazon.csv not found!")
-        return
-
-    df_amazon = pd.read_csv('amazon.csv')
     products_db = []
-    seen_names = set()
+    if Product.query.count() > 0:
+        print("Products already seeded, loading existing products.")
+        products_db = Product.query.all()
+    else:
+        if not os.path.exists('amazon.csv'):
+            print("amazon.csv not found!")
+            return
 
-    def clean_price(val):
-        if pd.isna(val):
-            return 0.0
-        val_str = str(val).replace('₹', '').replace(',', '').replace(' ', '').strip()
-        try:
-            return float(val_str)
-        except ValueError:
-            return 0.0
+        df_amazon = pd.read_csv('amazon.csv')
+        seen_names = set()
 
-    for idx, row in df_amazon.iterrows():
-        if len(products_db) >= 100:
-            break
+        def clean_price(val):
+            if pd.isna(val):
+                return 0.0
+            val_str = str(val).replace('₹', '').replace(',', '').replace(' ', '').strip()
+            try:
+                return float(val_str)
+            except ValueError:
+                return 0.0
 
-        raw_name = str(row.get('product_name', '')).strip()
-        if not raw_name:
-            continue
+        for idx, row in df_amazon.iterrows():
+            if len(products_db) >= 100:
+                break
+
+            raw_name = str(row.get('product_name', '')).strip()
+            if not raw_name:
+                continue
+            
+            name = raw_name[:95]
+            if name in seen_names:
+                continue
+
+            category = str(row.get('category', 'General')).split('|')[0].replace('&', ' & ').strip()
+            actual_price = clean_price(row.get('actual_price', 0))
+            discounted_price = clean_price(row.get('discounted_price', 0))
+
+            base_cost = round(actual_price, 2)
+            current_price = round(discounted_price, 2)
+
+            if base_cost <= 0 or current_price <= 0:
+                continue
+
+            # Adjust margins based on category rules
+            cat_lower = category.lower()
+            margin = 0.25 # Standard fallback
+            if "electronic" in cat_lower or "computer" in cat_lower:
+                margin = random.uniform(0.10, 0.18)
+            elif "accessories" in cat_lower or "cable" in cat_lower or "headphone" in cat_lower:
+                margin = random.uniform(0.25, 0.45)
+            elif "grocery" in cat_lower or "food" in cat_lower or "milk" in cat_lower:
+                margin = random.uniform(0.15, 0.30)
+            elif "apparel" in cat_lower or "shirt" in cat_lower or "shoe" in cat_lower:
+                margin = random.uniform(0.35, 0.60)
+
+            # Set purchase cost (base_cost) and selling price (current_price) based on margin
+            if base_cost > current_price or base_cost == current_price:
+                base_cost = round(current_price / (1 + margin), 2)
+            else:
+                # Recalculate price using cost and margin
+                current_price = round(base_cost * (1 + margin), 2)
+
+            stock_level = random.randint(15, 60) # Initial stock
+            barcode = f"8901234{idx:06d}"
+
+            # HSN and GST Rate mapping
+            def get_hsn_and_gst(n, c):
+                n_l = n.lower()
+                c_l = c.lower()
+                if "keyboard" in n_l:
+                    return "84716040", 18.0
+                elif "mouse" in n_l:
+                    return "84716060", 18.0
+                elif "headphone" in n_l or "earphone" in n_l or "bluetooth" in n_l:
+                    return "85183000", 18.0
+                elif "cable" in n_l or "wire" in n_l or "charger" in n_l:
+                    return "85444220", 18.0
+                elif "computer" in c_l or "electronic" in c_l:
+                    return "84713010", 18.0
+                elif "coffee" in n_l or "tea" in n_l:
+                    return "09012100", 5.0
+                elif "milk" in n_l or "organic" in n_l:
+                    return "04012000", 0.0
+                elif "shirt" in n_l or "apparel" in c_l or "jeans" in n_l:
+                    return "61091000", 5.0
+                elif "shoe" in n_l:
+                    return "64039190", 18.0
+                return "84733099", 18.0
+
+            hsn, gst = get_hsn_and_gst(name, category)
+            img_url = str(row.get('img_link', '')).strip()
+
+            product = Product(
+                name=name,
+                category=category,
+                base_cost=base_cost,
+                current_price=current_price,
+                stock_level=stock_level,
+                hsn_code=hsn,
+                gst_rate=gst,
+                barcode=barcode,
+                image_url=img_url if img_url else None
+            )
+            db.session.add(product)
+            products_db.append(product)
+            seen_names.add(name)
+
+        db.session.commit()
+        print(f"Seeded {len(products_db)} products.")
+
+    days_to_seed = 30 if os.getenv('VERCEL') == '1' else 180
+    print(f"Generating {days_to_seed} days of historical operating logs...")
+    if Transaction.query.count() > 0 or Order.query.count() > 0:
+        print("Historical operating logs already seeded. Skipping generation.")
+        return
         
-        name = raw_name[:95]
-        if name in seen_names:
-            continue
-
-        category = str(row.get('category', 'General')).split('|')[0].replace('&', ' & ').strip()
-        actual_price = clean_price(row.get('actual_price', 0))
-        discounted_price = clean_price(row.get('discounted_price', 0))
-
-        base_cost = round(actual_price, 2)
-        current_price = round(discounted_price, 2)
-
-        if base_cost <= 0 or current_price <= 0:
-            continue
-
-        # Adjust margins based on category rules
-        cat_lower = category.lower()
-        margin = 0.25 # Standard fallback
-        if "electronic" in cat_lower or "computer" in cat_lower:
-            margin = random.uniform(0.10, 0.18)
-        elif "accessories" in cat_lower or "cable" in cat_lower or "headphone" in cat_lower:
-            margin = random.uniform(0.25, 0.45)
-        elif "grocery" in cat_lower or "food" in cat_lower or "milk" in cat_lower:
-            margin = random.uniform(0.15, 0.30)
-        elif "apparel" in cat_lower or "shirt" in cat_lower or "shoe" in cat_lower:
-            margin = random.uniform(0.35, 0.60)
-
-        # Set purchase cost (base_cost) and selling price (current_price) based on margin
-        if base_cost > current_price or base_cost == current_price:
-            base_cost = round(current_price / (1 + margin), 2)
-        else:
-            # Recalculate price using cost and margin
-            current_price = round(base_cost * (1 + margin), 2)
-
-        stock_level = random.randint(15, 60) # Initial stock
-        barcode = f"8901234{idx:06d}"
-
-        # HSN and GST Rate mapping
-        def get_hsn_and_gst(n, c):
-            n_l = n.lower()
-            c_l = c.lower()
-            if "keyboard" in n_l:
-                return "84716040", 18.0
-            elif "mouse" in n_l:
-                return "84716060", 18.0
-            elif "headphone" in n_l or "earphone" in n_l or "bluetooth" in n_l:
-                return "85183000", 18.0
-            elif "cable" in n_l or "wire" in n_l or "charger" in n_l:
-                return "85444220", 18.0
-            elif "computer" in c_l or "electronic" in c_l:
-                return "84713010", 18.0
-            elif "coffee" in n_l or "tea" in n_l:
-                return "09012100", 5.0
-            elif "milk" in n_l or "organic" in n_l:
-                return "04012000", 0.0
-            elif "shirt" in n_l or "apparel" in c_l or "jeans" in n_l:
-                return "61091000", 5.0
-            elif "shoe" in n_l:
-                return "64039190", 18.0
-            return "84733099", 18.0
-
-        hsn, gst = get_hsn_and_gst(name, category)
-        img_url = str(row.get('img_link', '')).strip()
-
-        product = Product(
-            name=name,
-            category=category,
-            base_cost=base_cost,
-            current_price=current_price,
-            stock_level=stock_level,
-            hsn_code=hsn,
-            gst_rate=gst,
-            barcode=barcode,
-            image_url=img_url if img_url else None
-        )
-        db.session.add(product)
-        products_db.append(product)
-        seen_names.add(name)
-
-    db.session.commit()
-    print(f"Seeded {len(products_db)} products.")
-
-    # 2. Generate 180 Days of Historical Business Activity
-    print("Generating 180 days of historical operating logs...")
     end_date = datetime.now()
-    start_date = end_date - timedelta(days=180)
+    start_date = end_date - timedelta(days=days_to_seed)
     
     pricing_data_list = []
     demand_data_list = []
