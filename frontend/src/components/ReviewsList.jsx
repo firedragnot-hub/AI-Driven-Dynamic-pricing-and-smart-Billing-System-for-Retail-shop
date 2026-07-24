@@ -11,7 +11,7 @@ export default function ReviewsList({ token }) {
     setLoading(true);
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch('http://127.0.0.1:5000/api/reviews/admin', { headers });
+      const res = await fetch('/api/reviews/admin', { headers });
       if (res.ok) {
         const data = await res.json();
         setReviews(data);

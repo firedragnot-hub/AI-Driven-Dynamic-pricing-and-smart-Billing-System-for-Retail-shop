@@ -1093,10 +1093,10 @@ export default function GSTCompliance({ token }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2>Filing Return Packages</h2>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button className={`btn ${selectedReturn === 'gstr1' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setSelectedReturn('gstr1')}>GSTR-1</button>
-                <button className={`btn ${selectedReturn === 'gstr3b' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setSelectedReturn('gstr3b')}>GSTR-3B</button>
-                <button className={`btn ${selectedReturn === 'gstr9' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setSelectedReturn('gstr9')}>GSTR-9 (Annual)</button>
-                <button className={`btn ${selectedReturn === 'monthly_liability' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setSelectedReturn('monthly_liability')}>Liability Ledger</button>
+                <button className={`btn ${selectedReturn === 'gstr1' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => { setSelectedReturn('gstr1'); setReturnDetails(null); }}>GSTR-1</button>
+                <button className={`btn ${selectedReturn === 'gstr3b' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => { setSelectedReturn('gstr3b'); setReturnDetails(null); }}>GSTR-3B</button>
+                <button className={`btn ${selectedReturn === 'gstr9' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => { setSelectedReturn('gstr9'); setReturnDetails(null); }}>GSTR-9 (Annual)</button>
+                <button className={`btn ${selectedReturn === 'monthly_liability' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => { setSelectedReturn('monthly_liability'); setReturnDetails(null); }}>Liability Ledger</button>
               </div>
             </div>
           </div>
@@ -1221,19 +1221,19 @@ export default function GSTCompliance({ token }) {
                   <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>Taxable Value:</span>
-                      <b>₹{returnDetails.summary.outward_supplies.taxable_value.toLocaleString()}</b>
+                      <b>₹{(returnDetails?.summary?.outward_supplies?.taxable_value || 0).toLocaleString()}</b>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>CGST collected:</span>
-                      <b>₹{returnDetails.summary.outward_supplies.cgst.toLocaleString()}</b>
+                      <b>₹{(returnDetails?.summary?.outward_supplies?.cgst || 0).toLocaleString()}</b>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>SGST collected:</span>
-                      <b>₹{returnDetails.summary.outward_supplies.sgst.toLocaleString()}</b>
+                      <b>₹{(returnDetails?.summary?.outward_supplies?.sgst || 0).toLocaleString()}</b>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>IGST collected:</span>
-                      <b>₹{returnDetails.summary.outward_supplies.igst.toLocaleString()}</b>
+                      <b>₹{(returnDetails?.summary?.outward_supplies?.igst || 0).toLocaleString()}</b>
                     </div>
                   </div>
                 </div>
@@ -1243,19 +1243,19 @@ export default function GSTCompliance({ token }) {
                   <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>CGST Credit:</span>
-                      <b>₹{returnDetails.summary.eligible_itc.cgst.toLocaleString()}</b>
+                      <b>₹{(returnDetails?.summary?.eligible_itc?.cgst || 0).toLocaleString()}</b>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>SGST Credit:</span>
-                      <b>₹{returnDetails.summary.eligible_itc.sgst.toLocaleString()}</b>
+                      <b>₹{(returnDetails?.summary?.eligible_itc?.sgst || 0).toLocaleString()}</b>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>IGST Credit:</span>
-                      <b>₹{returnDetails.summary.eligible_itc.igst.toLocaleString()}</b>
+                      <b>₹{(returnDetails?.summary?.eligible_itc?.igst || 0).toLocaleString()}</b>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--cream2)', paddingTop: '1rem' }}>
                       <span>Total ITC Balance:</span>
-                      <b>₹{(returnDetails.summary.eligible_itc.cgst + returnDetails.summary.eligible_itc.sgst + returnDetails.summary.eligible_itc.igst).toLocaleString()}</b>
+                      <b>₹{((returnDetails?.summary?.eligible_itc?.cgst || 0) + (returnDetails?.summary?.eligible_itc?.sgst || 0) + (returnDetails?.summary?.eligible_itc?.igst || 0)).toLocaleString()}</b>
                     </div>
                   </div>
                 </div>
@@ -1266,19 +1266,19 @@ export default function GSTCompliance({ token }) {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
                   <div>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Net CGST Payable</span>
-                    <h4 style={{ color: 'var(--primary)' }}>₹{returnDetails.summary.tax_payable.cgst.toLocaleString()}</h4>
+                    <h4 style={{ color: 'var(--primary)' }}>₹{(returnDetails?.summary?.tax_payable?.cgst || 0).toLocaleString()}</h4>
                   </div>
                   <div>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Net SGST Payable</span>
-                    <h4 style={{ color: 'var(--primary)' }}>₹{returnDetails.summary.tax_payable.sgst.toLocaleString()}</h4>
+                    <h4 style={{ color: 'var(--primary)' }}>₹{(returnDetails?.summary?.tax_payable?.sgst || 0).toLocaleString()}</h4>
                   </div>
                   <div>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Net IGST Payable</span>
-                    <h4 style={{ color: 'var(--primary)' }}>₹{returnDetails.summary.tax_payable.igst.toLocaleString()}</h4>
+                    <h4 style={{ color: 'var(--primary)' }}>₹{(returnDetails?.summary?.tax_payable?.igst || 0).toLocaleString()}</h4>
                   </div>
                   <div>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Grand Net Cash Liability</span>
-                    <h3 style={{ color: 'var(--primary)' }}>₹{returnDetails.summary.tax_payable.net_payable.toLocaleString()}</h3>
+                    <h3 style={{ color: 'var(--primary)' }}>₹{(returnDetails?.summary?.tax_payable?.net_payable || 0).toLocaleString()}</h3>
                   </div>
                 </div>
               </div>
@@ -1305,23 +1305,28 @@ export default function GSTCompliance({ token }) {
                   <tbody>
                     <tr>
                       <td><b>Consolidated Outward Sales Turnover</b></td>
-                      <td><b>₹{returnDetails.summary.annual_turnover.toLocaleString()}</b></td>
+                      <td><b>₹{(returnDetails?.summary?.annual_turnover || 0).toLocaleString()}</b></td>
                     </tr>
                     <tr>
                       <td>Total Supplies Tax Liability (A)</td>
-                      <td>₹{returnDetails.summary.total_tax_collected.toLocaleString()}</td>
+                      <td>₹{(returnDetails?.summary?.total_tax_collected || 0).toLocaleString()}</td>
                     </tr>
                     <tr>
                       <td>Consolidated Purchases Turnover</td>
-                      <td>₹{returnDetails.summary.annual_purchases.toLocaleString()}</td>
+                      <td>₹{(returnDetails?.summary?.annual_purchases || 0).toLocaleString()}</td>
                     </tr>
                     <tr>
                       <td>Total Eligible ITC Availed (B)</td>
-                      <td>₹{returnDetails.summary.total_itc_availed.toLocaleString()}</td>
+                      <td>₹{(returnDetails?.summary?.total_itc_availed || 0).toLocaleString()}</td>
                     </tr>
                     <tr style={{ background: 'rgba(45, 106, 79, 0.05)' }}>
                       <td><b>Net Cash Tax Settled (A - B)</b></td>
-                      <td><b>₹{returnDetails.summary.net_tax_paid_cash.toLocaleString()}</b></td>
+                      <td><b>
+                        {(() => {
+                          const val = (returnDetails?.summary?.total_tax_collected || 0) - (returnDetails?.summary?.total_itc_availed || 0);
+                          return (val < 0 ? '-' : '') + '₹' + Math.abs(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        })()}
+                      </b></td>
                     </tr>
                   </tbody>
                 </table>

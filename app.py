@@ -94,6 +94,49 @@ with app.app_context():
         if 'sale_type' not in order_columns:
             cursor.execute("ALTER TABLE orders ADD COLUMN sale_type VARCHAR(20) DEFAULT 'online'")
             
+        # Check if return_logs table needs columns
+        cursor.execute("PRAGMA table_info(return_logs)")
+        return_logs_columns = [row[1] for row in cursor.fetchall()]
+        if 'order_id' not in return_logs_columns:
+            try:
+                cursor.execute("DROP TABLE IF EXISTS return_logs_old")
+                cursor.execute("ALTER TABLE return_logs RENAME TO return_logs_old")
+                cursor.execute("""
+                    CREATE TABLE return_logs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        transaction_id INTEGER REFERENCES transactions(id),
+                        order_id INTEGER REFERENCES orders(id),
+                        product_id INTEGER NOT NULL REFERENCES products(id),
+                        quantity INTEGER NOT NULL,
+                        refund_amount FLOAT NOT NULL,
+                        reason VARCHAR(255),
+                        timestamp DATETIME NOT NULL
+                    )
+                """)
+                # Try to copy existing rows
+                try:
+                    cursor.execute("""
+                        INSERT INTO return_logs (id, transaction_id, product_id, quantity, refund_amount, reason, timestamp)
+                        SELECT id, transaction_id, product_id, quantity, refund_amount, reason, timestamp FROM return_logs_old
+                    """)
+                except Exception as copy_err:
+                    print("Error copying old return_logs data:", str(copy_err))
+                cursor.execute("DROP TABLE return_logs_old")
+            except Exception as migrate_err:
+                print("Error creating return_logs table:", str(migrate_err))
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS return_logs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        transaction_id INTEGER REFERENCES transactions(id),
+                        order_id INTEGER REFERENCES orders(id),
+                        product_id INTEGER NOT NULL REFERENCES products(id),
+                        quantity INTEGER NOT NULL,
+                        refund_amount FLOAT NOT NULL,
+                        reason VARCHAR(255),
+                        timestamp DATETIME NOT NULL
+                    )
+                """)
+            
         conn.commit()
         conn.close()
     except Exception as e:
@@ -452,7 +495,18 @@ def process_return():
 
 @app.route('/api/returns', methods=['GET'])
 def get_returns():
-    returns = ReturnLog.query.order_by(ReturnLog.timestamp.desc()).all()
+    user_payload = get_current_user()
+    if user_payload:
+        if user_payload.get('role') == 'admin':
+            returns = ReturnLog.query.order_by(ReturnLog.timestamp.desc()).all()
+        else:
+            user_order_ids = [o.id for o in Order.query.filter_by(user_id=user_payload['user_id']).all()]
+            if user_order_ids:
+                returns = ReturnLog.query.filter(ReturnLog.order_id.in_(user_order_ids)).order_by(ReturnLog.timestamp.desc()).all()
+            else:
+                returns = []
+    else:
+        returns = ReturnLog.query.order_by(ReturnLog.timestamp.desc()).all()
     return jsonify([ret.to_dict() for ret in returns]), 200
 
 
@@ -1301,6 +1355,124 @@ def save_address():
     db.session.add(addr)
     db.session.commit()
     return jsonify(addr.to_dict()), 201
+
+@app.route('/api/addresses/<int:address_id>', methods=['PUT'])
+def update_address(address_id):
+    user_payload = get_current_user()
+    if not user_payload:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    addr = AddressBook.query.filter_by(id=address_id, user_id=user_payload['user_id']).first()
+    if not addr:
+        return jsonify({'error': 'Address not found'}), 404
+        
+    data = request.get_json() or {}
+    if 'name' in data:
+        addr.name = data['name']
+    if 'phone' in data:
+        addr.phone = data['phone']
+    if 'address_line' in data:
+        addr.address_line = data['address_line']
+    if 'city' in data:
+        addr.city = data['city']
+    if 'pincode' in data:
+        addr.pincode = data['pincode']
+        
+    db.session.commit()
+    return jsonify(addr.to_dict()), 200
+
+@app.route('/api/addresses/<int:address_id>', methods=['DELETE'])
+def delete_address(address_id):
+    user_payload = get_current_user()
+    if not user_payload:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    addr = AddressBook.query.filter_by(id=address_id, user_id=user_payload['user_id']).first()
+    if not addr:
+        return jsonify({'error': 'Address not found'}), 404
+        
+    db.session.delete(addr)
+    db.session.commit()
+    return jsonify({'message': 'Address deleted successfully'}), 200
+
+@app.route('/api/returns/request', methods=['POST'])
+def request_return():
+    user_payload = get_current_user()
+    if not user_payload:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    data = request.get_json() or {}
+    order_id = data.get('order_id')
+    product_id = data.get('product_id')
+    qty_to_return = data.get('quantity')
+    reason = data.get('reason', 'Customer Return')
+    
+    if not order_id or not product_id or not qty_to_return or qty_to_return <= 0:
+        return jsonify({'error': 'Invalid request parameters'}), 400
+        
+    order = Order.query.get(order_id)
+    if not order:
+        return jsonify({'error': 'Order not found'}), 404
+        
+    # Verify order ownership
+    if order.user_id != user_payload['user_id'] and order.email.strip().lower() != user_payload.get('username', '').strip().lower():
+        return jsonify({'error': 'Access denied'}), 403
+        
+    if order.status.lower() != 'delivered':
+        return jsonify({'error': 'Only delivered orders are eligible for return.'}), 400
+        
+    if datetime.utcnow() - order.timestamp > timedelta(days=7):
+        return jsonify({'error': 'Return window (7 days) has expired.'}), 400
+        
+    order_item = OrderItem.query.filter_by(order_id=order_id, product_id=product_id).first()
+    if not order_item:
+        return jsonify({'error': 'Product not found in this order'}), 404
+        
+    already_returned = db.session.query(func.sum(ReturnLog.quantity)).filter(
+        ReturnLog.order_id == order_id, 
+        ReturnLog.product_id == product_id
+    ).scalar() or 0
+    
+    available_to_return = order_item.quantity - already_returned
+    
+    if qty_to_return > available_to_return:
+        return jsonify({'error': f'Cannot return {qty_to_return} items. Only {available_to_return} items available to return.'}), 400
+        
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify({'error': 'Product not found in database'}), 404
+        
+    refund_amount = round(order_item.price_at_sale * qty_to_return, 2)
+    
+    return_log = ReturnLog(
+        order_id=order_id,
+        transaction_id=None,
+        product_id=product_id,
+        quantity=qty_to_return,
+        refund_amount=refund_amount,
+        reason=reason,
+        timestamp=datetime.utcnow()
+    )
+    db.session.add(return_log)
+    
+    product.stock_level += qty_to_return
+    order.total_amount = round(max(0.0, order.total_amount - refund_amount), 2)
+    
+    total_ordered_qty = db.session.query(func.sum(OrderItem.quantity)).filter(OrderItem.order_id == order_id).scalar() or 0
+    total_returned_qty = (db.session.query(func.sum(ReturnLog.quantity)).filter(ReturnLog.order_id == order_id).scalar() or 0) + qty_to_return
+    
+    if total_returned_qty >= total_ordered_qty:
+        order.status = 'Returned'
+    else:
+        order.status = 'Partially Returned'
+        
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Return request submitted successfully',
+        'return_log': return_log.to_dict(),
+        'order': order.to_dict()
+    }), 201
 
 # --- Interactive / Mock Coupons and Payments ---
 @app.route('/api/coupons/validate', methods=['POST'])

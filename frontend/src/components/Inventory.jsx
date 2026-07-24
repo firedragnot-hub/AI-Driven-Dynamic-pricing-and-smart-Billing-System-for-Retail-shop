@@ -51,8 +51,8 @@ export default function Inventory({ products, refreshProducts, token }) {
     };
 
     const url = editProduct 
-      ? `http://127.0.0.1:5000/api/products/${editProduct.id}`
-      : 'http://127.0.0.1:5000/api/products';
+      ? `/api/products/${editProduct.id}`
+      : '/api/products';
     
     const method = editProduct ? 'PUT' : 'POST';
 
@@ -83,7 +83,7 @@ export default function Inventory({ products, refreshProducts, token }) {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch(`http://127.0.0.1:5000/api/products/${productId}`, {
+      const res = await fetch(`/api/products/${productId}`, {
         method: 'DELETE',
         headers
       });
@@ -101,7 +101,7 @@ export default function Inventory({ products, refreshProducts, token }) {
   const handleExport = async (format) => {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch(`http://127.0.0.1:5000/api/reports/download?type=inventory&format=${format}`, { headers });
+      const res = await fetch(`/api/reports/download?type=inventory&format=${format}`, { headers });
       if (res.ok) {
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);

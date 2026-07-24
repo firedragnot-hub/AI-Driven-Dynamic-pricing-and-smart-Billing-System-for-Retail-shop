@@ -23,7 +23,7 @@ export default function OrdersList({ token }) {
         sort_by: sortBy,
         sale_type: saleTypeFilter
       });
-      const res = await fetch(`http://127.0.0.1:5000/api/orders?${params.toString()}`, { headers });
+      const res = await fetch(`/api/orders?${params.toString()}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setOrders(data);
@@ -47,7 +47,7 @@ export default function OrdersList({ token }) {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const res = await fetch(`http://127.0.0.1:5000/api/orders/${orderId}/status`, {
+      const res = await fetch(`/api/orders/${orderId}/status`, {
         method: 'PUT',
         headers,
         body: JSON.stringify({ status: newStatus })
@@ -73,7 +73,7 @@ export default function OrdersList({ token }) {
   const handleExport = async (format) => {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch(`http://127.0.0.1:5000/api/reports/download?type=sales&format=${format}`, { headers });
+      const res = await fetch(`/api/reports/download?type=sales&format=${format}`, { headers });
       if (res.ok) {
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
@@ -135,6 +135,10 @@ export default function OrdersList({ token }) {
         return <span className="badge" style={{ backgroundColor: '#3b82f6', color: '#fff' }}>Shipped</span>;
       case 'Processing':
         return <span className="badge" style={{ backgroundColor: '#8b5cf6', color: '#fff' }}>Processing</span>;
+      case 'Returned':
+        return <span className="badge" style={{ backgroundColor: '#64748b', color: '#fff' }}>Returned</span>;
+      case 'Partially Returned':
+        return <span className="badge" style={{ backgroundColor: '#f97316', color: '#fff' }}>Partially Returned</span>;
       default:
         return <span className="badge badge-warning">Pending</span>;
     }
@@ -446,6 +450,8 @@ export default function OrdersList({ token }) {
             <option value="Shipped">Shipped</option>
             <option value="Delivered">Delivered</option>
             <option value="Cancelled">Cancelled</option>
+            <option value="Returned">Returned</option>
+            <option value="Partially Returned">Partially Returned</option>
           </select>
         </div>
 
@@ -565,6 +571,8 @@ export default function OrdersList({ token }) {
                         <option value="Shipped">Shipped</option>
                         <option value="Delivered">Delivered</option>
                         <option value="Cancelled">Cancelled</option>
+                        <option value="Returned">Returned</option>
+                        <option value="Partially Returned">Partially Returned</option>
                       </select>
                     </td>
                     <td>

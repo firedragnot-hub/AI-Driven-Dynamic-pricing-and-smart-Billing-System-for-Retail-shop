@@ -94,7 +94,7 @@ export default function FinancialDashboard({ token }) {
     try {
       setError(null);
       setLoading(true);
-      const res = await fetch('http://127.0.0.1:5000/api/finance/dashboard', {
+      const res = await fetch('/api/finance/dashboard', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {

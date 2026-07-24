@@ -66,11 +66,11 @@ export default function Dashboard({ products, token, setActiveTab }) {
     setLoading(true);
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const dailyRes = await fetch('http://127.0.0.1:5000/api/sales/daily', { headers });
+      const dailyRes = await fetch('/api/sales/daily', { headers });
       const dailyData = await dailyRes.json();
       setDailySales(dailyData.reverse()); // Show chronologically
 
-      const monthlyRes = await fetch('http://127.0.0.1:5000/api/sales/monthly', { headers });
+      const monthlyRes = await fetch('/api/sales/monthly', { headers });
       const monthlyData = await monthlyRes.json();
       setMonthlySales(monthlyData.reverse());
     } catch (error) {
@@ -176,20 +176,18 @@ export default function Dashboard({ products, token, setActiveTab }) {
   };
 
   return (
-    <div style={{ padding: '24px 0', maxWidth: '1400px', margin: '0 auto' }}>
-      
-      {/* Dashboard Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+    <div>
+      <div className="page-header">
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>Executive Dashboard</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>Real-time updates, metrics and sales performance</p>
+          <h1>Executive Dashboard</h1>
+          <p>Real-time updates, metrics and sales performance</p>
+          <div className="page-header-accent"></div>
         </div>
-        
         <div className="finance-header-actions">
           <button className="finance-btn-secondary" onClick={fetchSalesData}>
             <RefreshCw size={16} /> Refresh
           </button>
-          <button className="finance-btn-secondary" style={{ color: '#8b5cf6', borderColor: '#8b5cf6', background: 'rgba(139, 92, 246, 0.05)' }}>
+          <button className="btn btn-accent" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
             <Sparkles size={16} /> AI Insights
           </button>
         </div>

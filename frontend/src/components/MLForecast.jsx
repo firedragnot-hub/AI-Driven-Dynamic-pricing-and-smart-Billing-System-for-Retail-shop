@@ -127,7 +127,7 @@ export default function MLForecast({ token }) {
       formData.append('purchase_id', purchaseId);
       formData.append('file', file);
 
-      const res = await fetch('http://127.0.0.1:5000/api/ml/reconcile-invoice', {
+      const res = await fetch('/api/ml/reconcile-invoice', {
         method: 'POST',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         body: formData
@@ -156,7 +156,7 @@ export default function MLForecast({ token }) {
   const handleConfirmReceipt = async (option) => {
     if (!reconciliationData) return;
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/ml/confirm-receipt', {
+      const res = await fetch('/api/ml/confirm-receipt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,7 +187,7 @@ export default function MLForecast({ token }) {
     setBillsLoading(true);
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch('http://127.0.0.1:5000/api/ml/bills', { headers });
+      const res = await fetch('/api/ml/bills', { headers });
       if (res.ok) {
         const data = await res.json();
         setPurchaseBills(data);
@@ -202,7 +202,7 @@ export default function MLForecast({ token }) {
   const fetchOrderHistory = async () => {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch('http://127.0.0.1:5000/api/ml/order-history', { headers });
+      const res = await fetch('/api/ml/order-history', { headers });
       if (res.ok) {
         const data = await res.json();
         setOrderHistory(data);
@@ -222,7 +222,7 @@ export default function MLForecast({ token }) {
         'Content-Type': 'application/json',
         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       };
-      const res = await fetch('http://127.0.0.1:5000/api/ml/order-recommendations', {
+      const res = await fetch('/api/ml/order-recommendations', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -252,7 +252,7 @@ export default function MLForecast({ token }) {
   const handleDownloadPDF = async () => {
     if (!budgetResult) return;
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/ml/budget-recommendation/pdf', {
+      const res = await fetch('/api/ml/budget-recommendation/pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -291,7 +291,7 @@ export default function MLForecast({ token }) {
     setDemandLoading(true);
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch(`http://127.0.0.1:5000/api/ml/predict-demand?date=${date}`, { headers });
+      const res = await fetch(`/api/ml/predict-demand?date=${date}`, { headers });
       const data = await res.json();
       if (res.ok) {
         setDemandResult(data);
@@ -307,7 +307,7 @@ export default function MLForecast({ token }) {
     setPricingLoading(true);
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch('http://127.0.0.1:5000/api/ml/pricing-recommendations', { headers });
+      const res = await fetch('/api/ml/pricing-recommendations', { headers });
       const data = await res.json();
       if (res.ok) {
         setPricingRecs(data);
@@ -321,7 +321,7 @@ export default function MLForecast({ token }) {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/products');
+      const res = await fetch('/api/products');
       if (res.ok) {
         const data = await res.json();
         const cats = ['All', ...new Set(data.map(p => p.category))];
@@ -350,7 +350,7 @@ export default function MLForecast({ token }) {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const res = await fetch('http://127.0.0.1:5000/api/ml/budget-recommendation', {
+      const res = await fetch('/api/ml/budget-recommendation', {
         method: 'POST',
         headers,
         body: JSON.stringify({ budget, category, period_days: periodDays })
@@ -375,7 +375,7 @@ export default function MLForecast({ token }) {
     setTrainingResult(null);
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch('http://127.0.0.1:5000/api/ml/train', {
+      const res = await fetch('/api/ml/train', {
         method: 'POST',
         headers
       });
@@ -902,7 +902,7 @@ export default function MLForecast({ token }) {
                                 View Details
                               </button>
                               <a
-                                href={`http://127.0.0.1:5000/api/ml/bills/${bill.id}/download`}
+                                href={`/api/ml/bills/${bill.id}/download`}
                                 download
                                 className="btn btn-primary"
                                 style={{ padding: '4px 8px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '4px', marginBottom: 0, textDecoration: 'none', color: '#fff' }}

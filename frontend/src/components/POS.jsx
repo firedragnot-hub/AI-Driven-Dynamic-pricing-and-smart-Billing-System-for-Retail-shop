@@ -54,7 +54,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
   const fetchTxHistory = async () => {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch('http://127.0.0.1:5000/api/transactions', { headers });
+      const res = await fetch('/api/transactions', { headers });
       if (res.ok) {
         const data = await res.json();
         setTransactions(data);
@@ -67,7 +67,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
   const fetchReturnsList = async () => {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch('http://127.0.0.1:5000/api/returns', { headers });
+      const res = await fetch('/api/returns', { headers });
       if (res.ok) {
         const data = await res.json();
         setReturnsList(data);
@@ -91,7 +91,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
     }
     try {
       setLoading(true);
-      const res = await fetch('http://127.0.0.1:5000/api/returns', {
+      const res = await fetch('/api/returns', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,7 +111,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
         fetchReturnsList();
         if (selectedTx && selectedTx.id === transactionId) {
           // Find the updated transaction in the refreshed list
-          const updatedTxsRes = await fetch('http://127.0.0.1:5000/api/transactions', {
+          const updatedTxsRes = await fetch('/api/transactions', {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
           });
           if (updatedTxsRes.ok) {
@@ -209,7 +209,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
         return;
       }
       try {
-        const res = await fetch('http://127.0.0.1:5000/api/ping', { signal: AbortSignal.timeout(3000) });
+        const res = await fetch('/api/ping', { signal: AbortSignal.timeout(3000) });
         if (res.ok) {
           setPingStatus('online');
           setIsOnline(true);
@@ -259,7 +259,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
     if (!activeOnline) return;
     try {
       const since = forceFull ? '' : lastSyncTime;
-      const res = await fetch(`http://127.0.0.1:5000/api/products?since=${since}`, {
+      const res = await fetch(`/api/products?since=${since}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       if (res.ok) {
@@ -439,7 +439,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
 
     if (activeOnline) {
       try {
-        const res = await fetch('http://127.0.0.1:5000/api/checkout', {
+        const res = await fetch('/api/checkout', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -546,7 +546,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
       const indexInQueue = updatedQueue.findIndex(q => q.uuid === tx.uuid);
       
       try {
-        const res = await fetch('http://127.0.0.1:5000/api/checkout', {
+        const res = await fetch('/api/checkout', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -597,7 +597,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
     if (action === 'force') {
       setLoading(true);
       try {
-        const res = await fetch('http://127.0.0.1:5000/api/checkout', {
+        const res = await fetch('/api/checkout', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1322,7 +1322,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {!checkoutResult.isOfflineCheckout && (
-                <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => window.open(`http://127.0.0.1:5000/api/transactions/${checkoutResult.id}/invoice`, '_blank')}>
+                <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => window.open(`/api/transactions/${checkoutResult.id}/invoice`, '_blank')}>
                   <FileText size={16} style={{ marginRight: '6px' }} /> Print Invoice PDF
                 </button>
               )}

@@ -468,7 +468,8 @@ class Expense(db.Model):
 class ReturnLog(db.Model):
     __tablename__ = 'return_logs'
     id = db.Column(db.Integer, primary_key=True)
-    transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=False)
+    transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     refund_amount = db.Column(db.Float, nullable=False)
@@ -477,11 +478,13 @@ class ReturnLog(db.Model):
 
     product = db.relationship('Product')
     transaction = db.relationship('Transaction')
+    order = db.relationship('Order')
 
     def to_dict(self):
         return {
             'id': self.id,
             'transaction_id': self.transaction_id,
+            'order_id': self.order_id,
             'product_id': self.product_id,
             'product_name': self.product.name if self.product else 'Unknown Product',
             'quantity': self.quantity,

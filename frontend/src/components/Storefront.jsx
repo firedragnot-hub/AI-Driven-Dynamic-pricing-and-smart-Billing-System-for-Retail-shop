@@ -168,10 +168,44 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
   const productMap = useMemo(() => { const m = {}; products.forEach((p) => { m[p.id] = p; }); return m; }, [products]);
   const cartItems = Object.entries(cart).map(([id, qty]) => ({ product: productMap[parseInt(id)], qty })).filter(x => x.product);
   const subtotal = cartItems.reduce((sum, { product, qty }) => sum + product.current_price * qty, 0);
-  const [form, setForm] = useState({ customer_name: user?.username || '', email: '', phone: '', address: '' });
+  const [form, setForm] = useState({ customer_name: user?.username || '', email: user?.email || '', phone: '', address: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddrId, setSelectedAddrId] = useState('');
+
+  useEffect(() => {
+    const fetchSaved = async () => {
+      try {
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch('/api/addresses', { headers });
+        if (res.ok) {
+          const data = await res.json();
+          setSavedAddresses(data);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    if (token) fetchSaved();
+  }, [token]);
+
+  const handleSelectSavedAddress = (e) => {
+    const id = e.target.value;
+    setSelectedAddrId(id);
+    if (!id) return;
+    const selected = savedAddresses.find(a => a.id === parseInt(id));
+    if (selected) {
+      setForm({
+        customer_name: selected.name,
+        email: user?.email || '',
+        phone: selected.phone,
+        address: `${selected.address_line}, ${selected.city} - ${selected.pincode}`
+      });
+    }
+  };
 
   const handlePlaceOrder = async () => {
     if (!form.customer_name || !form.email || !form.phone || !form.address) { setError('Please fill in all fields.'); return; }
@@ -179,7 +213,7 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const res = await fetch('http://127.0.0.1:5000/api/orders', { method: 'POST', headers, body: JSON.stringify({ ...form, items: cartItems.map(({ product, qty }) => ({ product_id: product.id, quantity: qty })) }) });
+      const res = await fetch('/api/orders', { method: 'POST', headers, body: JSON.stringify({ ...form, items: cartItems.map(({ product, qty }) => ({ product_id: product.id, quantity: qty })) }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Order failed');
       onSuccess(data);
@@ -196,6 +230,19 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <h3 style={{ fontWeight: 700, color: '#0f172a', margin: 0 }}>Delivery Details</h3>
           {error && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px', padding: '12px 16px', color: '#dc2626', fontSize: '0.875rem' }}>{error}</div>}
+          
+          {savedAddresses.length > 0 && (
+            <div style={{ marginBottom: '8px', background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Select Saved Address</label>
+              <select value={selectedAddrId} onChange={handleSelectSavedAddress} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', background: '#fff', fontFamily: 'inherit' }}>
+                <option value="">-- Choose from your Saved Addresses --</option>
+                {savedAddresses.map(a => (
+                  <option key={a.id} value={a.id}>{a.name} - {a.address_line}, {a.city}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {[
             { name: 'customer_name', label: 'Full Name', icon: <User size={16} />, type: 'text', placeholder: 'John Doe' },
             { name: 'email', label: 'Email Address', icon: <Mail size={16} />, type: 'email', placeholder: 'john@example.com' },
@@ -275,21 +322,83 @@ function OrderSuccess({ order, onContinue }) {
 function MyOrders({ token }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Return request states
+  const [returningOrder, setReturningOrder] = useState(null);
+  const [returnForm, setReturnForm] = useState({ product_id: '', quantity: 1, reason: 'Defective Product' });
+  const [returnError, setReturnError] = useState('');
+  const [submittingReturn, setSubmittingReturn] = useState(false);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch('/api/orders', { headers });
+      if (res.ok) { const data = await res.json(); setOrders(data.filter(o => o.sale_type !== 'offline')); }
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      try {
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-        const res = await fetch('http://127.0.0.1:5000/api/orders', { headers });
-        if (res.ok) { const data = await res.json(); setOrders(data.filter(o => o.sale_type !== 'offline')); }
-      } catch (e) { console.error(e); } finally { setLoading(false); }
-    };
     fetchOrders();
   }, [token]);
 
+  const handleOpenReturn = (order) => {
+    setReturningOrder(order);
+    setReturnError('');
+    if (order.items && order.items.length > 0) {
+      setReturnForm({
+        product_id: order.items[0].product_id.toString(),
+        quantity: 1,
+        reason: 'Defective Product'
+      });
+    }
+  };
+
+  const handleReturnSubmit = async (orderId) => {
+    if (!returnForm.product_id || returnForm.quantity <= 0) {
+      setReturnError('Please select a product and valid quantity.');
+      return;
+    }
+    setReturnError('');
+    setSubmittingReturn(true);
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch('/api/returns/request', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          order_id: orderId,
+          product_id: parseInt(returnForm.product_id),
+          quantity: parseInt(returnForm.quantity),
+          reason: returnForm.reason
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setReturningOrder(null);
+        fetchOrders();
+        alert('Return request submitted successfully and inventory restocked!');
+      } else {
+        setReturnError(data.error || 'Failed to submit return request.');
+      }
+    } catch (err) {
+      setReturnError(err.message);
+    } finally {
+      setSubmittingReturn(false);
+    }
+  };
+
   const statusStyle = (status) => {
-    const map = { Pending: { bg: '#fef3c7', color: '#92400e' }, Processing: { bg: '#dbeafe', color: '#1e40af' }, Shipped: { bg: '#e0f2fe', color: '#0369a1' }, Delivered: { bg: '#dcfce7', color: '#166534' }, Cancelled: { bg: '#fee2e2', color: '#991b1b' } };
+    const map = { 
+      Pending: { bg: '#fef3c7', color: '#92400e' }, 
+      Processing: { bg: '#dbeafe', color: '#1e40af' }, 
+      Shipped: { bg: '#e0f2fe', color: '#0369a1' }, 
+      Delivered: { bg: '#dcfce7', color: '#166534' }, 
+      Cancelled: { bg: '#fee2e2', color: '#991b1b' },
+      Returned: { bg: '#f1f5f9', color: '#475569' },
+      'Partially Returned': { bg: '#ffedd5', color: '#c2410c' }
+    };
     return map[status] || { bg: '#f1f5f9', color: '#475569' };
   };
 
@@ -308,12 +417,16 @@ function MyOrders({ token }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {orders.map((order) => {
             const s = statusStyle(order.status);
+            const orderDate = new Date(order.timestamp);
+            const diffDays = (new Date() - orderDate) / (1000 * 60 * 60 * 24);
+            const isEligibleForReturn = order.status === 'Delivered' && diffDays <= 7;
+
             return (
               <div key={order.id} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a' }}>Order #{order.id}</div>
-                    <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px' }}>{new Date(order.timestamp).toLocaleString()}</div>
+                    <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px' }}>{orderDate.toLocaleString()}</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>{fmt(order.total_amount)}</span>
@@ -321,21 +434,336 @@ function MyOrders({ token }) {
                   </div>
                 </div>
                 {order.items && order.items.length > 0 && (
-                  <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
-                    <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>{order.items.length} item{order.items.length !== 1 ? 's' : ''}</div>
+                  <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{order.items.length} item{order.items.length !== 1 ? 's' : ''}</div>
+                      {isEligibleForReturn && (
+                        <button 
+                          onClick={() => handleOpenReturn(order)} 
+                          style={{ 
+                            background: '#fff', 
+                            border: '1.5px solid #d97706', 
+                            color: '#d97706', 
+                            borderRadius: '8px', 
+                            padding: '6px 12px', 
+                            fontSize: '0.78rem', 
+                            fontWeight: 700, 
+                            cursor: 'pointer' 
+                          }}
+                        >
+                          Return Items
+                        </button>
+                      )}
+                    </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {order.items.slice(0, 3).map((item) => (
+                      {order.items.map((item) => (
                         <span key={item.id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '3px 8px', fontSize: '0.75rem', color: '#475569' }}>
                           {item.product_name?.length > 30 ? `${item.product_name.substring(0, 28)}...` : item.product_name} ×{item.quantity}
                         </span>
                       ))}
-                      {order.items.length > 3 && <span style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: '6px', padding: '3px 8px', fontSize: '0.75rem', color: '#92400e', fontWeight: 600 }}>+{order.items.length - 3} more</span>}
                     </div>
                   </div>
                 )}
               </div>
             );
           })}
+        </div>
+      )}
+
+      {returningOrder && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '480px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.1rem', color: '#0f172a' }}>Request Return (Order #{returningOrder.id})</h3>
+              <button onClick={() => setReturningOrder(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><X size={18} /></button>
+            </div>
+            {returnError && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px', padding: '10px 14px', color: '#dc2626', fontSize: '0.8rem' }}>{returnError}</div>}
+            
+            <div>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Select Product to Return</label>
+              <select value={returnForm.product_id} onChange={(e) => setReturnForm({ ...returnForm, product_id: e.target.value, quantity: 1 })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem' }}>
+                {returningOrder.items.map(item => (
+                  <option key={item.id} value={item.product_id.toString()}>{item.product_name} (Qty: {item.quantity})</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Quantity to Return</label>
+              <input 
+                type="number" 
+                min="1" 
+                max={returningOrder.items.find(item => item.product_id.toString() === returnForm.product_id)?.quantity || 1} 
+                value={returnForm.quantity} 
+                onChange={(e) => setReturnForm({ ...returnForm, quantity: Math.max(1, parseInt(e.target.value) || 1) })} 
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', boxSizing: 'border-box' }} 
+              />
+            </div>
+            
+            <div>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Reason for Return</label>
+              <select value={returnForm.reason} onChange={(e) => setReturnForm({ ...returnForm, reason: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem' }}>
+                <option value="Defective Product">Defective Product</option>
+                <option value="Wrong Item Shipped">Wrong Item Shipped</option>
+                <option value="Item not as Described">Item not as Described</option>
+                <option value="No Longer Needed">No Longer Needed</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <button onClick={() => handleReturnSubmit(returningOrder.id)} disabled={submittingReturn} className="btn btn-primary" style={{ padding: '11px 20px', flex: 1, fontSize: '0.9rem' }}>
+                {submittingReturn ? 'Submitting...' : 'Submit Request'}
+              </button>
+              <button onClick={() => setReturningOrder(null)} style={{ padding: '11px 20px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '10px', cursor: 'pointer', fontSize: '0.9rem' }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MyAddresses({ token }) {
+  const [addresses, setAddresses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editingAddr, setEditingAddr] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: '', phone: '', address_line: '', city: '', pincode: '' });
+  const [error, setError] = useState('');
+
+  const fetchAddresses = async () => {
+    setLoading(true);
+    try {
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch('/api/addresses', { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setAddresses(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAddresses();
+  }, [token]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.name || !form.phone || !form.address_line || !form.city || !form.pincode) {
+      setError('All fields are required.');
+      return;
+    }
+    setError('');
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      const method = editingAddr ? 'PUT' : 'POST';
+      const url = editingAddr ? `/api/addresses/${editingAddr.id}` : '/api/addresses';
+      
+      const res = await fetch(url, {
+        method,
+        headers,
+        body: JSON.stringify(form)
+      });
+      
+      if (res.ok) {
+        setForm({ name: '', phone: '', address_line: '', city: '', pincode: '' });
+        setEditingAddr(null);
+        setShowForm(false);
+        fetchAddresses();
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Failed to save address.');
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleEdit = (addr) => {
+    setEditingAddr(addr);
+    setForm({
+      name: addr.name,
+      phone: addr.phone,
+      address_line: addr.address_line,
+      city: addr.city,
+      pincode: addr.pincode
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this address?')) return;
+    try {
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch(`/api/addresses/${id}`, {
+        method: 'DELETE',
+        headers
+      });
+      if (res.ok) {
+        fetchAddresses();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}><Loader2 size={32} color="#eab308" style={{ animation: 'spin 1s linear infinite' }} /></div>;
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>My Saved Addresses</h2>
+        {!showForm && (
+          <button onClick={() => { setShowForm(true); setEditingAddr(null); setForm({ name: '', phone: '', address_line: '', city: '', pincode: '' }); }} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '0.85rem' }}>
+            <Plus size={16} /> Add New Address
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSubmit} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '600px' }}>
+          <h3 style={{ fontWeight: 700, color: '#0f172a', margin: 0 }}>{editingAddr ? 'Edit Address' : 'Add New Address'}</h3>
+          {error && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px', padding: '12px 16px', color: '#dc2626', fontSize: '0.875rem' }}>{error}</div>}
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Name</label>
+              <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="John Doe" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Phone</label>
+              <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="9876543210" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Address Line</label>
+            <input type="text" value={form.address_line} onChange={(e) => setForm({ ...form, address_line: e.target.value })} placeholder="Apartment, Street address" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>City</label>
+              <input type="text" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Mumbai" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Pincode</label>
+              <input type="text" value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} placeholder="400001" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+            <button type="submit" className="btn btn-primary" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>Save Address</button>
+            <button type="button" onClick={() => setShowForm(false)} style={{ padding: '10px 20px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '10px', cursor: 'pointer', fontSize: '0.9rem' }}>Cancel</button>
+          </div>
+        </form>
+      )}
+
+      {addresses.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '4rem 2rem', color: '#94a3b8', background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+          <MapPin size={56} strokeWidth={1} style={{ marginBottom: '12px' }} />
+          <div style={{ fontWeight: 600, fontSize: '1rem' }}>No addresses saved yet</div>
+          <div style={{ fontSize: '0.85rem', marginTop: '6px' }}>Add your shipping address to make checkout faster</div>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+          {addresses.map((addr) => (
+            <div key={addr.id} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <User size={15} color="#64748b" /> {addr.name}
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Phone size={14} color="#94a3b8" /> {addr.phone}
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', alignItems: 'flex-start', gap: '6px', marginTop: '8px' }}>
+                  <MapPin size={14} color="#94a3b8" style={{ marginTop: '3px', flexShrink: 0 }} />
+                  <div>
+                    {addr.address_line}<br />
+                    {addr.city} - {addr.pincode}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', borderTop: '1px solid #f1f5f9', marginTop: '16px', paddingTop: '12px' }}>
+                <button onClick={() => handleEdit(addr)} style={{ background: 'none', border: 'none', color: 'var(--primary-dark)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}>Edit</button>
+                <button onClick={() => handleDelete(addr.id)} style={{ background: 'none', border: 'none', color: '#ef4444', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}>Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MyReturns({ token }) {
+  const [returns, setReturns] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReturns = async () => {
+      setLoading(true);
+      try {
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch('/api/returns', { headers });
+        if (res.ok) {
+          const data = await res.json();
+          setReturns(data);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReturns();
+  }, [token]);
+
+  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}><Loader2 size={32} color="#eab308" style={{ animation: 'spin 1s linear infinite' }} /></div>;
+
+  return (
+    <div>
+      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', marginBottom: '1.5rem' }}>My Returns</h2>
+      {returns.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '4rem 2rem', color: '#94a3b8', background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+          <Package size={56} strokeWidth={1} style={{ marginBottom: '12px' }} />
+          <div style={{ fontWeight: 600, fontSize: '1rem' }}>No return requests yet</div>
+          <div style={{ fontSize: '0.85rem', marginTop: '6px' }}>Eligible item returns will be listed here</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {returns.map((ret) => (
+            <div key={ret.id} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a' }}>Return ID: #{ret.id}</div>
+                  {ret.order_id && <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '2px' }}>Order: #{ret.order_id}</div>}
+                  <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px' }}>Date: {new Date(ret.timestamp).toLocaleString()}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#dc2626' }}>Refunded: {fmt(ret.refund_amount)}</div>
+                  <span style={{ background: '#dcfce7', color: '#166534', fontWeight: 700, padding: '2px 10px', borderRadius: '20px', fontSize: '0.72rem', display: 'inline-block', marginTop: '4px' }}>Processed</span>
+                </div>
+              </div>
+              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ fontSize: '0.85rem', color: '#1e293b' }}>
+                  Returned Product: <b>{ret.product_name}</b> (Qty: {ret.quantity})
+                </div>
+                {ret.reason && (
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '4px' }}>
+                    Reason: <i>{ret.reason}</i>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -361,41 +789,67 @@ export default function Storefront({ products, refreshProducts, token, user }) {
   const handleOrderSuccess = (order) => { setLastOrder(order); setCart({}); setView('success'); setShowCart(false); };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--light)', position: 'relative' }}>
       {showCart && <CartSidebar cart={cart} products={products} onAdd={addToCart} onRemove={removeFromCart} onRemoveAll={removeAllFromCart} onClose={() => setShowCart(false)} onCheckout={() => { setShowCart(false); setView('checkout'); setActiveTab('shop'); }} />}
 
-      {/* Storefront nav strip */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '0 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px', position: 'sticky', top: '69px', zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+      <div className="store-nav-strip">
         <div style={{ display: 'flex', gap: '4px' }}>
-          {[{ key: 'shop', label: 'Shop', icon: '🛍️' }, { key: 'orders', label: 'My Orders', icon: '📦' }].map(({ key, label, icon }) => (
-            <button key={key} onClick={() => { setActiveTab(key); setView('list'); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 16px', border: 'none', borderRadius: '8px', fontWeight: activeTab === key ? 700 : 500, fontSize: '0.88rem', cursor: 'pointer', background: activeTab === key ? 'linear-gradient(135deg, #eab308, #d1a007)' : 'transparent', color: activeTab === key ? '#fff' : '#64748b', transition: 'all 0.18s', boxShadow: activeTab === key ? '0 3px 10px rgba(234,179,8,0.25)' : 'none', fontFamily: 'inherit' }}>
+          {[
+            { key: 'shop', label: 'Shop', icon: '🛍️' },
+            { key: 'orders', label: 'My Orders', icon: '📦' },
+            { key: 'addresses', label: 'My Addresses', icon: '📍' },
+            { key: 'returns', label: 'My Returns', icon: '🔄' }
+          ].map(({ key, label, icon }) => (
+            <button key={key} onClick={() => { setActiveTab(key); setView('list'); }} className={`store-tab-btn ${activeTab === key ? 'active' : ''}`}>
               {icon} {label}
             </button>
           ))}
         </div>
         {activeTab === 'shop' && view === 'list' && (
-          <button onClick={() => setShowCart(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 18px', background: totalItems > 0 ? 'linear-gradient(135deg, #eab308, #d1a007)' : '#f1f5f9', color: totalItems > 0 ? '#fff' : '#475569', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', boxShadow: totalItems > 0 ? '0 3px 12px rgba(234,179,8,0.3)' : 'none', transition: 'all 0.2s', fontFamily: 'inherit' }}>
-            <ShoppingCart size={16} /> Cart {totalItems > 0 && <span style={{ background: '#fff', color: '#d97706', fontWeight: 900, padding: '1px 7px', borderRadius: '20px', fontSize: '0.78rem' }}>{totalItems}</span>}
+          <button onClick={() => setShowCart(true)} className="btn btn-primary" style={{ padding: '0.5rem 1.125rem', fontSize: '0.85rem' }}>
+            <ShoppingCart size={16} /> Cart {totalItems > 0 && <span style={{ background: '#fff', color: 'var(--primary-dark)', fontWeight: 800, padding: '1px 7px', borderRadius: '20px', fontSize: '0.75rem' }}>{totalItems}</span>}
           </button>
         )}
       </div>
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem 2rem 4rem' }}>
         {activeTab === 'orders' && <MyOrders token={token} />}
+        {activeTab === 'addresses' && <MyAddresses token={token} />}
+        {activeTab === 'returns' && <MyReturns token={token} />}
         {activeTab === 'shop' && view === 'success' && lastOrder && <OrderSuccess order={lastOrder} onContinue={() => { setView('list'); refreshProducts(); }} />}
         {activeTab === 'shop' && view === 'checkout' && <CheckoutForm cart={cart} products={products} user={user} token={token} onSuccess={handleOrderSuccess} onBack={() => setView('list')} />}
         {activeTab === 'shop' && view === 'list' && (
           <>
-            {/* Search + Filter */}
+            <div className="store-hero">
+              <div className="store-hero-content">
+                <h2>Welcome to TEGL Store</h2>
+                <p>Discover quality products with fast delivery and secure checkout. Browse our curated collection below.</p>
+              </div>
+              <div className="store-hero-stats">
+                <div className="store-stat">
+                  <div className="store-stat-value">{products.length}</div>
+                  <div className="store-stat-label">Products</div>
+                </div>
+                <div className="store-stat">
+                  <div className="store-stat-value">{categories.length - 1}</div>
+                  <div className="store-stat-label">Categories</div>
+                </div>
+                <div className="store-stat">
+                  <div className="store-stat-value">COD</div>
+                  <div className="store-stat-label">Payment</div>
+                </div>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-              <div style={{ position: 'relative', flex: '1', minWidth: '240px' }}>
-                <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={16} />
-                <input type="text" placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: '100%', padding: '11px 14px 11px 38px', borderRadius: '12px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', background: '#fff', boxSizing: 'border-box', fontFamily: 'inherit' }} onFocus={(e) => { e.target.style.borderColor = '#eab308'; }} onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; }} />
+              <div className="search-bar">
+                <Search size={16} />
+                <input type="text" placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                <Filter size={14} color="#94a3b8" />
+                <Filter size={14} color="var(--text-muted)" />
                 {categories.map((cat) => (
-                  <button key={cat} onClick={() => setCatFilter(cat)} style={{ padding: '6px 14px', border: '1.5px solid', borderColor: catFilter === cat ? '#eab308' : '#e2e8f0', borderRadius: '20px', background: catFilter === cat ? '#fefce8' : '#fff', color: catFilter === cat ? '#92400e' : '#64748b', fontWeight: catFilter === cat ? 700 : 500, fontSize: '0.79rem', cursor: 'pointer', transition: 'all 0.18s', fontFamily: 'inherit' }}>
+                  <button key={cat} onClick={() => setCatFilter(cat)} className={`category-pill ${catFilter === cat ? 'active' : ''}`}>
                     {cat}
                   </button>
                 ))}

@@ -9,7 +9,7 @@ const OrdersList = lazy(() => import('./components/OrdersList'));
 const GSTCompliance = lazy(() => import('./components/GSTCompliance'));
 const FinancialDashboard = lazy(() => import('./components/FinancialDashboard'));
 const ReviewsList = lazy(() => import('./components/ReviewsList'));
-import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield } from 'lucide-react';
 import './App.css';
 
 export default function App() {
@@ -40,7 +40,7 @@ export default function App() {
     if (!token) return;
     setNotifLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/notifications/summary');
+      const res = await fetch('/api/notifications/summary');
       if (res.ok) {
         const data = await res.json();
         setNotifications(data);
@@ -63,7 +63,7 @@ export default function App() {
   const fetchProducts = async () => {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch('http://127.0.0.1:5000/api/products', { headers });
+      const res = await fetch('/api/products', { headers });
       if (res.ok) {
         const data = await res.json();
         setProducts(data);
@@ -86,7 +86,7 @@ export default function App() {
     setAuthError('');
     setAuthLoading(true);
     
-    const url = 'http://127.0.0.1:5000/api/auth/login';
+    const url = '/api/auth/login';
     const payload = { username: email, password }; // email field serves as username/email on login
 
     try {
@@ -125,7 +125,7 @@ export default function App() {
     setAuthLoading(true);
     
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/auth/change-password', {
+      const res = await fetch('/api/auth/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -166,12 +166,34 @@ export default function App() {
   if (!token || !user) {
     return (
       <div className="auth-page">
-        <div className="hs hs1"></div>
-        <div className="hs hs2"></div>
-        
+        <div className="auth-hero">
+          <div className="auth-hero-content">
+            <div className="auth-hero-badge">
+              <Sparkles size={14} /> AI-Powered Retail Platform
+            </div>
+            <h1>Manage Your Store <span>Smarter</span></h1>
+            <p>Complete retail management with POS, inventory tracking, GST compliance, ML forecasting, and a beautiful customer storefront — all in one platform.</p>
+            <div className="auth-features">
+              <div className="auth-feature">
+                <div className="auth-feature-icon"><TrendingUp size={18} /></div>
+                Real-time sales analytics & financial dashboards
+              </div>
+              <div className="auth-feature">
+                <div className="auth-feature-icon"><BrainCircuit size={18} /></div>
+                AI-powered demand forecasting & store insights
+              </div>
+              <div className="auth-feature">
+                <div className="auth-feature-icon"><Shield size={18} /></div>
+                GST compliance & automated tax filing reminders
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="auth-panel">
         <div className="auth-card">
           <div className="auth-logo">
-            <img src="/logo.png" alt="TEGL Logo" className="portal-logo-img" style={{ height: '50px' }} />
+            <img src="/logo.png" alt="TEGL Logo" className="portal-logo-img" style={{ height: '48px' }} />
             <h2>TEGL Retail Solutions</h2>
             <p>Smart Shop Management System</p>
           </div>
@@ -298,16 +320,18 @@ export default function App() {
             )}
           </div>
         </div>
+        </div>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <div className="loading-screen">
         <div className="hs hs1"></div>
         <div className="hs hs2"></div>
-        <p style={{ fontSize: '1.25rem', color: '#9ca3af', zIndex: 1 }}>Loading Smart Retail System...</p>
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Loading Smart Retail System...</p>
       </div>
     );
   }
@@ -326,60 +350,15 @@ export default function App() {
         <div className="portal-user-meta" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           {user.role === 'admin' && (
             <div style={{ position: 'relative' }}>
-              {/* Bell Button with Pulse Ring */}
-              <button 
+              <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                style={{ 
-                  background: showNotifications ? 'rgba(234, 179, 8, 0.25)' : 'rgba(234, 179, 8, 0.08)', 
-                  border: '2px solid rgba(234, 179, 8, 0.45)', 
-                  color: 'var(--text-primary)', 
-                  cursor: 'pointer', 
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '8px',
-                  borderRadius: '10px',
-                  width: '42px',
-                  height: '42px',
-                  boxShadow: '0 2px 8px rgba(234, 179, 8, 0.25)',
-                  transition: 'all 0.2s ease',
-                }}
+                className={`notif-btn ${showNotifications ? 'active' : ''}`}
               >
-                <Bell size={20} color="var(--primary)" style={{ filter: 'drop-shadow(0 0 3px rgba(234, 179, 8, 0.4))' }} />
+                <Bell size={18} color="var(--primary-dark)" />
                 {notifications && (notifications.pending_orders > 0 || notifications.low_stock > 0) && (
                   <>
-                    {/* Pulsing ring */}
-                    <span style={{ 
-                      position: 'absolute', 
-                      top: '-3px', 
-                      right: '-3px', 
-                      width: '22px',
-                      height: '22px',
-                      borderRadius: '50%',
-                      background: 'rgba(234, 179, 8, 0.35)',
-                      animation: 'notif-pulse 1.8s ease infinite',
-                      pointerEvents: 'none'
-                    }} />
-                    {/* Badge count */}
-                    <span style={{ 
-                      position: 'absolute', 
-                      top: '-4px', 
-                      right: '-4px', 
-                      background: 'linear-gradient(135deg, #eab308, #d1a007)', 
-                      color: 'white', 
-                      borderRadius: '50%', 
-                      width: '18px', 
-                      height: '18px', 
-                      fontSize: '0.6rem', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      fontWeight: '800',
-                      boxShadow: '0 0 6px rgba(234, 179, 8, 0.7)',
-                      border: '1.5px solid rgba(23,23,23,1)',
-                      zIndex: 2
-                    }}>
+                    <span className="notif-pulse-ring" />
+                    <span className="notif-badge">
                       {Math.min(notifications.pending_orders + notifications.low_stock, 99)}
                     </span>
                   </>
@@ -387,28 +366,8 @@ export default function App() {
               </button>
 
               {showNotifications && (
-                <div style={{ 
-                  position: 'absolute', 
-                  right: 0, 
-                  top: '50px', 
-                  width: '360px', 
-                  zIndex: 9999,
-                  borderRadius: '16px',
-                  boxShadow: '0 20px 50px rgba(0,0,0,0.12), 0 0 0 1px rgba(234, 179, 8, 0.25)',
-                  background: '#ffffff',
-                  overflow: 'hidden',
-                  animation: 'fadeSlideDown 0.2s ease',
-                  textAlign: 'left'
-                }}>
-                  {/* Header */}
-                  <div style={{ 
-                    padding: '16px 18px 14px',
-                    background: 'rgba(234, 179, 8, 0.05)',
-                    borderBottom: '1px solid #e2e8f0',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
+                <div className="notif-dropdown" style={{ textAlign: 'left' }}>
+                  <div className="notif-dropdown-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ 
                         width: '28px', height: '28px', borderRadius: '8px',
@@ -441,7 +400,7 @@ export default function App() {
                     </button>
                   </div>
 
-                  <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
+                  <div className="notif-dropdown-body">
                     {notifications ? (
                       <>
                         {/* AI Summary card */}
@@ -607,21 +566,14 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* Footer */}
-                  <div style={{ 
-                    padding: '10px 18px', 
-                    borderTop: '1px solid #e2e8f0',
-                    background: '#f8fafc',
-                    fontSize: '0.68rem',
-                    color: '#94a3b8',
-                    textAlign: 'center'
-                  }}>
+                  <div className="notif-dropdown-footer">
                     Auto-refreshes every 30 seconds · Powered by Groq AI
                   </div>
                 </div>
               )}
             </div>
           )}
+          <div className="user-avatar">{user.username?.charAt(0)?.toUpperCase() || 'U'}</div>
           <span className="user-welcome">Hello, <b>{user.username}</b></span>
           <button className="logout-btn" onClick={handleLogout}>
             <LogOut size={16} /> Logout
@@ -643,70 +595,60 @@ export default function App() {
       ) : (
         <div className="app-container">
           <aside className="sidebar">
-            <nav style={{ marginTop: '1rem' }}>
+            <div className="sidebar-brand">
+              <img src="/logo.png" alt="TEGL" />
+              <div className="sidebar-brand-text">
+                TEGL Retail
+                <span>Owner Portal</span>
+              </div>
+            </div>
+            <nav>
+              <div className="nav-section-label">Operations</div>
               <ul className="nav-links">
                 <li>
-                  <button 
-                    className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('dashboard')}
-                  >
+                  <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
                     <LayoutDashboard size={18} /> Dashboard
                   </button>
                 </li>
                 <li>
-                  <button 
-                    className={`nav-btn ${activeTab === 'pos' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('pos')}
-                  >
+                  <button className={`nav-btn ${activeTab === 'pos' ? 'active' : ''}`} onClick={() => setActiveTab('pos')}>
                     <ShoppingCart size={18} /> POS Checkout
                   </button>
                 </li>
                 <li>
-                  <button 
-                    className={`nav-btn ${activeTab === 'inventory' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('inventory')}
-                  >
+                  <button className={`nav-btn ${activeTab === 'inventory' ? 'active' : ''}`} onClick={() => setActiveTab('inventory')}>
                     <Package size={18} /> Inventory
                   </button>
                 </li>
                 <li>
-                  <button 
-                    className={`nav-btn ${activeTab === 'orders' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('orders')}
-                  >
+                  <button className={`nav-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
                     <ClipboardList size={18} /> Manage Orders
                   </button>
                 </li>
+              </ul>
+              <div className="nav-section-label">Analytics</div>
+              <ul className="nav-links">
                 <li>
-                  <button 
-                    className={`nav-btn ${activeTab === 'ml' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('ml')}
-                  >
+                  <button className={`nav-btn ${activeTab === 'ml' ? 'active' : ''}`} onClick={() => setActiveTab('ml')}>
                     <BrainCircuit size={18} /> ML Forecast
                   </button>
                 </li>
                 <li>
-                  <button 
-                    className={`nav-btn ${activeTab === 'gst' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('gst')}
-                  >
-                    <Landmark size={18} /> GST Compliance
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    className={`nav-btn ${activeTab === 'finance' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('finance')}
-                  >
+                  <button className={`nav-btn ${activeTab === 'finance' ? 'active' : ''}`} onClick={() => setActiveTab('finance')}>
                     <BarChart3 size={18} /> Financial Dashboard
                   </button>
                 </li>
                 <li>
-                  <button 
-                    className={`nav-btn ${activeTab === 'reviews' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('reviews')}
-                  >
+                  <button className={`nav-btn ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>
                     <MessageSquare size={18} /> Product Reviews
+                  </button>
+                </li>
+              </ul>
+              <div className="nav-section-label">Compliance</div>
+              <ul className="nav-links">
+                <li>
+                  <button className={`nav-btn ${activeTab === 'gst' ? 'active' : ''}`} onClick={() => setActiveTab('gst')}>
+                    <Landmark size={18} /> GST Compliance
                   </button>
                 </li>
               </ul>
