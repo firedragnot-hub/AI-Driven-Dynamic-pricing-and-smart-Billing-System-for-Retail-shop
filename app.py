@@ -868,9 +868,9 @@ def get_orders():
         query = query.filter_by(sale_type=sale_type)
 
     if sort_by == 'date_desc':
-        query = query.order_by(Order.timestamp.desc())
+        query = query.order_by(Order.id.desc())
     elif sort_by == 'date_asc':
-        query = query.order_by(Order.timestamp.asc())
+        query = query.order_by(Order.id.asc())
     elif sort_by == 'customer':
         query = query.order_by(Order.customer_name.asc())
     elif sort_by == 'status':
