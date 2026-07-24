@@ -61,10 +61,10 @@ export default function GSTCompliance({ token }) {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
       
       const [configRes, summaryRes, purchasesRes, expensesRes] = await Promise.all([
-        fetch('http://127.0.0.1:5000/api/gst/config', { headers }),
-        fetch('http://127.0.0.1:5000/api/gst/summary', { headers }),
-        fetch('http://127.0.0.1:5000/api/gst/purchases', { headers }),
-        fetch('http://127.0.0.1:5000/api/gst/expenses', { headers })
+        fetch('/api/gst/config', { headers }),
+        fetch('/api/gst/summary', { headers }),
+        fetch('/api/gst/purchases', { headers }),
+        fetch('/api/gst/expenses', { headers })
       ]);
 
       if (configRes.ok) {
@@ -110,7 +110,7 @@ export default function GSTCompliance({ token }) {
     setPnlLoading(true);
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch('http://127.0.0.1:5000/api/gst/pnl', { headers });
+      const res = await fetch('/api/gst/pnl', { headers });
       if (res.ok) {
         const data = await res.json();
         setPnl(data);
@@ -125,7 +125,7 @@ export default function GSTCompliance({ token }) {
   const fetchReturnDetails = async (type) => {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch(`http://127.0.0.1:5000/api/gst/returns/${type}`, { headers });
+      const res = await fetch(`/api/gst/returns/${type}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setReturnDetails(data);
@@ -133,7 +133,7 @@ export default function GSTCompliance({ token }) {
       
       // Fetch monthly if needed
       if (type === 'monthly_liability') {
-        const monthlyRes = await fetch('http://127.0.0.1:5000/api/gst/returns/monthly_liability', { headers });
+        const monthlyRes = await fetch('/api/gst/returns/monthly_liability', { headers });
         if (monthlyRes.ok) {
           const monthlyData = await monthlyRes.json();
           setMonthlyLiability(monthlyData);
@@ -167,7 +167,7 @@ export default function GSTCompliance({ token }) {
         'Content-Type': 'application/json'
       } : { 'Content-Type': 'application/json' };
       
-      const res = await fetch('http://127.0.0.1:5000/api/gst/config', {
+      const res = await fetch('/api/gst/config', {
         method: 'POST',
         headers,
         body: JSON.stringify(config)
@@ -212,7 +212,7 @@ export default function GSTCompliance({ token }) {
         'Content-Type': 'application/json'
       } : { 'Content-Type': 'application/json' };
       
-      const res = await fetch('http://127.0.0.1:5000/api/gst/purchases', {
+      const res = await fetch('/api/gst/purchases', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -254,7 +254,7 @@ export default function GSTCompliance({ token }) {
         'Content-Type': 'application/json'
       } : { 'Content-Type': 'application/json' };
       
-      const res = await fetch('http://127.0.0.1:5000/api/gst/expenses', {
+      const res = await fetch('/api/gst/expenses', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -293,7 +293,7 @@ export default function GSTCompliance({ token }) {
     if (!confirm('Are you sure you want to delete this purchase invoice?')) return;
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch(`http://127.0.0.1:5000/api/gst/purchases/${id}`, {
+      const res = await fetch(`/api/gst/purchases/${id}`, {
         method: 'DELETE',
         headers
       });
@@ -309,7 +309,7 @@ export default function GSTCompliance({ token }) {
     if (!confirm('Are you sure you want to delete this expense?')) return;
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch(`http://127.0.0.1:5000/api/gst/expenses/${id}`, {
+      const res = await fetch(`/api/gst/expenses/${id}`, {
         method: 'DELETE',
         headers
       });
@@ -322,12 +322,12 @@ export default function GSTCompliance({ token }) {
   };
 
   const downloadPDFReport = (type) => {
-    const url = `http://127.0.0.1:5000/api/gst/download-pdf?type=${type}&token=${token}`;
+    const url = `/api/gst/download-pdf?type=${type}&token=${token}`;
     window.open(url, '_blank');
   };
 
   const downloadCSVReport = (type) => {
-    const url = `http://127.0.0.1:5000/api/gst/export-csv?type=${type}&token=${token}`;
+    const url = `/api/gst/export-csv?type=${type}&token=${token}`;
     window.open(url, '_blank');
   };
 

@@ -86,8 +86,11 @@ export default function App() {
     setAuthError('');
     setAuthLoading(true);
     
-    const url = '/api/auth/login';
-    const payload = { username: email, password }; // email field serves as username/email on login
+    const isLogin = authMode === 'login';
+    const url = isLogin ? '/api/auth/login' : '/api/auth/register';
+    const payload = isLogin 
+      ? { username: email, password } 
+      : { username, email, password, role: authRole };
 
     try {
       const res = await fetch(url, {
@@ -96,9 +99,23 @@ export default function App() {
         body: JSON.stringify(payload)
       });
       
-      const data = await res.json();
+      let data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Authentication failed');
+        throw new Error(data.error || (isLogin ? 'Authentication failed' : 'Registration failed'));
+      }
+
+      if (!isLogin) {
+        // Automatically log in the user after registration
+        const loginRes = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: email, password })
+        });
+        const loginData = await loginRes.json();
+        if (!loginRes.ok) {
+          throw new Error(loginData.error || 'Authentication failed after registration');
+        }
+        data = loginData;
       }
 
       localStorage.setItem('token', data.token);
@@ -118,6 +135,7 @@ export default function App() {
       setAuthLoading(false);
     }
   };
+
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
