@@ -12,4 +12,3 @@ python-dotenv
 gunicorn
 psycopg2-binary
 pypdf
-Flask-Migrate
