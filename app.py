@@ -78,36 +78,10 @@ with app.app_context():
     
     if os.getenv('VERCEL') == '1' and not db_exists:
         try:
-            from models import User, BusinessConfig
-            from werkzeug.security import generate_password_hash
-            
-            if User.query.count() == 0:
-                print("Seeding default database on Vercel...")
-                config = BusinessConfig(
-                    business_name="TEGL Supermart",
-                    gstin="27ABCDE1234F1Z5",
-                    pan="ABCDE1234F",
-                    state="Maharashtra",
-                    address="101, Galaxy Business Galleria, Hiranandani Link Road, Andheri East, Mumbai - 400072"
-                )
-                db.session.add(config)
-                
-                admin = User(
-                    username='admin',
-                    email='admin@retail.com',
-                    password_hash=generate_password_hash('adminpassword'),
-                    role='admin'
-                )
-                customer = User(
-                    username='customer',
-                    email='customer@retail.com',
-                    password_hash=generate_password_hash('customerpassword'),
-                    role='customer'
-                )
-                db.session.add(admin)
-                db.session.add(customer)
-                db.session.commit()
-                print("Demo users seeded successfully in Vercel!")
+            print("Seeding full demo database on Vercel (skipping model training)...")
+            from seed_data import seed_database_and_train
+            seed_database_and_train(drop_tables=False, train_models=False)
+            print("Vercel database seeded with products, transactions, and historical data!")
         except Exception as seed_err:
             print("Vercel seeding error:", str(seed_err))
     # Migration helper to add missing columns to purchases

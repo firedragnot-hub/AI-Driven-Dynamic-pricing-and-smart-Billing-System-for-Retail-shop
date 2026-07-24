@@ -13,9 +13,10 @@ from models import (
 )
 from ml_models import train_dynamic_pricing_model, train_demand_prediction_model
 
-def seed_database_and_train():
+def seed_database_and_train(drop_tables=True, train_models=True):
     print("Initializing Database...")
-    db.drop_all()
+    if drop_tables:
+        db.drop_all()
     db.create_all()
     
     print("Seeding default business config...")
@@ -384,16 +385,17 @@ def seed_database_and_train():
     print("Database seeding completed.")
     
     # 3. Train models
-    print("Training models...")
-    df_pricing = pd.DataFrame(pricing_data_list)
-    df_demand = pd.DataFrame(demand_data_list)
-    
-    train_dynamic_pricing_model(df_pricing)
-    print("Pricing model trained and saved.")
-    
-    train_demand_prediction_model(df_demand)
-    print("Demand model trained and saved.")
-    print("All ML models trained and operational!")
+    if train_models:
+        print("Training models...")
+        df_pricing = pd.DataFrame(pricing_data_list)
+        df_demand = pd.DataFrame(demand_data_list)
+        
+        train_dynamic_pricing_model(df_pricing)
+        print("Pricing model trained and saved.")
+        
+        train_demand_prediction_model(df_demand)
+        print("Demand model trained and saved.")
+        print("All ML models trained and operational!")
 
 if __name__ == '__main__':
     with app.app_context():
