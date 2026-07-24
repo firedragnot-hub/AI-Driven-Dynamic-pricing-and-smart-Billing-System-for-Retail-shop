@@ -100,7 +100,7 @@ def generate_invoice_pdf(transaction):
     story.append(line_table)
     
     # Customer Details Block (for Orders)
-    if hasattr(transaction, 'customer_name') and transaction.customer_name:
+    if hasattr(transaction, 'address') and transaction.address:
         bill_to_data = [
             [
                 Paragraph("<b>Bill To:</b>", meta_style),
