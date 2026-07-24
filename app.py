@@ -390,7 +390,7 @@ def checkout():
         total_amount += price_at_sale * qty
         products_updates.append((product, qty, price_at_sale))
     db_transaction = Transaction(
-        timestamp=now,
+        timestamp=datetime.utcnow(),
         total_amount=round(total_amount, 2),
         uuid=uuid_val,
         payment_method=pay_method,
@@ -406,7 +406,7 @@ def checkout():
         email='pos@store.com',
         phone='0000000000',
         address='In-Store Counter',
-        timestamp=now,
+        timestamp=datetime.utcnow(),
         total_amount=round(total_amount, 2),
         status='Delivered', # Immediately Completed
         sale_type='offline'
@@ -935,7 +935,7 @@ def create_order():
         email=email,
         phone=phone,
         address=address,
-        timestamp=now,
+        timestamp=datetime.utcnow(),
         total_amount=round(total_amount, 2),
         status='Pending',
         sale_type='online'

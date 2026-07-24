@@ -69,7 +69,7 @@ class Transaction(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'timestamp': self.timestamp.isoformat(),
+            'timestamp': self.timestamp.isoformat() + 'Z',
             'total_amount': self.total_amount,
             'uuid': self.uuid,
             'payment_method': self.payment_method,
@@ -126,7 +126,7 @@ class Order(db.Model):
             'email': self.email,
             'phone': self.phone,
             'address': self.address,
-            'timestamp': self.timestamp.isoformat(),
+            'timestamp': self.timestamp.isoformat() + 'Z',
             'status': self.status,
             'total_amount': self.total_amount,
             'sale_type': self.sale_type,
@@ -229,7 +229,7 @@ class Review(db.Model):
             'username': self.username,
             'rating': self.rating,
             'comment': self.comment,
-            'timestamp': self.timestamp.isoformat()
+            'timestamp': self.timestamp.isoformat() + 'Z'
         }
 
 class Wishlist(db.Model):
@@ -247,7 +247,7 @@ class Wishlist(db.Model):
             'user_id': self.user_id,
             'product_id': self.product_id,
             'product': self.product.to_dict() if self.product else None,
-            'timestamp': self.timestamp.isoformat()
+            'timestamp': self.timestamp.isoformat() + 'Z'
         }
 
 class AddressBook(db.Model):
@@ -490,7 +490,7 @@ class ReturnLog(db.Model):
             'quantity': self.quantity,
             'refund_amount': self.refund_amount,
             'reason': self.reason,
-            'timestamp': self.timestamp.isoformat()
+            'timestamp': self.timestamp.isoformat() + 'Z'
         }
 
 
