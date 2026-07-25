@@ -122,6 +122,22 @@ with app.app_context():
                 print("Database successfully seeded with default credentials (admin/customer)!")
         except Exception as seed_err:
             print("Database seeding error:", str(seed_err))
+
+    # PostgreSQL migration helper to add missing columns to existing tables
+    if db_url and ("postgresql" in db_url or "postgres" in db_url):
+        try:
+            db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS verification_status VARCHAR(30) DEFAULT 'Pending Receipt';"))
+            db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP;"))
+            db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS verified_by VARCHAR(80);"))
+            db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS discrepancy_count INTEGER DEFAULT 0;"))
+            db.session.execute(db.text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS sale_type VARCHAR(20) DEFAULT 'online';"))
+            db.session.execute(db.text("ALTER TABLE return_logs ADD COLUMN IF NOT EXISTS order_id INTEGER REFERENCES orders(id);"))
+            db.session.commit()
+            print("PostgreSQL migrations applied successfully!")
+        except Exception as pg_mig_err:
+            db.session.rollback()
+            print("PostgreSQL migration warning:", str(pg_mig_err))
+
     # Migration helper to add missing columns to purchases (SQLite only)
     if not db_url or "sqlite" in db_url:
         try:
