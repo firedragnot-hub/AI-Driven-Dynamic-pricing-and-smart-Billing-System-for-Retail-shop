@@ -81,16 +81,17 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
     
-    if os.getenv('VERCEL') == '1':
-        try:
-            from models import Product, Transaction
-            if Product.query.count() == 0 or Transaction.query.count() == 0:
-                print("Seeding full demo database on Vercel (skipping model training)...")
-                from seed_data import seed_database_and_train
-                seed_database_and_train(drop_tables=False, train_models=False)
-                print("Vercel database seeded with products, transactions, and historical data!")
-        except Exception as seed_err:
-            print("Vercel seeding error:", str(seed_err))
+    try:
+        from models import User
+        if User.query.count() == 0:
+            print("No users found in database. Seeding default demo data...")
+            from seed_data import seed_database_and_train
+            # Skip model training if running on Vercel to prevent request timeout
+            train = os.getenv('VERCEL') != '1'
+            seed_database_and_train(drop_tables=False, train_models=train)
+            print("Database successfully seeded with default credentials (admin/customer)!")
+    except Exception as seed_err:
+        print("Database seeding error:", str(seed_err))
     # Migration helper to add missing columns to purchases (SQLite only)
     if not db_url or "sqlite" in db_url:
         try:
