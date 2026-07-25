@@ -127,8 +127,14 @@ def recommend_budget_allocation(budget, category, period_days, db_session):
         
     # 2. Get daily sales volumes for this category over the last 90 days
     prod_ids = [p.id for p in products]
+    dialect = db_session.bind.dialect.name
+    if dialect == 'postgresql':
+        date_expr = func.to_char(Transaction.timestamp, 'YYYY-MM-DD').label('date')
+    else:
+        date_expr = func.strftime('%Y-%m-%d', Transaction.timestamp).label('date')
+        
     sales_query = db_session.query(
-        func.strftime('%Y-%m-%d', Transaction.timestamp).label('date'),
+        date_expr,
         func.sum(TransactionItem.quantity).label('qty')
     ).join(TransactionItem).filter(TransactionItem.product_id.in_(prod_ids)).group_by('date').all()
     
