@@ -23,7 +23,33 @@ def train_dynamic_pricing_model(df, model_path=PRICING_MODEL_PATH):
     model.fit(X, y)
     
     joblib.dump(model, model_path)
+    # Clear cache to force reloading the newly trained model
+    global _pricing_model
+    _pricing_model = None
     return model
+
+_pricing_model = None
+_demand_model = None
+
+def load_pricing_model(model_path=PRICING_MODEL_PATH):
+    global _pricing_model
+    if _pricing_model is None:
+        if os.path.exists(model_path):
+            try:
+                _pricing_model = joblib.load(model_path)
+            except Exception:
+                pass
+    return _pricing_model
+
+def load_demand_model(model_path=DEMAND_MODEL_PATH):
+    global _demand_model
+    if _demand_model is None:
+        if os.path.exists(model_path):
+            try:
+                _demand_model = joblib.load(model_path)
+            except Exception:
+                pass
+    return _demand_model
 
 def predict_dynamic_price(base_cost, stock_level, hour_of_day, day_of_week, sales_count=0, model_path=PRICING_MODEL_PATH):
     """
@@ -33,9 +59,9 @@ def predict_dynamic_price(base_cost, stock_level, hour_of_day, day_of_week, sale
     # Demand / Sales Count markup: +2% for every 3 sales, capped at 20%
     demand_markup = min(0.20, (sales_count // 3) * 0.02)
 
-    if os.path.exists(model_path):
+    model = load_pricing_model(model_path)
+    if model is not None:
         try:
-            model = joblib.load(model_path)
             features = np.array([[base_cost, stock_level, hour_of_day, day_of_week]])
             predicted_price = model.predict(features)[0]
             # Add demand markup on top of ML model prediction to reflect live sales demand
@@ -82,15 +108,18 @@ def train_demand_prediction_model(df, model_path=DEMAND_MODEL_PATH):
     model.fit(X, y)
     
     joblib.dump(model, model_path)
+    # Clear cache to force reloading the newly trained model
+    global _demand_model
+    _demand_model = None
     return model
 
 def predict_demand(day_of_week, month, model_path=DEMAND_MODEL_PATH):
     """
     Predicts total store sales volume for a given day.
     """
-    if os.path.exists(model_path):
+    model = load_demand_model(model_path)
+    if model is not None:
         try:
-            model = joblib.load(model_path)
             features = np.array([[day_of_week, month]])
             predicted = model.predict(features)[0]
             return max(0, int(round(predicted)))
