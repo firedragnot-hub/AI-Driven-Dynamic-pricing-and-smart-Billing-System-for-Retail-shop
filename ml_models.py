@@ -136,7 +136,7 @@ def recommend_budget_allocation(budget, category, period_days, db_session):
     Runs a Linear Regression prediction of sales trend for the selected category.
     Then performs budget allocation across products in that category.
     """
-    from models import Product, Transaction, TransactionItem
+    from models import db, Product, Transaction, TransactionItem
     from sqlalchemy import func
     
     # 1. Fetch products
@@ -156,7 +156,7 @@ def recommend_budget_allocation(budget, category, period_days, db_session):
         
     # 2. Get daily sales volumes for this category over the last 90 days
     prod_ids = [p.id for p in products]
-    dialect = db_session.bind.dialect.name
+    dialect = db.engine.dialect.name
     if dialect == 'postgresql':
         date_expr = func.to_char(Transaction.timestamp, 'YYYY-MM-DD').label('date')
     else:
@@ -221,23 +221,27 @@ def recommend_budget_allocation(budget, category, period_days, db_session):
             'unit_profit': max(0.0, prod.current_price - prod.base_cost)
         })
         
-    allocations.sort(key=lambda x: x['expected_sales'], reverse=True)
-    initial_total_cost = sum(item['suggested_qty'] * item['base_cost'] for item in allocations)
+    # 5. Greedy Incremental Allocation based on priority (expected sales)
+    for item in allocations:
+        item['suggested_qty'] = 0
+        
+    remaining_budget = budget
+    # Sort by expected sales (descending), then cheaper base cost (ascending) to maximize quantity
+    allocations.sort(key=lambda x: (x['expected_sales'], -x['base_cost']), reverse=True)
     
-    if initial_total_cost > budget:
-        scaling_factor = budget / initial_total_cost
+    # Incrementally allocate items until budget is exhausted or demand limits are met
+    any_added = True
+    while any_added and remaining_budget > 0:
+        any_added = False
         for item in allocations:
-            item['suggested_qty'] = max(0, int(item['suggested_qty'] * scaling_factor))
-    else:
-        remaining_budget = budget - initial_total_cost
-        for item in allocations:
-            if remaining_budget <= 0:
-                break
-            can_buy_more = int(remaining_budget // item['base_cost'])
-            buy_extra = min(can_buy_more, int(item['expected_sales']))
-            if buy_extra > 0:
-                item['suggested_qty'] += buy_extra
-                remaining_budget -= buy_extra * item['base_cost']
+            limit = max(1, int(round(item['expected_sales'])))
+            # If we've met the predicted demand, allow a buffer of up to 10 extra units if budget permits
+            if item['suggested_qty'] < (limit + 10) and remaining_budget >= item['base_cost']:
+                item['suggested_qty'] += 1
+                remaining_budget -= item['base_cost']
+                any_added = True
+                if remaining_budget <= 0:
+                    break
 
     final_allocations = []
     for item in allocations:

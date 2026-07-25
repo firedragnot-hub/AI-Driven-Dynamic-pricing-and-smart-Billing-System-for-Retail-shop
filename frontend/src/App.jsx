@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const POS = lazy(() => import('./components/POS'));
@@ -13,6 +14,8 @@ import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, St
 import './App.css';
 
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
   
@@ -31,6 +34,14 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (location.pathname === '/owner/login') {
+      setAuthRole('admin');
+    } else if (location.pathname === '/login') {
+      setAuthRole('customer');
+    }
+  }, [location.pathname]);
 
   // Notifications State
   const [notifications, setNotifications] = useState(null);
@@ -105,6 +116,15 @@ export default function App() {
         throw new Error(data.error || (isLogin ? 'Authentication failed' : 'Registration failed'));
       }
 
+      if (isLogin) {
+        if (authRole === 'customer' && data.user.role === 'admin') {
+          throw new Error('Access denied: Admins cannot log in through the Customer Portal.');
+        }
+        if (authRole === 'admin' && data.user.role === 'customer') {
+          throw new Error('Access denied: Customers cannot log in through the Owner Portal.');
+        }
+      }
+
       if (!isLogin) {
         // Automatically log in the user after registration
         const loginRes = await fetch('/api/auth/login', {
@@ -124,11 +144,13 @@ export default function App() {
       setToken(data.token);
       setUser(data.user);
       
-      // Default tab based on role
+      // Default tab/path based on role
       if (data.user.role === 'admin') {
         setActiveTab('dashboard');
+        navigate('/owner/dashboard');
       } else {
         setActiveTab('shop');
+        navigate('/');
       }
     } catch (err) {
       setAuthError(err.message);
@@ -180,9 +202,14 @@ export default function App() {
     setEmail('');
     setPassword('');
     setAuthError('');
+    if (location.pathname.startsWith('/owner')) {
+      navigate('/owner/login');
+    } else {
+      navigate('/login');
+    }
   };
 
-  if (!token || !user) {
+  const renderAuthPage = (role) => {
     return (
       <div className="auth-page">
         <div className="auth-hero">
@@ -214,22 +241,9 @@ export default function App() {
           <div className="auth-logo">
             <img src="/logo.png" alt="TEGL Logo" className="portal-logo-img" style={{ height: '48px' }} />
             <h2>TEGL Retail Solutions</h2>
-            <p>Smart Shop Management System</p>
+            <p>{role === 'admin' ? 'Owner Portal Login' : 'Customer Shop Sign In'}</p>
           </div>
-          <div className="auth-role-tabs">
-            <button 
-              className={`role-tab-btn ${authRole === 'customer' ? 'active' : ''}`}
-              onClick={() => { setAuthRole('customer'); setAuthError(''); setAuthMode('login'); }}
-            >
-              Customer Portal
-            </button>
-            <button 
-              className={`role-tab-btn ${authRole === 'admin' ? 'active' : ''}`}
-              onClick={() => { setAuthRole('admin'); setAuthError(''); setAuthMode('login'); }}
-            >
-              Owner Portal
-            </button>
-          </div>
+
 
           {authMode === 'changePassword' ? (
             <form onSubmit={handlePasswordChange} className="auth-form">
@@ -328,10 +342,10 @@ export default function App() {
               <p><button onClick={() => { setAuthMode('login'); setAuthError(''); }}>Back to Sign In</button></p>
             ) : (
               <>
-                {authRole === 'customer' && authMode === 'login' && (
+                {role === 'customer' && authMode === 'login' && (
                   <p>Don't have an account? <button onClick={() => { setAuthMode('register'); setAuthError(''); }}>Create account</button></p>
                 )}
-                {authRole === 'customer' && authMode === 'register' && (
+                {role === 'customer' && authMode === 'register' && (
                   <p>Already have an account? <button onClick={() => { setAuthMode('login'); setAuthError(''); }}>Sign In</button></p>
                 )}
                 <p>Forgot password? <button onClick={() => { setAuthMode('changePassword'); setAuthError(''); }}>Change password</button></p>
@@ -342,37 +356,59 @@ export default function App() {
         </div>
       </div>
     );
-  }
+  };
 
-  if (loading) {
+  const renderCustomerPortal = () => {
     return (
-      <div className="loading-screen">
+      <div className={`portal-container customer-active`}>
         <div className="hs hs1"></div>
         <div className="hs hs2"></div>
-        <div className="loading-spinner"></div>
-        <p className="loading-text">Loading Smart Retail System...</p>
+
+        <header className="portal-header">
+          <div className="portal-brand">
+            <img src="/logo.png" alt="TEGL Logo" className="portal-logo-img" />
+            <span className="brand-name">TEGL Retail</span>
+            <span className="badge-role">Customer</span>
+          </div>
+          <div className="portal-user-meta" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <div className="user-avatar">{user.username?.charAt(0)?.toUpperCase() || 'U'}</div>
+            <span className="user-welcome">Hello, <b>{user.username}</b></span>
+            <button className="logout-btn" onClick={handleLogout}>
+              <LogOut size={16} /> Logout
+            </button>
+          </div>
+        </header>
+
+        <div className="storefront-content">
+          <Suspense fallback={
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '1.5rem', animation: 'spin 1s linear infinite' }}>⏳</div>
+              <div style={{ marginTop: '12px', fontSize: '0.85rem' }}>Loading Storefront...</div>
+            </div>
+          }>
+            <Storefront products={products} refreshProducts={fetchProducts} token={token} user={user} />
+          </Suspense>
+        </div>
       </div>
     );
-  }
+  };
 
-  return (
-    <div className={`portal-container ${user.role}-active`}>
-      <div className="hs hs1"></div>
-      <div className="hs hs2"></div>
+  const renderOwnerPortal = () => {
+    return (
+      <div className={`portal-container admin-active`}>
+        <div className="hs hs1"></div>
+        <div className="hs hs2"></div>
 
-      <header className="portal-header">
-        <div className="portal-brand">
-          {user.role === 'admin' && (
+        <header className="portal-header">
+          <div className="portal-brand">
             <button className="mobile-menu-toggle" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle Navigation Menu">
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
-          )}
-          <img src="/logo.png" alt="TEGL Logo" className="portal-logo-img" />
-          <span className="brand-name">TEGL Retail</span>
-          <span className="badge-role">{user.role === 'admin' ? 'Owner Portal' : 'Customer'}</span>
-        </div>
-        <div className="portal-user-meta" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          {user.role === 'admin' && (
+            <img src="/logo.png" alt="TEGL Logo" className="portal-logo-img" />
+            <span className="brand-name">TEGL Retail</span>
+            <span className="badge-role">Owner Portal</span>
+          </div>
+          <div className="portal-user-meta" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -427,7 +463,6 @@ export default function App() {
                   <div className="notif-dropdown-body">
                     {notifications ? (
                       <>
-                        {/* AI Summary card */}
                         <div 
                           onClick={() => { setActiveTab('ml'); setShowNotifications(false); }}
                           style={{ 
@@ -462,9 +497,7 @@ export default function App() {
                           </p>
                         </div>
 
-                        {/* Stat cards row */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                          {/* Pending Orders */}
                           <div 
                             onClick={() => { setActiveTab('orders'); setShowNotifications(false); }}
                             style={{ 
@@ -492,7 +525,6 @@ export default function App() {
                             </div>
                           </div>
 
-                          {/* Low Stock */}
                           <div 
                             onClick={() => { setActiveTab('inventory'); setShowNotifications(false); }}
                             style={{ 
@@ -521,7 +553,6 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Tax deadlines */}
                         <div style={{ 
                           background: '#f8fafc',
                           border: '1px solid #e2e8f0',
@@ -535,7 +566,6 @@ export default function App() {
                             Tax Filing Deadlines
                           </div>
                           
-                          {/* GST */}
                           <div 
                             onClick={() => { setActiveTab('gst'); setShowNotifications(false); }}
                             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
@@ -558,7 +588,6 @@ export default function App() {
                             </span>
                           </div>
 
-                          {/* ITR */}
                           <div 
                             onClick={() => { setActiveTab('finance'); setShowNotifications(false); }}
                             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
@@ -596,27 +625,14 @@ export default function App() {
                 </div>
               )}
             </div>
-          )}
-          <div className="user-avatar">{user.username?.charAt(0)?.toUpperCase() || 'U'}</div>
-          <span className="user-welcome">Hello, <b>{user.username}</b></span>
-          <button className="logout-btn" onClick={handleLogout}>
-            <LogOut size={16} /> Logout
-          </button>
-        </div>
-      </header>
+            <div className="user-avatar">{user.username?.charAt(0)?.toUpperCase() || 'U'}</div>
+            <span className="user-welcome">Hello, <b>{user.username}</b></span>
+            <button className="logout-btn" onClick={handleLogout}>
+              <LogOut size={16} /> Logout
+            </button>
+          </div>
+        </header>
 
-      {user.role === 'customer' ? (
-        <div className="storefront-content">
-          <Suspense fallback={
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', color: 'var(--text-muted)' }}>
-              <div style={{ fontSize: '1.5rem', animation: 'spin 1s linear infinite' }}>⏳</div>
-              <div style={{ marginTop: '12px', fontSize: '0.85rem' }}>Loading Storefront...</div>
-            </div>
-          }>
-            <Storefront products={products} refreshProducts={fetchProducts} token={token} user={user} />
-          </Suspense>
-        </div>
-      ) : (
         <div className="app-container">
           {mobileMenuOpen && (
             <div className="sidebar-overlay" onClick={() => setMobileMenuOpen(false)}></div>
@@ -700,7 +716,73 @@ export default function App() {
             </Suspense>
           </main>
         </div>
-      )}
-    </div>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="hs hs1"></div>
+        <div className="hs hs2"></div>
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Loading Smart Retail System...</p>
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      {/* Customer Routes */}
+      <Route 
+        path="/login" 
+        element={
+          token && user ? (
+            user.role === 'admin' ? <Navigate to="/owner/dashboard" replace /> : <Navigate to="/" replace />
+          ) : (
+            renderAuthPage('customer')
+          )
+        } 
+      />
+      <Route 
+        path="/" 
+        element={
+          !token || !user ? (
+            <Navigate to="/login" replace />
+          ) : user.role === 'admin' ? (
+            <Navigate to="/owner/dashboard" replace />
+          ) : (
+            renderCustomerPortal()
+          )
+        } 
+      />
+
+      {/* Owner Routes */}
+      <Route 
+        path="/owner/login" 
+        element={
+          token && user ? (
+            user.role === 'admin' ? <Navigate to="/owner/dashboard" replace /> : <Navigate to="/" replace />
+          ) : (
+            renderAuthPage('admin')
+          )
+        } 
+      />
+      <Route 
+        path="/owner/dashboard" 
+        element={
+          !token || !user ? (
+            <Navigate to="/owner/login" replace />
+          ) : user.role !== 'admin' ? (
+            <Navigate to="/" replace />
+          ) : (
+            renderOwnerPortal()
+          )
+        } 
+      />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }

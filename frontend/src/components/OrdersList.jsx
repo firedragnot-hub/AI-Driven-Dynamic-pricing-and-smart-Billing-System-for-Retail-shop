@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Eye, Printer, Check, X, FileText, Search, ArrowUpDown, Download } from 'lucide-react';
+import { io } from 'socket.io-client';
 
 export default function OrdersList({ token }) {
   const [orders, setOrders] = useState([]);
@@ -37,6 +38,27 @@ export default function OrdersList({ token }) {
 
   useEffect(() => {
     fetchOrders();
+  }, [search, statusFilter, sortBy, saleTypeFilter, token]);
+
+  useEffect(() => {
+    const socket = io();
+
+    socket.on('connect', () => {
+      console.log('Connected to WebSocket server');
+    });
+
+    socket.on('new_order', (order) => {
+      console.log('New order received via WebSocket:', order);
+      fetchOrders();
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Disconnected from WebSocket server');
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [search, statusFilter, sortBy, saleTypeFilter, token]);
 
   const updateStatus = async (orderId, newStatus) => {
