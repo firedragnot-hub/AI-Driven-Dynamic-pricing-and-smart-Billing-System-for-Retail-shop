@@ -81,6 +81,15 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
     
+    # PostgreSQL migration helper for password_hash size increase
+    if db_url and ("postgresql" in db_url or "postgres" in db_url):
+        try:
+            db.session.execute(db.text("ALTER TABLE users ALTER COLUMN password_hash TYPE VARCHAR(255);"))
+            db.session.commit()
+        except Exception as mig_err:
+            db.session.rollback()
+            print("Migration warning (password_hash length):", str(mig_err))
+            
     try:
         from models import User
         if not User.query.filter_by(username='admin').first():
