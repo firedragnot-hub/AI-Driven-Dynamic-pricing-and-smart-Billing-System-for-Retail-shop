@@ -6,4 +6,5 @@
 - [x] Add notification bell and dropdown with Groq summaries in `App.jsx`
 - [x] Integrate Reviews tab in `App.jsx`
 - [x] Add ordering, PDF, and dynamic indicators in `MLForecast.jsx`
-- [x] Verify build and functionality
+- [x] Replace hardcoded `http://127.0.0.1:5000` URLs with relative paths in `GSTCompliance.jsx`
+- [/] Verify frontend build locally

@@ -9,7 +9,7 @@ const OrdersList = lazy(() => import('./components/OrdersList'));
 const GSTCompliance = lazy(() => import('./components/GSTCompliance'));
 const FinancialDashboard = lazy(() => import('./components/FinancialDashboard'));
 const ReviewsList = lazy(() => import('./components/ReviewsList'));
-import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield, Menu, X } from 'lucide-react';
 import './App.css';
 
 export default function App() {
@@ -28,6 +28,7 @@ export default function App() {
 
   // Portal State
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -361,6 +362,11 @@ export default function App() {
 
       <header className="portal-header">
         <div className="portal-brand">
+          {user.role === 'admin' && (
+            <button className="mobile-menu-toggle" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle Navigation Menu">
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          )}
           <img src="/logo.png" alt="TEGL Logo" className="portal-logo-img" />
           <span className="brand-name">TEGL Retail</span>
           <span className="badge-role">{user.role === 'admin' ? 'Owner Portal' : 'Customer'}</span>
@@ -612,7 +618,10 @@ export default function App() {
         </div>
       ) : (
         <div className="app-container">
-          <aside className="sidebar">
+          {mobileMenuOpen && (
+            <div className="sidebar-overlay" onClick={() => setMobileMenuOpen(false)}></div>
+          )}
+          <aside className={`sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
             <div className="sidebar-brand">
               <img src="/logo.png" alt="TEGL" />
               <div className="sidebar-brand-text">
@@ -624,22 +633,22 @@ export default function App() {
               <div className="nav-section-label">Operations</div>
               <ul className="nav-links">
                 <li>
-                  <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+                  <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }}>
                     <LayoutDashboard size={18} /> Dashboard
                   </button>
                 </li>
                 <li>
-                  <button className={`nav-btn ${activeTab === 'pos' ? 'active' : ''}`} onClick={() => setActiveTab('pos')}>
+                  <button className={`nav-btn ${activeTab === 'pos' ? 'active' : ''}`} onClick={() => { setActiveTab('pos'); setMobileMenuOpen(false); }}>
                     <ShoppingCart size={18} /> POS Checkout
                   </button>
                 </li>
                 <li>
-                  <button className={`nav-btn ${activeTab === 'inventory' ? 'active' : ''}`} onClick={() => setActiveTab('inventory')}>
+                  <button className={`nav-btn ${activeTab === 'inventory' ? 'active' : ''}`} onClick={() => { setActiveTab('inventory'); setMobileMenuOpen(false); }}>
                     <Package size={18} /> Inventory
                   </button>
                 </li>
                 <li>
-                  <button className={`nav-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
+                  <button className={`nav-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => { setActiveTab('orders'); setMobileMenuOpen(false); }}>
                     <ClipboardList size={18} /> Manage Orders
                   </button>
                 </li>
@@ -647,17 +656,17 @@ export default function App() {
               <div className="nav-section-label">Analytics</div>
               <ul className="nav-links">
                 <li>
-                  <button className={`nav-btn ${activeTab === 'ml' ? 'active' : ''}`} onClick={() => setActiveTab('ml')}>
+                  <button className={`nav-btn ${activeTab === 'ml' ? 'active' : ''}`} onClick={() => { setActiveTab('ml'); setMobileMenuOpen(false); }}>
                     <BrainCircuit size={18} /> ML Forecast
                   </button>
                 </li>
                 <li>
-                  <button className={`nav-btn ${activeTab === 'finance' ? 'active' : ''}`} onClick={() => setActiveTab('finance')}>
+                  <button className={`nav-btn ${activeTab === 'finance' ? 'active' : ''}`} onClick={() => { setActiveTab('finance'); setMobileMenuOpen(false); }}>
                     <BarChart3 size={18} /> Financial Dashboard
                   </button>
                 </li>
                 <li>
-                  <button className={`nav-btn ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>
+                  <button className={`nav-btn ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => { setActiveTab('reviews'); setMobileMenuOpen(false); }}>
                     <MessageSquare size={18} /> Product Reviews
                   </button>
                 </li>
@@ -665,7 +674,7 @@ export default function App() {
               <div className="nav-section-label">Compliance</div>
               <ul className="nav-links">
                 <li>
-                  <button className={`nav-btn ${activeTab === 'gst' ? 'active' : ''}`} onClick={() => setActiveTab('gst')}>
+                  <button className={`nav-btn ${activeTab === 'gst' ? 'active' : ''}`} onClick={() => { setActiveTab('gst'); setMobileMenuOpen(false); }}>
                     <Landmark size={18} /> GST Compliance
                   </button>
                 </li>

@@ -67,7 +67,13 @@ if os.getenv('VERCEL') == '1':
 else:
     db_path = os.path.join(os.path.dirname(__file__), 'retail.db')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', f'sqlite:///{db_path}')
+db_url = os.getenv('DATABASE_URL')
+if db_url:
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
@@ -85,77 +91,78 @@ with app.app_context():
                 print("Vercel database seeded with products, transactions, and historical data!")
         except Exception as seed_err:
             print("Vercel seeding error:", str(seed_err))
-    # Migration helper to add missing columns to purchases
-    try:
-        # Check if purchases table needs columns
-        import sqlite3
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("PRAGMA table_info(purchases)")
-        columns = [row[1] for row in cursor.fetchall()]
-        
-        # Add columns if they do not exist
-        if 'verification_status' not in columns:
-            cursor.execute("ALTER TABLE purchases ADD COLUMN verification_status VARCHAR(30) DEFAULT 'Pending Receipt'")
-        if 'verified_at' not in columns:
-            cursor.execute("ALTER TABLE purchases ADD COLUMN verified_at DATETIME")
-        if 'verified_by' not in columns:
-            cursor.execute("ALTER TABLE purchases ADD COLUMN verified_by VARCHAR(80)")
-        if 'discrepancy_count' not in columns:
-            cursor.execute("ALTER TABLE purchases ADD COLUMN discrepancy_count INTEGER DEFAULT 0")
-        # Check if orders table needs columns
-        cursor.execute("PRAGMA table_info(orders)")
-        order_columns = [row[1] for row in cursor.fetchall()]
-        if 'sale_type' not in order_columns:
-            cursor.execute("ALTER TABLE orders ADD COLUMN sale_type VARCHAR(20) DEFAULT 'online'")
+    # Migration helper to add missing columns to purchases (SQLite only)
+    if not db_url or "sqlite" in db_url:
+        try:
+            # Check if purchases table needs columns
+            import sqlite3
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(purchases)")
+            columns = [row[1] for row in cursor.fetchall()]
             
-        # Check if return_logs table needs columns
-        cursor.execute("PRAGMA table_info(return_logs)")
-        return_logs_columns = [row[1] for row in cursor.fetchall()]
-        if 'order_id' not in return_logs_columns:
-            try:
-                cursor.execute("DROP TABLE IF EXISTS return_logs_old")
-                cursor.execute("ALTER TABLE return_logs RENAME TO return_logs_old")
-                cursor.execute("""
-                    CREATE TABLE return_logs (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        transaction_id INTEGER REFERENCES transactions(id),
-                        order_id INTEGER REFERENCES orders(id),
-                        product_id INTEGER NOT NULL REFERENCES products(id),
-                        quantity INTEGER NOT NULL,
-                        refund_amount FLOAT NOT NULL,
-                        reason VARCHAR(255),
-                        timestamp DATETIME NOT NULL
-                    )
-                """)
-                # Try to copy existing rows
+            # Add columns if they do not exist
+            if 'verification_status' not in columns:
+                cursor.execute("ALTER TABLE purchases ADD COLUMN verification_status VARCHAR(30) DEFAULT 'Pending Receipt'")
+            if 'verified_at' not in columns:
+                cursor.execute("ALTER TABLE purchases ADD COLUMN verified_at DATETIME")
+            if 'verified_by' not in columns:
+                cursor.execute("ALTER TABLE purchases ADD COLUMN verified_by VARCHAR(80)")
+            if 'discrepancy_count' not in columns:
+                cursor.execute("ALTER TABLE purchases ADD COLUMN discrepancy_count INTEGER DEFAULT 0")
+            # Check if orders table needs columns
+            cursor.execute("PRAGMA table_info(orders)")
+            order_columns = [row[1] for row in cursor.fetchall()]
+            if 'sale_type' not in order_columns:
+                cursor.execute("ALTER TABLE orders ADD COLUMN sale_type VARCHAR(20) DEFAULT 'online'")
+                
+            # Check if return_logs table needs columns
+            cursor.execute("PRAGMA table_info(return_logs)")
+            return_logs_columns = [row[1] for row in cursor.fetchall()]
+            if 'order_id' not in return_logs_columns:
                 try:
+                    cursor.execute("DROP TABLE IF EXISTS return_logs_old")
+                    cursor.execute("ALTER TABLE return_logs RENAME TO return_logs_old")
                     cursor.execute("""
-                        INSERT INTO return_logs (id, transaction_id, product_id, quantity, refund_amount, reason, timestamp)
-                        SELECT id, transaction_id, product_id, quantity, refund_amount, reason, timestamp FROM return_logs_old
+                        CREATE TABLE return_logs (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            transaction_id INTEGER REFERENCES transactions(id),
+                            order_id INTEGER REFERENCES orders(id),
+                            product_id INTEGER NOT NULL REFERENCES products(id),
+                            quantity INTEGER NOT NULL,
+                            refund_amount FLOAT NOT NULL,
+                            reason VARCHAR(255),
+                            timestamp DATETIME NOT NULL
+                        )
                     """)
-                except Exception as copy_err:
-                    print("Error copying old return_logs data:", str(copy_err))
-                cursor.execute("DROP TABLE return_logs_old")
-            except Exception as migrate_err:
-                print("Error creating return_logs table:", str(migrate_err))
-                cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS return_logs (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        transaction_id INTEGER REFERENCES transactions(id),
-                        order_id INTEGER REFERENCES orders(id),
-                        product_id INTEGER NOT NULL REFERENCES products(id),
-                        quantity INTEGER NOT NULL,
-                        refund_amount FLOAT NOT NULL,
-                        reason VARCHAR(255),
-                        timestamp DATETIME NOT NULL
-                    )
-                """)
-            
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print("Database migration error:", str(e))
+                    # Try to copy existing rows
+                    try:
+                        cursor.execute("""
+                            INSERT INTO return_logs (id, transaction_id, product_id, quantity, refund_amount, reason, timestamp)
+                            SELECT id, transaction_id, product_id, quantity, refund_amount, reason, timestamp FROM return_logs_old
+                        """)
+                    except Exception as copy_err:
+                        print("Error copying old return_logs data:", str(copy_err))
+                    cursor.execute("DROP TABLE return_logs_old")
+                except Exception as migrate_err:
+                    print("Error creating return_logs table:", str(migrate_err))
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS return_logs (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            transaction_id INTEGER REFERENCES transactions(id),
+                            order_id INTEGER REFERENCES orders(id),
+                            product_id INTEGER NOT NULL REFERENCES products(id),
+                            quantity INTEGER NOT NULL,
+                            refund_amount FLOAT NOT NULL,
+                            reason VARCHAR(255),
+                            timestamp DATETIME NOT NULL
+                        )
+                    """)
+                
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print("Database migration error:", str(e))
 
 
 # --- Helper to check admin access ---

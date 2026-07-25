@@ -67,6 +67,7 @@ export default function OrdersList({ token }) {
     setActivePrintOrder(order);
     setTimeout(() => {
       window.print();
+      setActivePrintOrder(null);
     }, 500);
   };
 
