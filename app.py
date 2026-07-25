@@ -166,6 +166,34 @@ with app.app_context():
             print("Database migration error:", str(e))
 
 
+@app.route('/api/diag', methods=['GET'])
+def diagnostic_route():
+    try:
+        from models import User, Product, Transaction
+        db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+        safe_uri = db_uri
+        if "@" in safe_uri:
+            parts = safe_uri.split("@")
+            safe_uri = "postgresql://***@***" + parts[1]
+            
+        users_count = User.query.count()
+        products_count = Product.query.count()
+        transactions_count = Transaction.query.count()
+        admin_user = User.query.filter_by(username='admin').first()
+        
+        return jsonify({
+            'database_uri': safe_uri,
+            'users_count': users_count,
+            'products_count': products_count,
+            'transactions_count': transactions_count,
+            'admin_exists': admin_user is not None,
+            'admin_email': admin_user.email if admin_user else None,
+            'vercel_env': os.getenv('VERCEL') == '1'
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # --- Helper to check admin access ---
 def require_admin(payload):
     return payload and payload.get('role') == 'admin'
