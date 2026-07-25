@@ -87,28 +87,38 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 with app.app_context():
-    db.create_all()
-    
-    # PostgreSQL migration helper for password_hash size increase
-    if db_url and ("postgresql" in db_url or "postgres" in db_url):
-        try:
-            db.session.execute(db.text("ALTER TABLE users ALTER COLUMN password_hash TYPE VARCHAR(255);"))
-            db.session.commit()
-        except Exception as mig_err:
-            db.session.rollback()
-            print("Migration warning (password_hash length):", str(mig_err))
-            
+    # Optimize cold start by checking if database is already initialized
     try:
-        from models import User
-        if not User.query.filter_by(username='admin').first():
-            print("Admin user not found. Seeding default demo data...")
-            from seed_data import seed_database_and_train
-            # Skip model training if running on Vercel to prevent request timeout
-            train = os.getenv('VERCEL') != '1'
-            seed_database_and_train(drop_tables=False, train_models=train)
-            print("Database successfully seeded with default credentials (admin/customer)!")
-    except Exception as seed_err:
-        print("Database seeding error:", str(seed_err))
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        db_initialized = inspector.has_table("users")
+    except Exception:
+        db_initialized = False
+
+    if not db_initialized:
+        print("Database not initialized. Creating tables...")
+        db.create_all()
+        
+        # PostgreSQL migration helper for password_hash size increase
+        if db_url and ("postgresql" in db_url or "postgres" in db_url):
+            try:
+                db.session.execute(db.text("ALTER TABLE users ALTER COLUMN password_hash TYPE VARCHAR(255);"))
+                db.session.commit()
+            except Exception as mig_err:
+                db.session.rollback()
+                print("Migration warning (password_hash length):", str(mig_err))
+                
+        try:
+            from models import User
+            if not User.query.filter_by(username='admin').first():
+                print("Admin user not found. Seeding default demo data...")
+                from seed_data import seed_database_and_train
+                # Skip model training if running on Vercel to prevent request timeout
+                train = os.getenv('VERCEL') != '1'
+                seed_database_and_train(drop_tables=False, train_models=train)
+                print("Database successfully seeded with default credentials (admin/customer)!")
+        except Exception as seed_err:
+            print("Database seeding error:", str(seed_err))
     # Migration helper to add missing columns to purchases (SQLite only)
     if not db_url or "sqlite" in db_url:
         try:
