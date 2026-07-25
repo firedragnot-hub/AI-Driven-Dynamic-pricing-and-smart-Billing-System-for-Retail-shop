@@ -934,6 +934,42 @@ def get_orders():
     orders = query.all()
     return jsonify([o.to_dict() for o in orders]), 200
 
+def send_order_email_notification(order_id, customer_name, email, phone, address, items_summary, total_amount):
+    def run():
+        import urllib.request
+        import json
+        try:
+            payload = {
+                "access_key": "aa8acc90-e57a-4c4b-820b-94d5c588a1a6",
+                "subject": f"New Order Placed - Order #{order_id}",
+                "from_name": "TEGL Retail Solutions",
+                "name": "System Notification",
+                "email": "noreply@teglretail.com",
+                "message": (
+                    f"New online order received!\n\n"
+                    f"Order Details:\n"
+                    f"  Order ID: {order_id}\n"
+                    f"  Customer: {customer_name}\n"
+                    f"  Email: {email}\n"
+                    f"  Phone: {phone}\n"
+                    f"  Delivery Address: {address}\n"
+                    f"  Total Amount: INR {total_amount}\n\n"
+                    f"Items Ordered:\n"
+                    f"{items_summary}"
+                )
+            }
+            req = urllib.request.Request(
+                "https://api.web3forms.com/submit",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                print("Web3Forms email response status:", response.status)
+        except Exception as err:
+            print("Failed to send order email via Web3Forms:", str(err))
+
+    threading.Thread(target=run, daemon=True).start()
+
 @app.route('/api/orders', methods=['POST'])
 def create_order():
     user_payload = get_current_user()
@@ -996,6 +1032,7 @@ def create_order():
     db.session.add(db_order)
     db.session.flush()
     
+    items_summary = ""
     for product, qty, price_at_sale in products_updates:
         product.stock_level -= qty
         
@@ -1006,8 +1043,21 @@ def create_order():
             price_at_sale=price_at_sale
         )
         db.session.add(order_item)
+        items_summary += f"  - {product.name} (Qty: {qty}) @ INR {price_at_sale} each\n"
         
     db.session.commit()
+    
+    # Send email notification to owner asynchronously
+    send_order_email_notification(
+        order_id=db_order.id,
+        customer_name=customer_name,
+        email=email,
+        phone=phone,
+        address=address,
+        items_summary=items_summary,
+        total_amount=round(total_amount, 2)
+    )
+    
     return jsonify(db_order.to_dict()), 201
 
 @app.route('/api/orders/<int:order_id>/status', methods=['PUT'])
