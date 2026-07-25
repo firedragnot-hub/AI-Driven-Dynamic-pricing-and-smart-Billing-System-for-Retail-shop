@@ -351,6 +351,17 @@ export default function App() {
                 <p>Forgot password? <button onClick={() => { setAuthMode('changePassword'); setAuthError(''); }}>Change password</button></p>
               </>
             )}
+            
+            {/* Switch between Owner and Customer portals */}
+            {role === 'customer' ? (
+              <p style={{ marginTop: '8px', borderTop: '1px solid var(--border-color, #eee)', paddingTop: '8px' }}>
+                Are you a store owner? <button type="button" onClick={() => { navigate('/owner/login'); setAuthError(''); setAuthMode('login'); }}>Go to Owner Portal</button>
+              </p>
+            ) : (
+              <p style={{ marginTop: '8px', borderTop: '1px solid var(--border-color, #eee)', paddingTop: '8px' }}>
+                Want to shop instead? <button type="button" onClick={() => { navigate('/login'); setAuthError(''); setAuthMode('login'); }}>Go to Customer Shop</button>
+              </p>
+            )}
           </div>
         </div>
         </div>

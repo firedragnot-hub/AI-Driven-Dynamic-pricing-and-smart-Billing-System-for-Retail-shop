@@ -19,8 +19,12 @@
       "dest": "app.py"
     },
     {
-      "src": "/(.*)",
+      "src": "/((?!api/).*\\..*)",
       "dest": "frontend/$1"
+    },
+    {
+      "src": "/((?!api/).*)",
+      "dest": "frontend/index.html"
     }
   ]
 }
