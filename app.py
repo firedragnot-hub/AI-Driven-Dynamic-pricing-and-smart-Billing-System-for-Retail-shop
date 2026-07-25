@@ -83,8 +83,8 @@ with app.app_context():
     
     try:
         from models import User
-        if User.query.count() == 0:
-            print("No users found in database. Seeding default demo data...")
+        if not User.query.filter_by(username='admin').first():
+            print("Admin user not found. Seeding default demo data...")
             from seed_data import seed_database_and_train
             # Skip model training if running on Vercel to prevent request timeout
             train = os.getenv('VERCEL') != '1'
