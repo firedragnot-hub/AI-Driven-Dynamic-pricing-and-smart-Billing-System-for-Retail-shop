@@ -162,7 +162,7 @@ def seed_database_and_train(drop_tables=True, train_models=True):
         db.session.commit()
         print(f"Seeded {len(products_db)} products.")
 
-    days_to_seed = 30 if os.getenv('VERCEL') == '1' else 180
+    days_to_seed = 1 if os.getenv('VERCEL') == '1' else 180
     print(f"Generating {days_to_seed} days of historical operating logs...")
     if Transaction.query.count() > 0 or Order.query.count() > 0:
         print("Historical operating logs already seeded. Skipping generation.")
