@@ -275,7 +275,7 @@ class BusinessConfig(db.Model):
     __tablename__ = 'business_config'
     id = db.Column(db.Integer, primary_key=True)
     business_name = db.Column(db.String(100), nullable=False)
-    gstin = db.Column(db.String(15), nullable=False)
+    gstin = db.Column(db.String(50), nullable=False)
     pan = db.Column(db.String(10), nullable=False)
     state = db.Column(db.String(50), nullable=False)
     address = db.Column(db.Text, nullable=False)
@@ -294,7 +294,7 @@ class Purchase(db.Model):
     __tablename__ = 'purchases'
     id = db.Column(db.Integer, primary_key=True)
     supplier_name = db.Column(db.String(100), nullable=False)
-    supplier_gstin = db.Column(db.String(15), nullable=True)
+    supplier_gstin = db.Column(db.String(50), nullable=True)
     invoice_no = db.Column(db.String(50), nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     total_amount = db.Column(db.Float, nullable=False)
@@ -436,7 +436,7 @@ class Expense(db.Model):
     __tablename__ = 'expenses'
     id = db.Column(db.Integer, primary_key=True)
     merchant_name = db.Column(db.String(100), nullable=False)
-    merchant_gstin = db.Column(db.String(15), nullable=True)
+    merchant_gstin = db.Column(db.String(50), nullable=True)
     invoice_no = db.Column(db.String(50), nullable=True)
     date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     category = db.Column(db.String(50), nullable=False)
