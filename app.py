@@ -24,9 +24,7 @@ def db_strftime(fmt, column):
         return func.strftime(fmt, column)
 
 # ML imports
-from ml_models import predict_dynamic_price, predict_demand, recommend_budget_allocation
 # PDF imports
-from pdf_generator import generate_invoice_pdf, generate_gst_pdf_report, generate_pnl_pdf_report, generate_purchasing_plan_pdf
 
 from flask_socketio import SocketIO, emit
 
@@ -331,6 +329,7 @@ def ping():
 
 @app.route('/api/products', methods=['GET'])
 def get_products():
+    from ml_models import predict_dynamic_price
     since_str = request.args.get('since')
     since_dt = None
     if since_str:
@@ -408,6 +407,7 @@ def get_products():
 
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
+    from ml_models import predict_dynamic_price
     data = request.get_json() or {}
     items_to_checkout = data.get('items', [])
     uuid_val = data.get('uuid')
@@ -611,6 +611,7 @@ def get_returns():
 
 @app.route('/api/transactions/<int:transaction_id>/invoice', methods=['GET'])
 def get_invoice(transaction_id):
+    from pdf_generator import generate_invoice_pdf
     transaction = Transaction.query.get(transaction_id)
     if not transaction:
         return jsonify({'error': 'Transaction not found'}), 404
@@ -625,6 +626,7 @@ def get_invoice(transaction_id):
 
 @app.route('/api/orders/<int:order_id>/invoice', methods=['GET'])
 def get_order_invoice(order_id):
+    from pdf_generator import generate_invoice_pdf
     order = Order.query.get(order_id)
     if not order:
         return jsonify({'error': 'Order not found'}), 404
@@ -643,6 +645,7 @@ def get_order_invoice(order_id):
 
 @app.route('/api/ml/pricing-recommendations', methods=['GET'])
 def get_pricing_recommendations():
+    from ml_models import predict_dynamic_price
     """
     Returns dynamic pricing details for all products, and saves predictions to the database.
     """
@@ -702,6 +705,7 @@ def get_pricing_recommendations():
 
 @app.route('/api/ml/budget-recommendation', methods=['POST'])
 def get_budget_recommendation():
+    from ml_models import recommend_budget_allocation
     """
     Calculates allocation of a budget across products in a category using Linear Regression predictions.
     """
@@ -797,6 +801,7 @@ def explain_demand_prediction(date_str, predicted_demand_volume, day_of_week, mo
 
 @app.route('/api/ml/predict-demand', methods=['GET'])
 def get_predicted_demand():
+    from ml_models import predict_demand
     date_str = request.args.get('date')
     if date_str:
         try:
@@ -1001,6 +1006,7 @@ def send_order_email_notification(order_id, customer_name, email, phone, address
 
 @app.route('/api/orders', methods=['POST'])
 def create_order():
+    from ml_models import predict_dynamic_price
     user_payload = get_current_user()
     
     data = request.get_json() or {}
@@ -2741,6 +2747,7 @@ def gst_returns(return_type):
 
 @app.route('/api/gst/download-pdf', methods=['GET'])
 def download_gst_pdf():
+    from pdf_generator import generate_gst_pdf_report, generate_pnl_pdf_report
     user = get_current_user()
     if not user:
         token = request.args.get('token')
@@ -3636,6 +3643,7 @@ def download_purchase_bill(bill_id):
 
 @app.route('/api/ml/budget-recommendation/pdf', methods=['POST'])
 def export_budget_pdf():
+    from pdf_generator import generate_purchasing_plan_pdf
     budget_result = request.get_json() or {}
     pdf_buffer = generate_purchasing_plan_pdf(budget_result)
     return send_file(
