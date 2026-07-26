@@ -225,6 +225,7 @@ class Review(db.Model):
         return {
             'id': self.id,
             'product_id': self.product_id,
+            'product_name': self.product.name if self.product else 'Unknown Product',
             'user_id': self.user_id,
             'username': self.username,
             'rating': self.rating,
