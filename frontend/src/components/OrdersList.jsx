@@ -14,6 +14,11 @@ export default function OrdersList({ token }) {
   const [sortBy, setSortBy] = useState('date_desc');
   const [saleTypeFilter, setSaleTypeFilter] = useState('All');
 
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(100);
+  const [totalCount, setTotalCount] = useState(0);
+
   const fetchOrders = async () => {
     setLoading(true);
     try {
@@ -22,12 +27,15 @@ export default function OrdersList({ token }) {
         search,
         status: statusFilter,
         sort_by: sortBy,
-        sale_type: saleTypeFilter
+        sale_type: saleTypeFilter,
+        page: page.toString(),
+        limit: limit.toString()
       });
       const res = await fetch(`/api/orders?${params.toString()}`, { headers });
       if (res.ok) {
         const data = await res.json();
-        setOrders(data);
+        setOrders(data.orders || []);
+        setTotalCount(data.total_count || 0);
       }
     } catch (e) {
       console.error('Error fetching orders:', e);
@@ -38,7 +46,7 @@ export default function OrdersList({ token }) {
 
   useEffect(() => {
     fetchOrders();
-  }, [search, statusFilter, sortBy, saleTypeFilter, token]);
+  }, [search, statusFilter, sortBy, saleTypeFilter, page, limit, token]);
 
   useEffect(() => {
     const socket = io();
@@ -455,7 +463,7 @@ export default function OrdersList({ token }) {
             className="form-control" 
             style={{ paddingLeft: '40px', marginBottom: 0 }}
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
         
@@ -465,7 +473,7 @@ export default function OrdersList({ token }) {
             className="form-control" 
             style={{ width: '150px', marginBottom: 0 }}
             value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
+            onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
           >
             <option value="All">All Statuses</option>
             <option value="Pending">Pending</option>
@@ -484,7 +492,7 @@ export default function OrdersList({ token }) {
             className="form-control" 
             style={{ width: '130px', marginBottom: 0 }}
             value={saleTypeFilter}
-            onChange={e => setSaleTypeFilter(e.target.value)}
+            onChange={e => { setSaleTypeFilter(e.target.value); setPage(1); }}
           >
             <option value="All">All Channels</option>
             <option value="online">Online</option>
@@ -498,7 +506,7 @@ export default function OrdersList({ token }) {
             className="form-control" 
             style={{ width: '150px', marginBottom: 0 }}
             value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
+            onChange={e => { setSortBy(e.target.value); setPage(1); }}
           >
             <option value="date_desc">Date Newest</option>
             <option value="date_asc">Date Oldest</option>
@@ -614,6 +622,65 @@ export default function OrdersList({ token }) {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {!loading && orders.length > 0 && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: '1.5rem',
+          padding: '1.25rem',
+          background: 'rgba(255, 255, 255, 0.05)',
+          borderRadius: '12px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            Showing <strong style={{ color: 'var(--primary)' }}>{Math.min(totalCount, (page - 1) * limit + 1)}</strong> to <strong style={{ color: 'var(--primary)' }}>{Math.min(totalCount, page * limit)}</strong> of <strong style={{ color: 'var(--primary)' }}>{totalCount}</strong> orders
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Page Size:</span>
+            <select
+              value={limit}
+              onChange={e => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className="form-control"
+              style={{ width: '85px', padding: '0.25rem 0.5rem', marginBottom: 0, fontSize: '0.9rem', height: '35px' }}
+            >
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="200">200</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', opacity: page === 1 ? 0.5 : 1 }}
+            >
+              Previous
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setPage(p => p + 1)}
+              disabled={page * limit >= totalCount}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', opacity: page * limit >= totalCount ? 0.5 : 1 }}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Render Print Area to document.body via Portal to fix the display:none print bug */}
       {activePrintOrder && createPortal(renderInvoiceMarkup(), document.body)}

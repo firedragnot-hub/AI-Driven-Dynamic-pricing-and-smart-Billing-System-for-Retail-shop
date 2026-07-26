@@ -866,10 +866,11 @@ def train_models():
             
     df_pricing = pd.DataFrame(pricing_records)
     
+    date_expr_demand = db_strftime('%Y-%m-%d', Transaction.timestamp)
     db_demand = db.session.query(
-        db_strftime('%Y-%m-%d', Transaction.timestamp).label('date'),
+        date_expr_demand.label('date'),
         func.sum(TransactionItem.quantity).label('total_items_sold')
-    ).join(TransactionItem).group_by('date').all()
+    ).join(TransactionItem).group_by(date_expr_demand).all()
     
     if len(db_demand) < 5:
         return jsonify({'error': 'Insufficient daily history to train demand model. Need at least 5 days of data.'}), 400
@@ -899,11 +900,12 @@ def train_models():
 
 @app.route('/api/sales/daily', methods=['GET'])
 def get_daily_sales():
+    date_expr_daily = db_strftime('%Y-%m-%d', Transaction.timestamp)
     results = db.session.query(
-        db_strftime('%Y-%m-%d', Transaction.timestamp).label('date'),
+        date_expr_daily.label('date'),
         func.sum(Transaction.total_amount).label('revenue'),
         func.count(Transaction.id).label('transaction_count')
-    ).group_by('date').order_by(Transaction.timestamp.desc()).limit(30).all()
+    ).group_by(date_expr_daily).order_by(Transaction.timestamp.desc()).limit(30).all()
     
     sales_history = []
     for date_str, revenue, count in results:
@@ -917,11 +919,12 @@ def get_daily_sales():
 
 @app.route('/api/sales/monthly', methods=['GET'])
 def get_monthly_sales():
+    month_expr = db_strftime('%Y-%m', Transaction.timestamp)
     results = db.session.query(
-        db_strftime('%Y-%m', Transaction.timestamp).label('month'),
+        month_expr.label('month'),
         func.sum(Transaction.total_amount).label('revenue'),
         func.count(Transaction.id).label('transaction_count')
-    ).group_by('month').order_by(db_strftime('%Y-%m', Transaction.timestamp).desc()).all()
+    ).group_by(month_expr).order_by(month_expr.desc()).all()
     
     sales_history = []
     for month_str, revenue, count in results:
@@ -960,6 +963,9 @@ def get_orders():
     if sale_type and sale_type != 'All':
         query = query.filter_by(sale_type=sale_type)
 
+    page = request.args.get('page', type=int)
+    limit = request.args.get('limit', type=int)
+
     if sort_by == 'date_desc':
         query = query.order_by(Order.id.desc())
     elif sort_by == 'date_asc':
@@ -971,8 +977,21 @@ def get_orders():
     elif sort_by == 'total':
         query = query.order_by(Order.total_amount.desc())
         
-    orders = query.all()
-    return jsonify([o.to_dict() for o in orders]), 200
+    if page is not None or limit is not None:
+        p = page or 1
+        l = limit or 100
+        total_count = query.count()
+        query = query.limit(l).offset((p - 1) * l)
+        orders = query.all()
+        return jsonify({
+            'orders': [o.to_dict() for o in orders],
+            'total_count': total_count,
+            'page': p,
+            'limit': l
+        }), 200
+    else:
+        orders = query.all()
+        return jsonify([o.to_dict() for o in orders]), 200
 
 def send_order_email_notification(order_id, customer_name, email, phone, address, items_summary, total_amount):
     def run():
@@ -2956,60 +2975,65 @@ def get_finance_dashboard():
     # Pre-fetch monthly data in bulk (last 12 months)
     year_ago = now - timedelta(days=366)
     
+    m_transaction = db_strftime('%Y-%m', Transaction.timestamp)
+    m_order = db_strftime('%Y-%m', Order.timestamp)
+    m_expense = db_strftime('%Y-%m', Expense.date)
+    m_purchase = db_strftime('%Y-%m', Purchase.date)
+
     # 1. POS Revenue
     pos_by_month = db.session.query(
-        db_strftime('%Y-%m', Transaction.timestamp).label('m'),
+        m_transaction.label('m'),
         func.sum(Transaction.total_amount)
-    ).filter(Transaction.timestamp >= year_ago).group_by('m').all()
+    ).filter(Transaction.timestamp >= year_ago).group_by(m_transaction).all()
     pos_month_map = {row[0]: float(row[1] or 0.0) for row in pos_by_month}
     
     # 2. Order Revenue
     ord_by_month = db.session.query(
-        db_strftime('%Y-%m', Order.timestamp).label('m'),
+        m_order.label('m'),
         func.sum(Order.total_amount)
-    ).filter(Order.timestamp >= year_ago, Order.status != 'Cancelled').group_by('m').all()
+    ).filter(Order.timestamp >= year_ago, Order.status != 'Cancelled').group_by(m_order).all()
     ord_month_map = {row[0]: float(row[1] or 0.0) for row in ord_by_month}
     
     # 3. Expenses
     exp_by_month = db.session.query(
-        db_strftime('%Y-%m', Expense.date).label('m'),
+        m_expense.label('m'),
         func.sum(Expense.total_amount)
-    ).filter(Expense.date >= year_ago).group_by('m').all()
+    ).filter(Expense.date >= year_ago).group_by(m_expense).all()
     exp_month_map = {row[0]: float(row[1] or 0.0) for row in exp_by_month}
     
     # 4. Purchases
     pur_by_month = db.session.query(
-        db_strftime('%Y-%m', Purchase.date).label('m'),
+        m_purchase.label('m'),
         func.sum(Purchase.total_amount)
-    ).filter(Purchase.date >= year_ago).group_by('m').all()
+    ).filter(Purchase.date >= year_ago).group_by(m_purchase).all()
     pur_month_map = {row[0]: float(row[1] or 0.0) for row in pur_by_month}
     
     # 5. COGS POS
     mcogs_pos_by_month = db.session.query(
-        db_strftime('%Y-%m', Transaction.timestamp).label('m'),
+        m_transaction.label('m'),
         func.sum(TransactionItem.quantity * Product.base_cost)
-    ).join(Product).join(Transaction).filter(Transaction.timestamp >= year_ago).group_by('m').all()
+    ).join(Product).join(Transaction).filter(Transaction.timestamp >= year_ago).group_by(m_transaction).all()
     mcogs_pos_month_map = {row[0]: float(row[1] or 0.0) for row in mcogs_pos_by_month}
     
     # 6. COGS Order
     mcogs_ord_by_month = db.session.query(
-        db_strftime('%Y-%m', Order.timestamp).label('m'),
+        m_order.label('m'),
         func.sum(OrderItem.quantity * Product.base_cost)
-    ).join(Product).join(Order).filter(Order.timestamp >= year_ago, Order.status != 'Cancelled').group_by('m').all()
+    ).join(Product).join(Order).filter(Order.timestamp >= year_ago, Order.status != 'Cancelled').group_by(m_order).all()
     mcogs_ord_month_map = {row[0]: float(row[1] or 0.0) for row in mcogs_ord_by_month}
     
     # 7. Order Delivered Revenue (for cash inflow)
     ord_del_by_month = db.session.query(
-        db_strftime('%Y-%m', Order.timestamp).label('m'),
+        m_order.label('m'),
         func.sum(Order.total_amount)
-    ).filter(Order.timestamp >= year_ago, Order.status == 'Delivered').group_by('m').all()
+    ).filter(Order.timestamp >= year_ago, Order.status == 'Delivered').group_by(m_order).all()
     ord_del_month_map = {row[0]: float(row[1] or 0.0) for row in ord_del_by_month}
     
     # 8. Purchases Paid (for cash outflow)
     pur_paid_by_month = db.session.query(
-        db_strftime('%Y-%m', Purchase.date).label('m'),
+        m_purchase.label('m'),
         func.sum(Purchase.total_amount)
-    ).filter(Purchase.date >= year_ago, Purchase.payment_status == 'Paid').group_by('m').all()
+    ).filter(Purchase.date >= year_ago, Purchase.payment_status == 'Paid').group_by(m_purchase).all()
     pur_paid_month_map = {row[0]: float(row[1] or 0.0) for row in pur_paid_by_month}
 
     for i in range(11, -1, -1):

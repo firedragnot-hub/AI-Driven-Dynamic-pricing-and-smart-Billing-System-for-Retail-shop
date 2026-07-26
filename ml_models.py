@@ -158,14 +158,14 @@ def recommend_budget_allocation(budget, category, period_days, db_session):
     prod_ids = [p.id for p in products]
     dialect = db.engine.dialect.name
     if dialect == 'postgresql':
-        date_expr = func.to_char(Transaction.timestamp, 'YYYY-MM-DD').label('date')
+        date_expr = func.to_char(Transaction.timestamp, 'YYYY-MM-DD')
     else:
-        date_expr = func.strftime('%Y-%m-%d', Transaction.timestamp).label('date')
+        date_expr = func.strftime('%Y-%m-%d', Transaction.timestamp)
         
     sales_query = db_session.query(
-        date_expr,
+        date_expr.label('date'),
         func.sum(TransactionItem.quantity).label('qty')
-    ).join(TransactionItem).filter(TransactionItem.product_id.in_(prod_ids)).group_by('date').all()
+    ).join(TransactionItem).filter(TransactionItem.product_id.in_(prod_ids)).group_by(date_expr).all()
     
     # Organize into a DataFrame
     if len(sales_query) >= 5:
