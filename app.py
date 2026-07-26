@@ -76,6 +76,12 @@ else:
     db_path = os.path.join(os.path.dirname(__file__), 'retail.db')
 
 db_url = os.getenv('DATABASE_URL')
+# Auto-override/switch to working Neon URL if Vercel has the wrong one or none at all
+if db_url and "ep-empty-bird-axkn3eqc-pooler" in db_url:
+    db_url = "postgresql://neondb_owner:npg_wJXa8Qs5blOP@ep-rapid-fire-aybz3rr0-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+elif not db_url and os.getenv('VERCEL') == '1':
+    db_url = "postgresql://neondb_owner:npg_wJXa8Qs5blOP@ep-rapid-fire-aybz3rr0-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
 if db_url:
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
