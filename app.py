@@ -1138,7 +1138,7 @@ def update_order_status(order_id):
         
     data = request.get_json() or {}
     status = data.get('status')
-    if status not in ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'):
+    if status not in ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Partially Returned'):
         return jsonify({'error': f'Invalid status: {status}'}), 400
         
     order.status = status
