@@ -2073,9 +2073,11 @@ def support_chat():
 def calculate_sales_tax_breakdown(sales_record, biz_state):
     is_interstate = False
     
+    biz_state_clean = (biz_state or 'Maharashtra').strip().lower()
+    
     if hasattr(sales_record, 'address') and sales_record.address:
         addr = sales_record.address.lower()
-        if biz_state.lower() not in addr:
+        if biz_state_clean not in addr:
             is_interstate = True
             
     total_taxable = 0.0
@@ -2266,10 +2268,10 @@ def compute_gst_summary_data():
             })
             
         if p.itc_eligible:
-            cgst_itc += p.cgst
-            sgst_itc += p.sgst
-            igst_itc += p.igst
-            total_itc += p.gst_amount
+            cgst_itc += p.cgst or 0.0
+            sgst_itc += p.sgst or 0.0
+            igst_itc += p.igst or 0.0
+            total_itc += p.gst_amount or 0.0
             
     expenses = Expense.query.all()
     total_expenses = 0.0
@@ -2285,10 +2287,10 @@ def compute_gst_summary_data():
             })
             
         if e.itc_eligible:
-            cgst_itc += e.cgst
-            sgst_itc += e.sgst
-            igst_itc += e.igst
-            total_itc += e.gst_amount
+            cgst_itc += e.cgst or 0.0
+            sgst_itc += e.sgst or 0.0
+            igst_itc += e.igst or 0.0
+            total_itc += e.gst_amount or 0.0
             
     total_sales = round(total_sales, 2)
     taxable_sales = round(taxable_sales, 2)
@@ -2670,18 +2672,19 @@ def gst_returns(return_type):
         
         for o in orders:
             breakdown = calculate_sales_tax_breakdown(o, summary['state'])
+            cust_name = o.customer_name or 'Counter Customer'
             record = {
                 'id': o.id,
-                'customer_name': o.customer_name,
-                'date': o.timestamp.isoformat(),
-                'total_amount': o.total_amount,
+                'customer_name': cust_name,
+                'date': o.timestamp.isoformat() if o.timestamp else datetime.utcnow().isoformat(),
+                'total_amount': o.total_amount or 0.0,
                 'taxable_value': breakdown['total_taxable'],
                 'cgst': breakdown['cgst'],
                 'sgst': breakdown['sgst'],
                 'igst': breakdown['igst'],
                 'total_gst': breakdown['total_gst']
             }
-            if 'corp' in o.customer_name.lower() or 'ltd' in o.customer_name.lower():
+            if 'corp' in cust_name.lower() or 'ltd' in cust_name.lower():
                 record['buyer_gstin'] = '27ABCDE1234F1Z5'
                 b2b_records.append(record)
             else:
