@@ -326,14 +326,20 @@ export default function App() {
         body: JSON.stringify(payload)
       });
       
-      let data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        const textErr = await res.text();
+        throw new Error(textErr || 'A server error occurred. Please check the backend console.');
+      }
       if (!res.ok) {
-        if (res.status === 403 && data.unverified) {
+        if (res.status === 403 && data && data.unverified) {
           setUnverifiedEmail(data.email);
           setVerificationSent(true);
           throw new Error(data.error);
         }
-        throw new Error(data.error || (isLogin ? 'Authentication failed' : 'Registration failed'));
+        throw new Error((data && data.error) || (isLogin ? 'Authentication failed' : 'Registration failed'));
       }
 
       if (isLogin) {
