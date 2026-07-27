@@ -176,6 +176,15 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddrId, setSelectedAddrId] = useState('');
 
+  // Payment Integration Mock States
+  const [paymentOpt, setPaymentOpt] = useState('cod'); // 'cod' or 'card'
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [cardName, setCardName] = useState('');
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
   useEffect(() => {
     const fetchSaved = async () => {
       try {
@@ -207,17 +216,57 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
     }
   };
 
-  const handlePlaceOrder = async () => {
-    if (!form.customer_name || !form.email || !form.phone || !form.address) { setError('Please fill in all fields.'); return; }
+  const executeOrderPlacement = async (paymentDetails = {}) => {
     setError(''); setLoading(true);
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const res = await fetch('/api/orders', { method: 'POST', headers, body: JSON.stringify({ ...form, items: cartItems.map(({ product, qty }) => ({ product_id: product.id, quantity: qty })) }) });
+      const orderPayload = { 
+        ...form, 
+        items: cartItems.map(({ product, qty }) => ({ product_id: product.id, quantity: qty })),
+        notes: paymentOpt === 'card' ? `Paid via Mock Card (Tx: ${Math.random().toString(36).substring(2, 10).toUpperCase()})` : 'COD'
+      };
+      
+      const res = await fetch('/api/orders', { 
+        method: 'POST', 
+        headers, 
+        body: JSON.stringify(orderPayload) 
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Order failed');
       onSuccess(data);
-    } catch (err) { setError(err.message); } finally { setLoading(false); }
+    } catch (err) { 
+      setError(err.message); 
+    } finally { 
+      setLoading(false); 
+    }
+  };
+
+  const handlePlaceOrderSubmit = () => {
+    if (!form.customer_name || !form.email || !form.phone || !form.address) { 
+      setError('Please fill in all delivery fields.'); 
+      return; 
+    }
+    
+    if (paymentOpt === 'card') {
+      setShowPaymentModal(true);
+    } else {
+      executeOrderPlacement();
+    }
+  };
+
+  const handleMockPaymentSubmit = (e) => {
+    e.preventDefault();
+    if (!cardNumber || !cardExpiry || !cardCvv || !cardName) {
+      alert("Please fill in all credit card details.");
+      return;
+    }
+    setPaymentLoading(true);
+    setTimeout(() => {
+      setPaymentLoading(false);
+      setShowPaymentModal(false);
+      executeOrderPlacement();
+    }, 2000);
   };
 
   return (
@@ -263,9 +312,51 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
               <textarea name="address" value={form.address} onChange={handleChange} placeholder="Full street address, city, state, PIN..." rows={3} style={{ width: '100%', padding: '11px 12px 11px 36px', borderRadius: '10px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} onFocus={(e) => { e.target.style.borderColor = '#eab308'; }} onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; }} />
             </div>
           </div>
-          <div style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CreditCard size={16} color="#d97706" />
-            <span style={{ fontSize: '0.82rem', color: '#92400e', fontWeight: 600 }}>Payment on Delivery (COD) — No online payment required</span>
+          {/* Payment Method Selector */}
+          <div>
+            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Select Payment Method</label>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div 
+                onClick={() => setPaymentOpt('cod')} 
+                style={{ 
+                  flex: 1, 
+                  padding: '12px', 
+                  borderRadius: '10px', 
+                  border: paymentOpt === 'cod' ? '2px solid #eab308' : '1.5px solid #e2e8f0', 
+                  background: paymentOpt === 'cod' ? '#fefce8' : '#fff', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  color: paymentOpt === 'cod' ? '#92400e' : '#475569'
+                }}
+              >
+                <input type="radio" checked={paymentOpt === 'cod'} readOnly style={{ accentColor: '#eab308' }} />
+                Cash on Delivery (COD)
+              </div>
+              <div 
+                onClick={() => setPaymentOpt('card')} 
+                style={{ 
+                  flex: 1, 
+                  padding: '12px', 
+                  borderRadius: '10px', 
+                  border: paymentOpt === 'card' ? '2px solid #eab308' : '1.5px solid #e2e8f0', 
+                  background: paymentOpt === 'card' ? '#fefce8' : '#fff', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  color: paymentOpt === 'card' ? '#92400e' : '#475569'
+                }}
+              >
+                <input type="radio" checked={paymentOpt === 'card'} readOnly style={{ accentColor: '#eab308' }} />
+                Mock Credit Card / UPI
+              </div>
+            </div>
           </div>
         </div>
 
@@ -285,11 +376,129 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
               <span style={{ fontWeight: 900, fontSize: '1.2rem', color: '#0f172a' }}>{fmt(subtotal)}</span>
             </div>
           </div>
-          <button onClick={handlePlaceOrder} disabled={loading} style={{ width: '100%', padding: '16px', background: loading ? '#fde68a' : 'linear-gradient(135deg, #eab308, #d1a007)', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '1.05rem', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(234,179,8,0.35)' }}>
+          <button onClick={handlePlaceOrderSubmit} disabled={loading} style={{ width: '100%', padding: '16px', background: loading ? '#fde68a' : 'linear-gradient(135deg, #eab308, #d1a007)', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '1.05rem', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(234,179,8,0.35)' }}>
             {loading ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Placing Order...</> : <>Place Order <CheckCircle size={18} /></>}
           </button>
         </div>
       </div>
+
+      {/* Mock Payment Gateway Modal Overlay (Stripe Style) */}
+      {showPaymentModal && (
+        <>
+          <div onClick={() => setShowPaymentModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10000 }} />
+          <div 
+            style={{ 
+              position: 'fixed', 
+              top: '50%', 
+              left: '50%', 
+              transform: 'translate(-50%, -50%)', 
+              background: '#fff', 
+              borderRadius: '20px', 
+              boxShadow: '0 15px 50px rgba(0,0,0,0.2)', 
+              zIndex: 10001,
+              width: '420px',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.4rem' }}>💳</span>
+                <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0f172a' }}>Stripe Checkout <span style={{ fontSize: '0.72rem', color: '#94a3b8', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px' }}>Test Mode</span></span>
+              </div>
+              <button onClick={() => setShowPaymentModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#94a3b8' }}>✕</button>
+            </div>
+
+            <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.85rem', color: '#475569' }}>Total to Pay</span>
+              <span style={{ fontWeight: 800, color: '#0f172a' }}>{fmt(subtotal)}</span>
+            </div>
+
+            <form onSubmit={handleMockPaymentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Cardholder Name</label>
+                <input 
+                  type="text" 
+                  value={cardName} 
+                  onChange={e => setCardName(e.target.value)} 
+                  required 
+                  placeholder="John Doe" 
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Card Number</label>
+                <input 
+                  type="text" 
+                  value={cardNumber} 
+                  onChange={e => setCardNumber(e.target.value)} 
+                  required 
+                  placeholder="4242 4242 4242 4242" 
+                  maxLength={19}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Expiration (MM/YY)</label>
+                  <input 
+                    type="text" 
+                    value={cardExpiry} 
+                    onChange={e => setCardExpiry(e.target.value)} 
+                    required 
+                    placeholder="12/28" 
+                    maxLength={5}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>CVV</label>
+                  <input 
+                    type="password" 
+                    value={cardCvv} 
+                    onChange={e => setCardCvv(e.target.value)} 
+                    required 
+                    placeholder="***" 
+                    maxLength={4}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={paymentLoading} 
+                style={{ 
+                  marginTop: '12px',
+                  width: '100%', 
+                  padding: '14px', 
+                  background: paymentLoading ? '#fde68a' : '#635bff', // Stripe purple style!
+                  color: '#fff', 
+                  border: 'none', 
+                  borderRadius: '10px', 
+                  fontWeight: 800, 
+                  fontSize: '1rem', 
+                  cursor: paymentLoading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+              >
+                {paymentLoading ? (
+                  <>Processing Mock Payment...</>
+                ) : (
+                  <>Pay {fmt(subtotal)}</>
+                )}
+              </button>
+            </form>
+          </div>
+        </>
+      )}
     </div>
   );
 }

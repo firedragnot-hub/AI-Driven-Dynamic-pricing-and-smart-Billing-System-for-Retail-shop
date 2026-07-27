@@ -140,6 +140,7 @@ with app.app_context():
             db.session.execute(db.text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;"))
             db.session.execute(db.text("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);"))
             db.session.execute(db.text("UPDATE users SET is_verified = TRUE WHERE is_verified IS NULL OR username IN ('admin', 'customer');"))
+            db.session.execute(db.text("ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT;"))
             db.session.commit()
             print("PostgreSQL migrations applied successfully!")
         except Exception as pg_mig_err:
@@ -222,6 +223,12 @@ with app.app_context():
                 cursor.execute("ALTER TABLE users ADD COLUMN verification_token VARCHAR(255)")
             cursor.execute("UPDATE users SET is_verified = 1 WHERE is_verified IS NULL OR username IN ('admin', 'customer')")
             
+            # Check if products table needs description column
+            cursor.execute("PRAGMA table_info(products)")
+            product_columns = [row[1] for row in cursor.fetchall()]
+            if 'description' not in product_columns:
+                cursor.execute("ALTER TABLE products ADD COLUMN description TEXT")
+            
             conn.commit()
             conn.close()
         except Exception as e:
@@ -254,6 +261,144 @@ def diagnostic_route():
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# --- AI Assistant & Generator Routes ---
+
+@app.route('/api/ai/chat', methods=['POST'])
+def ai_chat():
+    from models import Product, User, Transaction, Order
+    from routes.auth import get_current_user
+    
+    # Optional authorization check
+    user_payload = get_current_user()
+    
+    data = request.get_json() or {}
+    message = data.get('message', '').strip()
+    
+    if not message:
+        return jsonify({'error': 'Message is required'}), 400
+        
+    # Gather live store data for context
+    try:
+        users_count = User.query.count()
+        products_count = Product.query.count()
+        low_stock_products = Product.query.filter(Product.stock_level < 10).all()
+        low_stock_count = len(low_stock_products)
+        orders_count = Order.query.count()
+        
+        # Calculate today's sales
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_sales_sum = db.session.query(func.sum(Transaction.total_amount)).filter(Transaction.timestamp >= today_start).scalar() or 0
+        today_orders_sum = db.session.query(func.sum(Order.total_amount)).filter(Order.timestamp >= today_start).scalar() or 0
+        total_sales_today = round(float(today_sales_sum) + float(today_orders_sum), 2)
+    except Exception as e:
+        print("Error gathering store data for AI:", e)
+        users_count = products_count = low_stock_count = orders_count = total_sales_today = 0
+        low_stock_products = []
+
+    # Format low stock list for context
+    low_stock_names = [f"{p.name} (Stock: {p.stock_level})" for p in low_stock_products[:5]]
+    low_stock_str = ", ".join(low_stock_names) if low_stock_names else "None"
+
+    # AI chatbot rules / responses
+    msg_lower = message.lower()
+    
+    # Try using GEMINI API if API key is provided
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if gemini_key:
+        try:
+            # We can invoke the Gemini API using urllib
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            system_instruction = (
+                f"You are the TEGL Retail Smart AI Assistant. Here is the current live store status:\n"
+                f"- Total Registered Customers: {users_count}\n"
+                f"- Total Products: {products_count}\n"
+                f"- Low Stock Count (<10): {low_stock_count} (Items: {low_stock_str})\n"
+                f"- Pending Orders: {orders_count}\n"
+                f"- Today's Sales: INR {total_sales_today}\n\n"
+                f"Help the user (usually the store owner/admin) with management insights. Keep responses concise, clear, and helpful."
+            )
+            
+            payload = {
+                "contents": [
+                    {"role": "user", "parts": [{"text": f"System Context: {system_instruction}\n\nUser query: {message}"}]}
+                ]
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                res_data = json.loads(response.read().decode('utf-8'))
+                ai_text = res_data['candidates'][0]['content']['parts'][0]['text']
+                return jsonify({'reply': ai_text}), 200
+        except Exception as api_err:
+            print("Gemini API call failed, falling back to rule-based engine:", api_err)
+
+    # Fallback Rule-Based Smart Chatbot Engine (Highly context-aware!)
+    reply = "I'm your TEGL Retail AI assistant. I can help you monitor store status. Ask me about sales, low stock alerts, customer count, or reorders!"
+    
+    if "hello" in msg_lower or "hi" in msg_lower or "hey" in msg_lower:
+        reply = "Hello! I am your TEGL Retail AI Assistant. How can I help you manage your store today?"
+    elif "sales" in msg_lower or "revenue" in msg_lower or "earn" in msg_lower:
+        reply = f"Today's sales count stands at INR {total_sales_today}. There are {orders_count} pending orders. If you want detailed forecasts, you can head to the 'ML Forecast' tab!"
+    elif "stock" in msg_lower or "inventory" in msg_lower or "quantity" in msg_lower:
+        if low_stock_count > 0:
+            reply = f"We currently have {products_count} active product types. Warning: {low_stock_count} item(s) are low in stock (less than 10 units remaining): {low_stock_str}. I suggest placing a reorder soon."
+        else:
+            reply = f"Inventory is healthy! We have {products_count} unique products, and all items are above critical stock thresholds."
+    elif "customer" in msg_lower or "user" in msg_lower or "people" in msg_lower:
+        reply = f"We have {users_count} registered users/customers in our database."
+    elif "order" in msg_lower or "pending" in msg_lower:
+        reply = f"There are currently {orders_count} online customer orders in the system. You can view them in the 'Manage Orders' operations tab."
+    elif "reorder" in msg_lower or "purchase" in msg_lower or "supplier" in msg_lower:
+        if low_stock_count > 0:
+            reply = f"Low stock items detected: {low_stock_str}. I recommend sending a Purchase Order draft to your suppliers for these items."
+        else:
+            reply = "All products are well stocked. No automatic reorder recommendations are needed at this time."
+            
+    return jsonify({'reply': reply}), 200
+
+@app.route('/api/ai/generate-description', methods=['POST'])
+def ai_generate_description():
+    data = request.get_json() or {}
+    name = data.get('name', '').strip()
+    category = data.get('category', '').strip()
+    
+    if not name or not category:
+        return jsonify({'error': 'Name and category are required'}), 400
+        
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if gemini_key:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            prompt = f"Write a professional, premium, and SEO-friendly e-commerce product description for a product named '{name}' under the category '{category}'. Keep it under 100 words, starting with a catchy hook."
+            payload = {
+                "contents": [
+                    {"parts": [{"text": prompt}]}
+                ]
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                res_data = json.loads(response.read().decode('utf-8'))
+                ai_text = res_data['candidates'][0]['content']['parts'][0]['text']
+                return jsonify({'description': ai_text.strip()}), 200
+        except Exception as api_err:
+            print("Gemini API call failed, falling back:", api_err)
+            
+    # Premium template-based fallback description generator
+    fallback_desc = (
+        f"Discover the new '{name}', a premium-grade product in our '{category}' collection. "
+        f"Engineered for exceptional performance, durability, and style, this item meets high standards of retail quality. "
+        f"Perfect for customers seeking innovation and reliability in the '{category}' space. Add it to your cart today!"
+    )
+    return jsonify({'description': fallback_desc}), 200
 
 
 # --- Helper to check admin access ---
@@ -292,7 +437,8 @@ def create_product():
         current_price=float(current_price),
         stock_level=int(data['stock_level']),
         hsn_code=data.get('hsn_code', '84733099'),
-        gst_rate=float(data.get('gst_rate', 18.0))
+        gst_rate=float(data.get('gst_rate', 18.0)),
+        description=data.get('description', '')
     )
     db.session.add(product)
     db.session.commit()
@@ -324,6 +470,8 @@ def update_product(product_id):
         product.hsn_code = data['hsn_code']
     if 'gst_rate' in data:
         product.gst_rate = float(data['gst_rate'])
+    if 'description' in data:
+        product.description = data['description']
         
     db.session.commit()
     return jsonify(product.to_dict()), 200

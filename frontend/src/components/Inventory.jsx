@@ -13,6 +13,36 @@ export default function Inventory({ products, refreshProducts, token }) {
   const [stockLevel, setStockLevel] = useState('');
   const [hsnCode, setHsnCode] = useState('');
   const [gstRate, setGstRate] = useState('18');
+  const [description, setDescription] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
+
+  const handleAIDescription = async () => {
+    if (!name || !category) {
+      alert("Please fill in the Product Name and Category first.");
+      return;
+    }
+    setAiGenerating(true);
+    try {
+      const res = await fetch('/api/ai/generate-description', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ name, category })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setDescription(data.description);
+      } else {
+        alert(data.error || "Failed to generate description.");
+      }
+    } catch (e) {
+      alert("Error generating description.");
+    } finally {
+      setAiGenerating(false);
+    }
+  };
 
   const openAddModal = () => {
     setEditProduct(null);
@@ -23,6 +53,7 @@ export default function Inventory({ products, refreshProducts, token }) {
     setStockLevel('');
     setHsnCode('84733099');
     setGstRate('18');
+    setDescription('');
     setModalOpen(true);
   };
 
@@ -35,6 +66,7 @@ export default function Inventory({ products, refreshProducts, token }) {
     setStockLevel(product.stock_level.toString());
     setHsnCode((product.hsn_code || '84733099').toString());
     setGstRate((product.gst_rate || 18).toString());
+    setDescription(product.description || '');
     setModalOpen(true);
   };
 
@@ -47,7 +79,8 @@ export default function Inventory({ products, refreshProducts, token }) {
       current_price: parseFloat(currentPrice),
       stock_level: parseInt(stockLevel),
       hsn_code: hsnCode,
-      gst_rate: parseFloat(gstRate)
+      gst_rate: parseFloat(gstRate),
+      description
     };
 
     const url = editProduct 
@@ -289,6 +322,40 @@ export default function Inventory({ products, refreshProducts, token }) {
                   required 
                   value={stockLevel} 
                   onChange={e => setStockLevel(e.target.value)}
+                />
+              </div>
+
+              <div className="input-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label style={{ margin: 0 }}>Product Description</label>
+                  <button 
+                    type="button" 
+                    onClick={handleAIDescription} 
+                    disabled={aiGenerating}
+                    style={{ 
+                      padding: '4px 10px', 
+                      fontSize: '0.72rem', 
+                      background: 'linear-gradient(135deg, #eab308, #d1a007)', 
+                      color: '#fff', 
+                      border: 'none', 
+                      borderRadius: '6px', 
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    {aiGenerating ? 'Generating...' : '✨ Auto-Write Description'}
+                  </button>
+                </div>
+                <textarea 
+                  className="form-control" 
+                  rows={3}
+                  value={description} 
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Describe the product details..."
+                  style={{ resize: 'vertical', minHeight: '80px', fontFamily: 'inherit' }}
                 />
               </div>
 

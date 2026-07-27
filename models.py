@@ -38,6 +38,7 @@ class Product(db.Model):
     gst_rate = db.Column(db.Float, default=18.0)
     image_url = db.Column(db.String(500), nullable=True)
     barcode = db.Column(db.String(50), unique=True, nullable=True)
+    description = db.Column(db.Text, nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     def to_dict(self):
@@ -52,6 +53,7 @@ class Product(db.Model):
             'gst_rate': self.gst_rate,
             'image_url': self.image_url,
             'barcode': self.barcode,
+            'description': self.description,
             'updated_at': self.updated_at.isoformat()
         }
 

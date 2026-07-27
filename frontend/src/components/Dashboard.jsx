@@ -62,6 +62,45 @@ export default function Dashboard({ products, token, setActiveTab }) {
   const [monthlySales, setMonthlySales] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // AI Chatbot State
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState([
+    { role: 'assistant', text: 'Hi! I am your TEGL Retail AI Assistant. How can I help you manage your store today?' }
+  ]);
+  const [chatLoading, setChatLoading] = useState(false);
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userText = chatInput.trim();
+    setChatInput('');
+    setChatMessages(prev => [...prev, { role: 'user', text: userText }]);
+    setChatLoading(true);
+
+    try {
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ message: userText })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setChatMessages(prev => [...prev, { role: 'assistant', text: data.reply }]);
+      } else {
+        setChatMessages(prev => [...prev, { role: 'assistant', text: data.error || 'Failed to generate response.' }]);
+      }
+    } catch (e) {
+      setChatMessages(prev => [...prev, { role: 'assistant', text: 'Error connecting to AI server.' }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   const fetchSalesData = async () => {
     setLoading(true);
     try {
@@ -244,6 +283,131 @@ export default function Dashboard({ products, token, setActiveTab }) {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Floating AI Chat Assistant */}
+      <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999 }}>
+        {!chatOpen ? (
+          <button 
+            onClick={() => setChatOpen(true)}
+            style={{ 
+              width: '60px', 
+              height: '60px', 
+              borderRadius: '50%', 
+              background: 'linear-gradient(135deg, #eab308, #d1a007)', 
+              color: '#fff', 
+              border: 'none', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              boxShadow: '0 6px 20px rgba(234,179,8,0.4)',
+              transition: 'transform 0.2s ease',
+              fontSize: '1.5rem'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.08)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            💬
+          </button>
+        ) : (
+          <div 
+            style={{ 
+              width: '360px', 
+              height: '460px', 
+              background: '#fff', 
+              borderRadius: '20px', 
+              boxShadow: '0 10px 40px rgba(0,0,0,0.15)', 
+              border: '1px solid #f1f5f9',
+              display: 'flex', 
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Header */}
+            <div style={{ padding: '16px 20px', background: 'linear-gradient(135deg, #eab308, #d1a007)', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.2rem' }}>✨</span>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Smart Store AI</div>
+                  <div style={{ fontSize: '0.65rem', opacity: 0.9 }}>Online Analytics Assistant</div>
+                </div>
+              </div>
+              <button 
+                onClick={() => setChatOpen(false)}
+                style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.1rem', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Messages body */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', background: '#f8fafc' }}>
+              {chatMessages.map((m, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                  <div 
+                    style={{ 
+                      maxWidth: '80%', 
+                      padding: '10px 14px', 
+                      borderRadius: m.role === 'user' ? '14px 14px 0 14px' : '14px 14px 14px 0',
+                      background: m.role === 'user' ? 'linear-gradient(135deg, #eab308, #d1a007)' : '#fff',
+                      color: m.role === 'user' ? '#fff' : '#1e293b',
+                      fontSize: '0.82rem',
+                      lineHeight: '1.4',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                      border: m.role === 'user' ? 'none' : '1px solid #e2e8f0',
+                      textAlign: 'left'
+                    }}
+                  >
+                    {m.text}
+                  </div>
+                </div>
+              ))}
+              {chatLoading && (
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <div style={{ background: '#fff', color: '#64748b', padding: '10px 14px', borderRadius: '14px 14px 14px 0', fontSize: '0.82rem', border: '1px solid #e2e8f0' }}>
+                    Thinking...
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Input Form */}
+            <form onSubmit={handleSendMessage} style={{ padding: '12px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '8px', background: '#fff' }}>
+              <input 
+                type="text" 
+                placeholder="Ask about sales, stock or reorders..." 
+                value={chatInput}
+                onChange={e => setChatInput(e.target.value)}
+                style={{ 
+                  flex: 1, 
+                  padding: '10px 14px', 
+                  borderRadius: '10px', 
+                  border: '1.5px solid #e2e8f0',
+                  fontSize: '0.82rem',
+                  outline: 'none',
+                  fontFamily: 'inherit'
+                }}
+              />
+              <button 
+                type="submit"
+                disabled={chatLoading}
+                style={{ 
+                  padding: '10px 14px', 
+                  background: 'linear-gradient(135deg, #eab308, #d1a007)', 
+                  color: '#fff', 
+                  border: 'none', 
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '0.82rem'
+                }}
+              >
+                Send
+              </button>
+            </form>
+          </div>
+        )}
       </div>
 
     </div>
