@@ -1,10 +1,11 @@
 - [x] Create automatic dynamic pricing fluctuation simulator in `app.py`
-- [x] Implement AI ordering endpoint and PDF export route in `app.py`
-- [x] Implement Groq API notification summary endpoint in `app.py`
-- [x] Implement reviews retrieve API in `app.py`
-- [x] Create `ReviewsList.jsx` in frontend
-- [x] Add notification bell and dropdown with Groq summaries in `App.jsx`
-- [x] Integrate Reviews tab in `App.jsx`
+- [x] Install backend dependencies (`flask-socketio`) and update `requirements.txt`
+- [x] Initialize Flask-SocketIO in `app.py`
+- [x] Emit `new_order` event in `create_order` endpoint in `app.py`
+- [x] Update how Flask runs in `app.py` using `socketio.run`
+- [x] Install frontend dependencies (`socket.io-client`) in `frontend` directory
+- [x] Update `frontend/src/components/OrdersList.jsx` to connect to Socket.IO and listen for `new_order` events
+- [x] Verify the implementation `App.jsx`
 - [x] Add ordering, PDF, and dynamic indicators in `MLForecast.jsx`
 - [x] Replace hardcoded `http://127.0.0.1:5000` URLs with relative paths in `GSTCompliance.jsx`
-- [/] Verify frontend build locally
+- [x] Verify frontend build locally

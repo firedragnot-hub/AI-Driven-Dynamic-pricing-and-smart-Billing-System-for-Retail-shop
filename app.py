@@ -761,7 +761,7 @@ def explain_demand_prediction(date_str, predicted_demand_volume, day_of_week, mo
     current_fest_name, current_fest_date, current_fest_hike = get_festival_for_month(month)
     next_month = (month % 12) + 1
     next_fest_name, next_fest_date, next_fest_hike = get_festival_for_month(next_month)
-    api_key = os.getenv("GROQ_API_KEY", "")
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
     url = "https://api.groq.com/openai/v1/chat/completions"
     
     prompt = (
@@ -3850,7 +3850,7 @@ def get_notifications_summary():
 
     
     # 2. Call Groq Completion API
-    groq_api_key = os.getenv("GROQ_API_KEY", "")
+    groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
     groq_url = "https://api.groq.com/openai/v1/chat/completions"
     
     prompt = (

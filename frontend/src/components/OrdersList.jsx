@@ -7,7 +7,7 @@ export default function OrdersList({ token }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activePrintOrder, setActivePrintOrder] = useState(null);
-  
+
   // Filtering & Sorting State
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -71,7 +71,7 @@ export default function OrdersList({ token }) {
 
   const updateStatus = async (orderId, newStatus) => {
     try {
-      const headers = { 
+      const headers = {
         'Content-Type': 'application/json'
       };
       if (token) {
@@ -177,7 +177,7 @@ export default function OrdersList({ token }) {
 
   const renderInvoiceMarkup = () => {
     if (!activePrintOrder) return null;
-    
+
     const buyerInfo = getBuyerStateAndCode(activePrintOrder.address);
     const sellerStateCode = '09'; // Uttar Pradesh
     const isLocal = buyerInfo.code === sellerStateCode;
@@ -194,14 +194,14 @@ export default function OrdersList({ token }) {
       const taxableVal = total / (1 + (gst_rate / 100));
       const gstAmt = total - taxableVal;
       const rateBeforeTax = item.price_at_sale / (1 + (gst_rate / 100));
-      
+
       subtotal += total;
       totalTaxableAmount += taxableVal;
-      
+
       let cgstRate = 0, cgstAmt = 0;
       let sgstRate = 0, sgstAmt = 0;
       let igstRate = 0, igstAmt = 0;
-      
+
       if (isLocal) {
         cgstRate = gst_rate / 2;
         cgstAmt = gstAmt / 2;
@@ -214,7 +214,7 @@ export default function OrdersList({ token }) {
         igstAmt = gstAmt;
         totalIgst += igstAmt;
       }
-      
+
       return {
         sNo: idx + 1,
         name: item.product_name,
@@ -241,7 +241,7 @@ export default function OrdersList({ token }) {
 
     return (
       <div className="print-area" style={{ background: '#fff', color: '#1f2937', fontFamily: "'Poppins', sans-serif", padding: '30px', maxWidth: '800px', margin: '0 auto', fontSize: '11px', border: '1px solid #e5e7eb', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-        
+
         {/* Top Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '3px solid #1d4ed8', paddingBottom: '15px', marginBottom: '20px' }}>
           <div>
@@ -250,13 +250,13 @@ export default function OrdersList({ token }) {
               <span style={{ fontSize: '10px', color: '#6b7280', borderLeft: '1px solid #d1d5db', paddingLeft: '8px', textTransform: 'uppercase', fontWeight: 600 }}>Electronics Pvt. Ltd.</span>
             </div>
             <div style={{ color: '#4b5563', fontSize: '10px', marginTop: '4px', lineHeight: '1.4', textAlign: 'left' }}>
-              Plot No. 42, Tech Park, Sector 62, Noida<br/>
-              Uttar Pradesh, India - 201301<br/>
-              GSTIN: 09AAACT1234A1Z5 | PAN: AAACT1234A<br/>
+              Plot No. 42, Tech Park, Sector 62, Noida<br />
+              Uttar Pradesh, India - 201301<br />
+              GSTIN: 09AAACT1234A1Z5 | PAN: AAACT1234A<br />
               Email: billing@tegl.com | Phone: +91 98765 43210
             </div>
           </div>
-          
+
           <div style={{ textAlign: 'right' }}>
             <h1 style={{ margin: 0, color: '#1d4ed8', fontSize: '22px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TAX INVOICE</h1>
             <div style={{ marginTop: '8px', display: 'grid', gridTemplateColumns: 'auto auto', gap: '4px 12px', justifyItems: 'end', fontSize: '10.5px', color: '#374151' }}>
@@ -273,20 +273,20 @@ export default function OrdersList({ token }) {
           <div style={{ textAlign: 'left' }}>
             <h3 style={{ margin: '0 0 6px 0', fontSize: '10.5px', color: '#1d4ed8', borderBottom: '1px solid #cbd5e1', paddingBottom: '3px', fontWeight: 'bold', textTransform: 'uppercase' }}>Details of Seller (Consignor)</h3>
             <div style={{ lineHeight: '1.4', color: '#374151' }}>
-              <strong>TEGL Electronics Pvt. Ltd.</strong><br/>
-              Plot No. 42, Tech Park, Sector 62, Noida<br/>
-              State: Uttar Pradesh (Code: 09)<br/>
-              GSTIN: 09AAACT1234A1Z5<br/>
+              <strong>TEGL Electronics Pvt. Ltd.</strong><br />
+              Plot No. 42, Tech Park, Sector 62, Noida<br />
+              State: Uttar Pradesh (Code: 09)<br />
+              GSTIN: 09AAACT1234A1Z5<br />
               Email: billing@tegl.com
             </div>
           </div>
           <div style={{ textAlign: 'left' }}>
             <h3 style={{ margin: '0 0 6px 0', fontSize: '10.5px', color: '#1d4ed8', borderBottom: '1px solid #cbd5e1', paddingBottom: '3px', fontWeight: 'bold', textTransform: 'uppercase' }}>Details of Buyer (Consignee)</h3>
             <div style={{ lineHeight: '1.4', color: '#374151' }}>
-              <strong>{activePrintOrder.customer_name}</strong><br/>
-              Address: {activePrintOrder.address}<br/>
-              State: {buyerInfo.state} (Code: {buyerInfo.code})<br/>
-              GSTIN: Unregistered<br/>
+              <strong>{activePrintOrder.customer_name}</strong><br />
+              Address: {activePrintOrder.address}<br />
+              State: {buyerInfo.state} (Code: {buyerInfo.code})<br />
+              GSTIN: Unregistered<br />
               Phone: {activePrintOrder.phone} | Email: {activePrintOrder.email}
             </div>
           </div>
@@ -348,9 +348,9 @@ export default function OrdersList({ token }) {
               <div style={{ flex: 1 }}>
                 <h4 style={{ margin: '0 0 6px 0', fontSize: '10px', color: '#1d4ed8', fontWeight: 'bold', textTransform: 'uppercase' }}>Bank Details</h4>
                 <div style={{ lineHeight: '1.4', color: '#4b5563' }}>
-                  Bank: <strong>State Bank of India</strong><br/>
-                  A/c Name: <strong>TEGL Electronics Pvt. Ltd.</strong><br/>
-                  A/c No: <strong>98765432109</strong><br/>
+                  Bank: <strong>State Bank of India</strong><br />
+                  A/c Name: <strong>TEGL Electronics Pvt. Ltd.</strong><br />
+                  A/c No: <strong>98765432109</strong><br />
                   IFSC: <strong>SBIN0001234</strong>
                 </div>
               </div>
@@ -359,9 +359,9 @@ export default function OrdersList({ token }) {
                 <div style={{ fontSize: '8px', fontWeight: 'bold', marginTop: '4px', color: '#4b5563' }}>Scan to Pay via UPI</div>
               </div>
             </div>
-            
+
             <div style={{ marginTop: '12px', fontSize: '9.5px', color: '#4b5563', lineHeight: '1.3' }}>
-              <strong>Amount in Words:</strong><br/>
+              <strong>Amount in Words:</strong><br />
               <span style={{ fontStyle: 'italic', fontWeight: 600, color: '#1f2937' }}>{numberToWords(grandTotal)}</span>
             </div>
           </div>
@@ -421,10 +421,10 @@ export default function OrdersList({ token }) {
               Thank you for your business! We look forward to serving you again.
             </div>
           </div>
-          
+
           <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '80px', alignItems: 'center' }}>
             <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#374151' }}>For TEGL Electronics Pvt. Ltd.</span>
-            
+
             {/* Signature Area */}
             <div style={{ borderBottom: '1px solid #d1d5db', width: '150px', margin: '15px 0 5px 0' }}></div>
             <span style={{ fontSize: '8.5px', color: '#6b7280' }}>Authorized Signatory</span>
@@ -457,20 +457,20 @@ export default function OrdersList({ token }) {
       <div className="glass-panel" style={{ marginBottom: '1.5rem', padding: '1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
           <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} size={18} />
-          <input 
-            type="text" 
-            placeholder="Search by ID, Customer Name, Email..." 
-            className="form-control" 
+          <input
+            type="text"
+            placeholder="Search by ID, Customer Name, Email..."
+            className="form-control"
             style={{ paddingLeft: '40px', marginBottom: 0 }}
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
-        
+
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#5c5c5c' }}>Status:</span>
-          <select 
-            className="form-control" 
+          <select
+            className="form-control"
             style={{ width: '150px', marginBottom: 0 }}
             value={statusFilter}
             onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
@@ -488,8 +488,8 @@ export default function OrdersList({ token }) {
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#5c5c5c' }}>Channel:</span>
-          <select 
-            className="form-control" 
+          <select
+            className="form-control"
             style={{ width: '130px', marginBottom: 0 }}
             value={saleTypeFilter}
             onChange={e => { setSaleTypeFilter(e.target.value); setPage(1); }}
@@ -502,8 +502,8 @@ export default function OrdersList({ token }) {
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <ArrowUpDown size={16} style={{ color: '#5c5c5c' }} />
-          <select 
-            className="form-control" 
+          <select
+            className="form-control"
             style={{ width: '150px', marginBottom: 0 }}
             value={sortBy}
             onChange={e => { setSortBy(e.target.value); setPage(1); }}
@@ -519,17 +519,17 @@ export default function OrdersList({ token }) {
 
       <div className="glass-panel">
         {loading ? (
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
             padding: '3rem 0',
-            gap: '16px' 
+            gap: '16px'
           }}>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '50px' }}>
               {[0, 1, 2, 3, 4].map(idx => (
-                <div 
+                <div
                   key={idx}
                   style={{
                     width: '6px',
@@ -572,9 +572,9 @@ export default function OrdersList({ token }) {
                       <div style={{ fontSize: '0.75rem', color: '#8c8c8c' }}>✉️ {o.email}</div>
                     </td>
                     <td>
-                      <span className="badge" style={{ 
-                        backgroundColor: o.sale_type === 'offline' ? '#f97316' : '#2563eb', 
-                        color: '#ffffff', 
+                      <span className="badge" style={{
+                        backgroundColor: o.sale_type === 'offline' ? '#f97316' : '#2563eb',
+                        color: '#ffffff',
                         textTransform: 'uppercase',
                         fontWeight: 'bold',
                         fontSize: '0.7rem',
@@ -591,7 +591,7 @@ export default function OrdersList({ token }) {
                     <td style={{ fontWeight: 'bold' }}>₹{o.total_amount.toFixed(2)}</td>
                     <td>{getStatusBadge(o.status)}</td>
                     <td>
-                      <select 
+                      <select
                         value={o.status}
                         onChange={(e) => updateStatus(o.id, e.target.value)}
                         className="form-control"
@@ -607,9 +607,9 @@ export default function OrdersList({ token }) {
                       </select>
                     </td>
                     <td>
-                      <button 
-                        className="btn-icon" 
-                        title="Print Invoice / Packing Sheet" 
+                      <button
+                        className="btn-icon"
+                        title="Print Invoice / Packing Sheet"
                         onClick={() => handlePrint(o)}
                       >
                         <Printer size={15} />
