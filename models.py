@@ -11,6 +11,8 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), default='customer', nullable=False) # 'customer' or 'admin'
+    is_verified = db.Column(db.Boolean, default=False, nullable=False)
+    verification_token = db.Column(db.String(255), nullable=True)
     
     orders = db.relationship('Order', backref='user', lazy=True)
 
@@ -19,7 +21,8 @@ class User(db.Model):
             'id': self.id,
             'username': self.username,
             'email': self.email,
-            'role': self.role
+            'role': self.role,
+            'is_verified': self.is_verified
         }
 
 class Product(db.Model):

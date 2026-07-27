@@ -32,7 +32,8 @@ app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-from routes.auth import auth_bp, get_current_user
+from routes.auth import auth_bp, get_current_user, limiter
+limiter.init_app(app)
 app.register_blueprint(auth_bp)
 
 import threading
@@ -136,6 +137,9 @@ with app.app_context():
             db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS discrepancy_count INTEGER DEFAULT 0;"))
             db.session.execute(db.text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS sale_type VARCHAR(20) DEFAULT 'online';"))
             db.session.execute(db.text("ALTER TABLE return_logs ADD COLUMN IF NOT EXISTS order_id INTEGER REFERENCES orders(id);"))
+            db.session.execute(db.text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;"))
+            db.session.execute(db.text("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);"))
+            db.session.execute(db.text("UPDATE users SET is_verified = TRUE WHERE is_verified IS NULL OR username IN ('admin', 'customer');"))
             db.session.commit()
             print("PostgreSQL migrations applied successfully!")
         except Exception as pg_mig_err:
@@ -209,7 +213,15 @@ with app.app_context():
                             timestamp DATETIME NOT NULL
                         )
                     """)
-                
+            # Check if users table needs columns
+            cursor.execute("PRAGMA table_info(users)")
+            user_columns = [row[1] for row in cursor.fetchall()]
+            if 'is_verified' not in user_columns:
+                cursor.execute("ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT 0")
+            if 'verification_token' not in user_columns:
+                cursor.execute("ALTER TABLE users ADD COLUMN verification_token VARCHAR(255)")
+            cursor.execute("UPDATE users SET is_verified = 1 WHERE is_verified IS NULL OR username IN ('admin', 'customer')")
+            
             conn.commit()
             conn.close()
         except Exception as e:
@@ -1033,6 +1045,12 @@ def send_order_email_notification(order_id, customer_name, email, phone, address
 def create_order():
     from ml_models import predict_dynamic_price
     user_payload = get_current_user()
+    if not user_payload:
+        return jsonify({'error': 'Authentication required. Please log in to place an order.'}), 401
+        
+    user = User.query.get(user_payload['user_id'])
+    if not user or not user.is_verified:
+        return jsonify({'error': 'Email verification is required to place an order. Please verify your email first.'}), 403
     
     data = request.get_json() or {}
     customer_name = data.get('customer_name')

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const POS = lazy(() => import('./components/POS'));
@@ -12,6 +12,84 @@ const FinancialDashboard = lazy(() => import('./components/FinancialDashboard'))
 const ReviewsList = lazy(() => import('./components/ReviewsList'));
 import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield, Menu, X } from 'lucide-react';
 import './App.css';
+
+// Component for verification email landing page
+function EmailVerification() {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
+  const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'error'
+  const [msg, setMsg] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!token) {
+      setStatus('error');
+      setMsg('No verification token provided.');
+      return;
+    }
+    
+    const verifyToken = async () => {
+      try {
+        const res = await fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setStatus('success');
+          setMsg(data.message || 'Email verified successfully!');
+        } else {
+          setStatus('error');
+          setMsg(data.error || 'Failed to verify email.');
+        }
+      } catch (err) {
+        setStatus('error');
+        setMsg('Connection error. Please try again.');
+      }
+    };
+    
+    verifyToken();
+  }, [token]);
+
+  return (
+    <div className="auth-page" style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <div className="auth-card" style={{ maxWidth: '400px', width: '100%', margin: '0 auto', textAlign: 'center', padding: '30px' }}>
+        <img src="/logo.png" alt="TEGL Logo" style={{ height: '48px', marginBottom: '15px' }} />
+        <h2>Email Verification</h2>
+        
+        {status === 'verifying' && (
+          <div style={{ margin: '20px 0' }}>
+            <div className="loading-spinner" style={{ margin: '0 auto 15px' }}></div>
+            <p>Verifying your email address...</p>
+          </div>
+        )}
+        
+        {status === 'success' && (
+          <div style={{ margin: '20px 0', color: '#2ec4b6' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>✓</div>
+            <p style={{ fontWeight: 500 }}>{msg}</p>
+          </div>
+        )}
+        
+        {status === 'error' && (
+          <div style={{ margin: '20px 0', color: '#e71d36' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>✗</div>
+            <p style={{ fontWeight: 500 }}>{msg}</p>
+          </div>
+        )}
+        
+        <button 
+          onClick={() => navigate('/login')} 
+          className="auth-submit-btn" 
+          style={{ width: '100%', marginTop: '15px' }}
+        >
+          Go to Login
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const navigate = useNavigate();
@@ -28,6 +106,85 @@ export default function App() {
   const [newPassword, setNewPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+
+  // Security & verification States
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [resendSuccess, setResendSuccess] = useState('');
+
+  // Load Cloudflare Turnstile & Google Identity Services dynamically
+  useEffect(() => {
+    // Turnstile script
+    if (!document.getElementById('cloudflare-turnstile-script')) {
+      const script = document.createElement('script');
+      script.id = 'cloudflare-turnstile-script';
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+
+    // Google GSI script
+    if (!document.getElementById('google-gsi-script')) {
+      const script = document.createElement('script');
+      script.id = 'google-gsi-script';
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  // Initialize Google Login Button when on login screen
+  useEffect(() => {
+    if (authMode === 'login' && !token) {
+      const timer = setInterval(() => {
+        if (window.google && document.getElementById('google-signin-btn')) {
+          clearInterval(timer);
+          try {
+            window.google.accounts.id.initialize({
+              client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy-google-client-id.apps.googleusercontent.com',
+              callback: handleGoogleLogin
+            });
+            window.google.accounts.id.renderButton(
+              document.getElementById('google-signin-btn'),
+              { theme: 'outline', size: 'large', width: '100%' }
+            );
+          } catch (e) {
+            console.error("Google Sign-In initialization error:", e);
+          }
+        }
+      }, 500);
+      return () => clearInterval(timer);
+    }
+  }, [authMode, token]);
+
+  // Turnstile render logic
+  useEffect(() => {
+    if ((authMode === 'login' || authMode === 'register') && !token && !verificationSent) {
+      const timer = setTimeout(() => {
+        const container = document.getElementById('turnstile-container');
+        if (window.turnstile && container) {
+          try {
+            window.turnstile.reset(container);
+          } catch(e) {}
+          
+          try {
+            window.turnstile.render(container, {
+              sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA', // standard testing key
+              callback: (tok) => {
+                setTurnstileToken(tok);
+              }
+            });
+          } catch(e) {
+            console.error("Turnstile render error:", e);
+          }
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [authMode, token, verificationSent]);
 
   // Portal State
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -91,7 +248,65 @@ export default function App() {
     fetchProducts();
   }, [token]);
 
+  const handleGoogleLogin = async (response) => {
+    setAuthError('');
+    setAuthLoading(true);
+    try {
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Google Sign-In failed');
+      }
 
+      if (authRole === 'customer' && data.user.role === 'admin') {
+        throw new Error('Access denied: Admins cannot log in through the Customer Portal.');
+      }
+      if (authRole === 'admin' && data.user.role === 'customer') {
+        throw new Error('Access denied: Customers cannot log in through the Owner Portal.');
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setToken(data.token);
+      setUser(data.user);
+      
+      if (data.user.role === 'admin') {
+        setActiveTab('dashboard');
+        navigate('/owner/dashboard');
+      } else {
+        setActiveTab('shop');
+        navigate('/');
+      }
+    } catch (err) {
+      setAuthError(err.message);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResendSuccess('');
+    setAuthError('');
+    try {
+      const res = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: unverifiedEmail })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResendSuccess('Verification link resent successfully! Please check your email.');
+      } else {
+        setAuthError(data.error || 'Failed to resend verification link.');
+      }
+    } catch (err) {
+      setAuthError(err.message);
+    }
+  };
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -101,8 +316,8 @@ export default function App() {
     const isLogin = authMode === 'login';
     const url = isLogin ? '/api/auth/login' : '/api/auth/register';
     const payload = isLogin 
-      ? { username: email, password } 
-      : { username, email, password, role: authRole };
+      ? { username: email, password, turnstile_token: turnstileToken } 
+      : { username, email, password, role: authRole, turnstile_token: turnstileToken };
 
     try {
       const res = await fetch(url, {
@@ -113,6 +328,11 @@ export default function App() {
       
       let data = await res.json();
       if (!res.ok) {
+        if (res.status === 403 && data.unverified) {
+          setUnverifiedEmail(data.email);
+          setVerificationSent(true);
+          throw new Error(data.error);
+        }
         throw new Error(data.error || (isLogin ? 'Authentication failed' : 'Registration failed'));
       }
 
@@ -126,17 +346,11 @@ export default function App() {
       }
 
       if (!isLogin) {
-        // Automatically log in the user after registration
-        const loginRes = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: email, password })
-        });
-        const loginData = await loginRes.json();
-        if (!loginRes.ok) {
-          throw new Error(loginData.error || 'Authentication failed after registration');
-        }
-        data = loginData;
+        // Prompt user to verify email instead of logging in automatically
+        setUnverifiedEmail(email);
+        setVerificationSent(true);
+        setAuthLoading(false);
+        return;
       }
 
       localStorage.setItem('token', data.token);
@@ -245,7 +459,34 @@ export default function App() {
           </div>
 
 
-          {authMode === 'changePassword' ? (
+          {verificationSent ? (
+            <div className="auth-form" style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '2.5rem', color: '#ffb703', marginBottom: '15px' }}>✉</div>
+              <h3>Verify Your Email</h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted, #666)', marginBottom: '15px' }}>
+                A verification link has been sent to <strong>{unverifiedEmail}</strong>. Please check your inbox and verify your email before logging in.
+              </p>
+              {resendSuccess && <div style={{ color: '#2ec4b6', fontSize: '0.85rem', marginBottom: '10px' }}>{resendSuccess}</div>}
+              {authError && <div className="auth-error-msg" style={{ marginBottom: '10px' }}>{authError}</div>}
+              <button 
+                type="button" 
+                onClick={handleResendVerification} 
+                className="auth-submit-btn" 
+                style={{ width: '100%', marginBottom: '10px' }}
+                disabled={authLoading}
+              >
+                Resend Verification Link
+              </button>
+              <button 
+                type="button" 
+                onClick={() => { setVerificationSent(false); setAuthError(''); setResendSuccess(''); }}
+                className="auth-submit-btn"
+                style={{ width: '100%', background: 'transparent', border: '1px solid var(--border-color, #eee)', color: 'var(--text-color, #333)' }}
+              >
+                Back to Sign In
+              </button>
+            </div>
+          ) : authMode === 'changePassword' ? (
             <form onSubmit={handlePasswordChange} className="auth-form">
               <h3>Change Password</h3>
               
@@ -330,23 +571,38 @@ export default function App() {
                 />
               </div>
 
+              {/* Cloudflare Turnstile Container */}
+              <div id="turnstile-container" style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}></div>
+
               <button type="submit" className="auth-submit-btn" disabled={authLoading}>
                 {authLoading ? 'Verifying...' : (authMode === 'login' ? 'Login' : 'Sign Up')}
                 <ChevronRight size={18} />
               </button>
+
+              {/* Google Sign-In Button (Customer Login Only) */}
+              {authMode === 'login' && role === 'customer' && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', margin: '15px 0' }}>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
+                    <span style={{ padding: '0 10px', fontSize: '0.8rem', color: 'var(--text-muted, #aaa)' }}>OR</span>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
+                  </div>
+                  <div id="google-signin-btn" style={{ minHeight: '40px', width: '100%' }}></div>
+                </>
+              )}
             </form>
           )}
 
           <div className="auth-footer-toggle" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-            {authMode === 'changePassword' ? (
+            {verificationSent ? null : authMode === 'changePassword' ? (
               <p><button onClick={() => { setAuthMode('login'); setAuthError(''); }}>Back to Sign In</button></p>
             ) : (
               <>
                 {role === 'customer' && authMode === 'login' && (
-                  <p>Don't have an account? <button onClick={() => { setAuthMode('register'); setAuthError(''); }}>Create account</button></p>
+                  <p>Don't have an account? <button onClick={() => { setAuthMode('register'); setAuthError(''); setTurnstileToken(''); }}>Create account</button></p>
                 )}
                 {role === 'customer' && authMode === 'register' && (
-                  <p>Already have an account? <button onClick={() => { setAuthMode('login'); setAuthError(''); }}>Sign In</button></p>
+                  <p>Already have an account? <button onClick={() => { setAuthMode('login'); setAuthError(''); setTurnstileToken(''); }}>Sign In</button></p>
                 )}
                 <p>Forgot password? <button onClick={() => { setAuthMode('changePassword'); setAuthError(''); }}>Change password</button></p>
               </>
@@ -355,11 +611,11 @@ export default function App() {
             {/* Switch between Owner and Customer portals */}
             {role === 'customer' ? (
               <p style={{ marginTop: '8px', borderTop: '1px solid var(--border-color, #eee)', paddingTop: '8px' }}>
-                Are you a store owner? <button type="button" onClick={() => { navigate('/owner/login'); setAuthError(''); setAuthMode('login'); }}>Go to Owner Portal</button>
+                Are you a store owner? <button type="button" onClick={() => { navigate('/owner/login'); setAuthError(''); setAuthMode('login'); setVerificationSent(false); setTurnstileToken(''); }}>Go to Owner Portal</button>
               </p>
             ) : (
               <p style={{ marginTop: '8px', borderTop: '1px solid var(--border-color, #eee)', paddingTop: '8px' }}>
-                Want to shop instead? <button type="button" onClick={() => { navigate('/login'); setAuthError(''); setAuthMode('login'); }}>Go to Customer Shop</button>
+                Want to shop instead? <button type="button" onClick={() => { navigate('/login'); setAuthError(''); setAuthMode('login'); setVerificationSent(false); setTurnstileToken(''); }}>Go to Customer Shop</button>
               </p>
             )}
           </div>
@@ -744,6 +1000,7 @@ export default function App() {
 
   return (
     <Routes>
+      <Route path="/verify-email" element={<EmailVerification />} />
       {/* Customer Routes */}
       <Route 
         path="/login" 
