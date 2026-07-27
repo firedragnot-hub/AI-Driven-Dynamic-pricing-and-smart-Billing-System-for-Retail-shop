@@ -784,7 +784,7 @@ def explain_demand_prediction(date_str, predicted_demand_volume, day_of_week, mo
     }
     
     payload = {
-        "model": "llama-3.1-8b-instant",
+        "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
         "messages": [
             {"role": "system", "content": "You are a business intelligence agent. You must output a single paragraph of text only."},
             {"role": "user", "content": prompt}
@@ -2150,24 +2150,123 @@ def compute_gst_summary_data():
     config = BusinessConfig.query.first()
     biz_state = config.state if config else 'Maharashtra'
     biz_gstin = config.gstin if config else '27AAPCS1010A1Z0'
+    biz_state_clean = (biz_state or 'Maharashtra').strip().lower()
     
-    from sqlalchemy.orm import joinedload
-    pos_transactions = Transaction.query.options(
-        joinedload(Transaction.items).joinedload(TransactionItem.product)
-    ).all()
-    orders = Order.query.filter(Order.status != 'Cancelled').options(
-        joinedload(Order.items).joinedload(OrderItem.product)
-    ).all()
+    # 1. POS sales aggregation (intrastate)
+    pos_sum = db.session.query(
+        func.count(Transaction.id).label('sales_count'),
+        func.sum(Transaction.total_amount).label('total_sales')
+    ).first()
+    pos_sales_count = pos_sum[0] or 0
+    pos_total_sales = pos_sum[1] or 0.0
+
+    pos_items_summary = db.session.query(
+        func.sum((TransactionItem.quantity * TransactionItem.price_at_sale) / (1 + Product.gst_rate / 100.0)).label('taxable_sales'),
+        func.sum((TransactionItem.quantity * TransactionItem.price_at_sale) - ((TransactionItem.quantity * TransactionItem.price_at_sale) / (1 + Product.gst_rate / 100.0))).label('total_gst')
+    ).join(Product).first()
+    pos_taxable_sales = float(pos_items_summary[0] or 0.0)
+    pos_total_gst = float(pos_items_summary[1] or 0.0)
     
-    sales_count = 0
-    total_sales = 0.0
-    taxable_sales = 0.0
-    cgst_collected = 0.0
-    sgst_collected = 0.0
-    igst_collected = 0.0
-    total_gst_collected = 0.0
+    # 2. Order sales aggregation (can be interstate)
+    order_sum = db.session.query(
+        func.count(Order.id).label('sales_count'),
+        func.sum(Order.total_amount).label('total_sales')
+    ).filter(Order.status != 'Cancelled').first()
+    order_sales_count = order_sum[0] or 0
+    order_total_sales = order_sum[1] or 0.0
     
+    is_interstate_expr = ~func.lower(Order.address).like(f"%{biz_state_clean}%")
+    
+    order_items_summary = db.session.query(
+        is_interstate_expr.label('is_interstate'),
+        func.sum((OrderItem.quantity * OrderItem.price_at_sale) / (1 + Product.gst_rate / 100.0)).label('taxable_value'),
+        func.sum((OrderItem.quantity * OrderItem.price_at_sale) - ((OrderItem.quantity * OrderItem.price_at_sale) / (1 + Product.gst_rate / 100.0))).label('total_gst')
+    ).join(Product).join(Order).filter(Order.status != 'Cancelled').group_by(is_interstate_expr).all()
+    
+    order_taxable_sales = 0.0
+    order_cgst = 0.0
+    order_sgst = 0.0
+    order_igst = 0.0
+    order_total_gst = 0.0
+    
+    for row in order_items_summary:
+        is_interstate = row[0]
+        taxable_val = float(row[1] or 0.0)
+        total_gst = float(row[2] or 0.0)
+        
+        order_taxable_sales += taxable_val
+        order_total_gst += total_gst
+        
+        if is_interstate:
+            order_igst += total_gst
+        else:
+            order_cgst += total_gst / 2.0
+            order_sgst += total_gst / 2.0
+
+    # Total sales and tax
+    sales_count = pos_sales_count + order_sales_count
+    total_sales = pos_total_sales + order_total_sales
+    taxable_sales = pos_taxable_sales + order_taxable_sales
+    cgst_collected = (pos_total_gst / 2.0) + order_cgst
+    sgst_collected = (pos_total_gst / 2.0) + order_sgst
+    igst_collected = order_igst
+    total_gst_collected = pos_total_gst + order_total_gst
+    
+    # 3. HSN Summary for POS + Orders combined in SQL
     hsn_wise = {}
+    
+    hsn_pos = db.session.query(
+        Product.hsn_code,
+        func.sum(TransactionItem.quantity).label('quantity'),
+        func.sum((TransactionItem.quantity * TransactionItem.price_at_sale) / (1 + Product.gst_rate / 100.0)).label('taxable_value'),
+        Product.gst_rate,
+        func.sum((TransactionItem.quantity * TransactionItem.price_at_sale) - ((TransactionItem.quantity * TransactionItem.price_at_sale) / (1 + Product.gst_rate / 100.0))).label('total_gst'),
+        func.sum(TransactionItem.quantity * TransactionItem.price_at_sale).label('total_amount')
+    ).join(Product).group_by(Product.hsn_code, Product.gst_rate).all()
+    
+    hsn_orders = db.session.query(
+        Product.hsn_code,
+        is_interstate_expr.label('is_interstate'),
+        func.sum(OrderItem.quantity).label('quantity'),
+        func.sum((OrderItem.quantity * OrderItem.price_at_sale) / (1 + Product.gst_rate / 100.0)).label('taxable_value'),
+        Product.gst_rate,
+        func.sum((OrderItem.quantity * OrderItem.price_at_sale) - ((OrderItem.quantity * OrderItem.price_at_sale) / (1 + Product.gst_rate / 100.0))).label('total_gst'),
+        func.sum(OrderItem.quantity * OrderItem.price_at_sale).label('total_amount')
+    ).join(Product).join(Order).filter(Order.status != 'Cancelled').group_by(Product.hsn_code, is_interstate_expr, Product.gst_rate).all()
+    
+    def add_to_hsn(hsn, qty, taxable_val, gst_rate, total_gst, total_amount, is_interstate):
+        hsn = (hsn or '').strip()
+        if not hsn:
+            hsn = '84733099'
+        if hsn not in hsn_wise:
+            hsn_wise[hsn] = {
+                'hsn_code': hsn,
+                'quantity': 0,
+                'taxable_value': 0.0,
+                'gst_rate': gst_rate,
+                'cgst': 0.0,
+                'sgst': 0.0,
+                'igst': 0.0,
+                'total_gst': 0.0,
+                'total_amount': 0.0
+            }
+        hsn_wise[hsn]['quantity'] += qty
+        hsn_wise[hsn]['taxable_value'] += taxable_val
+        hsn_wise[hsn]['total_gst'] += total_gst
+        hsn_wise[hsn]['total_amount'] += total_amount
+        if is_interstate:
+            hsn_wise[hsn]['igst'] += total_gst
+        else:
+            hsn_wise[hsn]['cgst'] += total_gst / 2.0
+            hsn_wise[hsn]['sgst'] += total_gst / 2.0
+
+    for row in hsn_pos:
+        add_to_hsn(row[0], int(row[1] or 0), float(row[2] or 0.0), float(row[3] or 18.0), float(row[4] or 0.0), float(row[5] or 0.0), False)
+        
+    for row in hsn_orders:
+        add_to_hsn(row[0], int(row[2] or 0), float(row[3] or 0.0), float(row[4] or 18.0), float(row[5] or 0.0), float(row[6] or 0.0), row[1])
+
+    # 4. Validations (HSN missing and anomalous rate checks)
     validations = []
     
     def validate_gstin_format(gstin):
@@ -2176,87 +2275,59 @@ def compute_gst_summary_data():
         import re
         return bool(re.match(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$', gstin))
 
-    for tx in pos_transactions:
-        sales_count += 1
-        total_sales += tx.total_amount
-        breakdown = calculate_sales_tax_breakdown(tx, biz_state)
+    missing_hsn_pos = db.session.query(TransactionItem.transaction_id, Product.name).join(Product).filter(
+        (Product.hsn_code == None) | (Product.hsn_code == '')
+    ).limit(10).all()
+    for tx_id, prod_name in missing_hsn_pos:
+        validations.append({
+            'type': 'warning',
+            'record_type': 'POS Sale',
+            'record_id': tx_id,
+            'message': f"Product '{prod_name}' is missing an HSN code."
+        })
         
-        taxable_sales += breakdown['total_taxable']
-        cgst_collected += breakdown['cgst']
-        sgst_collected += breakdown['sgst']
-        igst_collected += breakdown['igst']
-        total_gst_collected += breakdown['total_gst']
+    missing_hsn_ord = db.session.query(OrderItem.order_id, Product.name).join(Product).join(Order).filter(
+        Order.status != 'Cancelled',
+        (Product.hsn_code == None) | (Product.hsn_code == '')
+    ).limit(10).all()
+    for order_id, prod_name in missing_hsn_ord:
+        validations.append({
+            'type': 'warning',
+            'record_type': 'Order',
+            'record_id': order_id,
+            'message': f"Product '{prod_name}' is missing an HSN code."
+        })
         
-        for item in tx.items:
-            hsn = item.product.hsn_code if (item.product and item.product.hsn_code) else None
-            if not hsn or hsn.strip() == '':
-                validations.append({
-                    'type': 'warning',
-                    'record_type': 'POS Sale',
-                    'record_id': tx.id,
-                    'message': f"Product '{item.product.name if item.product else 'Unknown'}' is missing an HSN code."
-                })
-            gst_rate = item.product.gst_rate if item.product else 18.0
-            if gst_rate < 0 or gst_rate > 28:
-                validations.append({
-                    'type': 'danger',
-                    'record_type': 'POS Sale',
-                    'record_id': tx.id,
-                    'message': f"Anomalous GST rate of {gst_rate}% on product '{item.product.name if item.product else 'Unknown'}'."
-                })
-                
-        for hsn, data in breakdown['hsn_wise'].items():
-            if hsn not in hsn_wise:
-                hsn_wise[hsn] = data.copy()
-            else:
-                hsn_wise[hsn]['quantity'] += data['quantity']
-                hsn_wise[hsn]['taxable_value'] += data['taxable_value']
-                hsn_wise[hsn]['cgst'] += data['cgst']
-                hsn_wise[hsn]['sgst'] += data['sgst']
-                hsn_wise[hsn]['igst'] += data['igst']
-                hsn_wise[hsn]['total_gst'] += data['total_gst']
-                hsn_wise[hsn]['total_amount'] += data['total_amount']
-                
-    for order in orders:
-        sales_count += 1
-        total_sales += order.total_amount
-        breakdown = calculate_sales_tax_breakdown(order, biz_state)
+    anomalous_gst_pos = db.session.query(TransactionItem.transaction_id, Product.name, Product.gst_rate).join(Product).filter(
+        (Product.gst_rate < 0) | (Product.gst_rate > 28)
+    ).limit(10).all()
+    for tx_id, prod_name, gst_rate in anomalous_gst_pos:
+        validations.append({
+            'type': 'danger',
+            'record_type': 'POS Sale',
+            'record_id': tx_id,
+            'message': f"Anomalous GST rate of {gst_rate}% on product '{prod_name}'."
+        })
         
-        taxable_sales += breakdown['total_taxable']
-        cgst_collected += breakdown['cgst']
-        sgst_collected += breakdown['sgst']
-        igst_collected += breakdown['igst']
-        total_gst_collected += breakdown['total_gst']
-        
-        for item in order.items:
-            hsn = item.product.hsn_code if (item.product and item.product.hsn_code) else None
-            if not hsn or hsn.strip() == '':
-                validations.append({
-                    'type': 'warning',
-                    'record_type': 'Order',
-                    'record_id': order.id,
-                    'message': f"Product '{item.product.name if item.product else 'Unknown'}' is missing an HSN code."
-                })
-                
-        for hsn, data in breakdown['hsn_wise'].items():
-            if hsn not in hsn_wise:
-                hsn_wise[hsn] = data.copy()
-            else:
-                hsn_wise[hsn]['quantity'] += data['quantity']
-                hsn_wise[hsn]['taxable_value'] += data['taxable_value']
-                hsn_wise[hsn]['cgst'] += data['cgst']
-                hsn_wise[hsn]['sgst'] += data['sgst']
-                hsn_wise[hsn]['igst'] += data['igst']
-                hsn_wise[hsn]['total_gst'] += data['total_gst']
-                hsn_wise[hsn]['total_amount'] += data['total_amount']
-                
+    anomalous_gst_ord = db.session.query(OrderItem.order_id, Product.name, Product.gst_rate).join(Product).join(Order).filter(
+        Order.status != 'Cancelled',
+        (Product.gst_rate < 0) | (Product.gst_rate > 28)
+    ).limit(10).all()
+    for order_id, prod_name, gst_rate in anomalous_gst_ord:
+        validations.append({
+            'type': 'danger',
+            'record_type': 'Order',
+            'record_id': order_id,
+            'message': f"Anomalous GST rate of {gst_rate}% on product '{prod_name}'."
+        })
+
+    # Purchases & Expenses summary
     purchases = Purchase.query.all()
     total_purchases = 0.0
     cgst_itc = 0.0
     sgst_itc = 0.0
     igst_itc = 0.0
     total_itc = 0.0
-    
     for p in purchases:
         total_purchases += p.total_amount
         if p.supplier_gstin and not validate_gstin_format(p.supplier_gstin):
@@ -2266,7 +2337,6 @@ def compute_gst_summary_data():
                 'record_id': p.id,
                 'message': f"Supplier '{p.supplier_name}' has an invalid GSTIN format: '{p.supplier_gstin}'."
             })
-            
         if p.itc_eligible:
             cgst_itc += p.cgst or 0.0
             sgst_itc += p.sgst or 0.0
@@ -2275,7 +2345,6 @@ def compute_gst_summary_data():
             
     expenses = Expense.query.all()
     total_expenses = 0.0
-    
     for e in expenses:
         total_expenses += e.total_amount
         if e.merchant_gstin and not validate_gstin_format(e.merchant_gstin):
@@ -2285,13 +2354,13 @@ def compute_gst_summary_data():
                 'record_id': e.id,
                 'message': f"Merchant '{e.merchant_name}' has an invalid GSTIN format: '{e.merchant_gstin}'."
             })
-            
         if e.itc_eligible:
             cgst_itc += e.cgst or 0.0
             sgst_itc += e.sgst or 0.0
             igst_itc += e.igst or 0.0
             total_itc += e.gst_amount or 0.0
             
+    # Rounding
     total_sales = round(total_sales, 2)
     taxable_sales = round(taxable_sales, 2)
     cgst_collected = round(cgst_collected, 2)
@@ -2666,24 +2735,81 @@ def gst_returns(return_type):
     summary = compute_gst_summary_data()
     
     if return_type == 'gstr1':
-        orders = Order.query.filter(Order.status != 'Cancelled').all()
+        from collections import defaultdict
+        
+        # 1. Load orders using specific field query to bypass ORM instantiation overhead
+        orders_data = db.session.query(
+            Order.id,
+            Order.customer_name,
+            Order.timestamp,
+            Order.total_amount,
+            Order.address
+        ).filter(Order.status != 'Cancelled').all()
+
+        # 2. Load order items and product gst_rates in a single query
+        items_data = db.session.query(
+            OrderItem.order_id,
+            OrderItem.quantity,
+            OrderItem.price_at_sale,
+            Product.gst_rate
+        ).join(Product).all()
+
+        # Group items by order_id
+        order_items_map = defaultdict(list)
+        for item in items_data:
+            order_items_map[item.order_id].append(item)
+
         b2b_records = []
         b2c_records = []
         
-        for o in orders:
-            breakdown = calculate_sales_tax_breakdown(o, summary['state'])
-            cust_name = o.customer_name or 'Counter Customer'
+        biz_state_clean = (summary['state'] or 'Maharashtra').strip().lower()
+
+        for order_id, customer_name, timestamp, total_amount, address in orders_data:
+            # Determine if interstate
+            is_interstate = False
+            if address:
+                addr = address.lower()
+                if biz_state_clean not in addr:
+                    is_interstate = True
+
+            total_taxable = 0.0
+            total_gst = 0.0
+            cgst = 0.0
+            sgst = 0.0
+            igst = 0.0
+
+            items = order_items_map.get(order_id, [])
+            for item in items:
+                qty = item.quantity
+                price = item.price_at_sale
+                total_item = qty * price
+                gst_rate = item.gst_rate or 18.0
+
+                taxable_val = total_item / (1 + gst_rate / 100.0)
+                gst_val = total_item - taxable_val
+
+                total_taxable += taxable_val
+                total_gst += gst_val
+
+                if is_interstate:
+                    igst += gst_val
+                else:
+                    cgst += gst_val / 2.0
+                    sgst += gst_val / 2.0
+
+            cust_name = customer_name or 'Counter Customer'
             record = {
-                'id': o.id,
+                'id': order_id,
                 'customer_name': cust_name,
-                'date': o.timestamp.isoformat() if o.timestamp else datetime.utcnow().isoformat(),
-                'total_amount': o.total_amount or 0.0,
-                'taxable_value': breakdown['total_taxable'],
-                'cgst': breakdown['cgst'],
-                'sgst': breakdown['sgst'],
-                'igst': breakdown['igst'],
-                'total_gst': breakdown['total_gst']
+                'date': timestamp.isoformat() if timestamp else datetime.utcnow().isoformat(),
+                'total_amount': total_amount or 0.0,
+                'taxable_value': round(total_taxable, 2),
+                'cgst': round(cgst, 2),
+                'sgst': round(sgst, 2),
+                'igst': round(igst, 2),
+                'total_gst': round(total_gst, 2)
             }
+
             if 'corp' in cust_name.lower() or 'ltd' in cust_name.lower():
                 record['buyer_gstin'] = '27ABCDE1234F1Z5'
                 b2b_records.append(record)
@@ -3326,8 +3452,11 @@ def reconcile_invoice():
     if not file or not file.filename.endswith('.pdf'):
         return jsonify({'error': 'Valid PDF file required'}), 400
         
-    uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads', 'bills')
-    os.makedirs(uploads_dir, exist_ok=True)
+    if os.getenv('VERCEL') == '1':
+        uploads_dir = '/tmp'
+    else:
+        uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads', 'bills')
+        os.makedirs(uploads_dir, exist_ok=True)
     
     filename = f"bill_{purchase.id}_{int(datetime.utcnow().timestamp())}.pdf"
     file_path = os.path.join(uploads_dir, filename)
@@ -3400,7 +3529,7 @@ def reconcile_invoice():
     if len(mismatches) == 0:
         bill = PurchaseBill(
             purchase_id=purchase.id,
-            pdf_path=f"uploads/bills/{filename}",
+            pdf_path=file_path,
             extracted_json=json.dumps(parsed_items),
             verification_report=json.dumps(verification_report),
             verification_status='Verified',
@@ -3434,7 +3563,7 @@ def reconcile_invoice():
     else:
         bill = PurchaseBill(
             purchase_id=purchase.id,
-            pdf_path=f"uploads/bills/{filename}",
+            pdf_path=file_path,
             extracted_json=json.dumps(parsed_items),
             verification_report=json.dumps(verification_report),
             verification_status='Discrepancies Detected',
@@ -3660,7 +3789,11 @@ def download_purchase_bill(bill_id):
     if not bill or not bill.pdf_path:
         return jsonify({'error': 'Bill not found'}), 404
         
-    absolute_path = os.path.join(os.path.dirname(__file__), bill.pdf_path)
+    if os.path.isabs(bill.pdf_path):
+        absolute_path = bill.pdf_path
+    else:
+        absolute_path = os.path.join(os.path.dirname(__file__), bill.pdf_path)
+        
     if not os.path.exists(absolute_path):
         return jsonify({'error': 'File not found on disk'}), 404
         
@@ -3729,7 +3862,7 @@ def get_notifications_summary():
     )
     
     payload = {
-        "model": "llama3-8b-8192",
+        "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.5,
         "max_tokens": 100
@@ -3741,7 +3874,8 @@ def get_notifications_summary():
             data=json.dumps(payload).encode('utf-8'),
             headers={
                 'Content-Type': 'application/json',
-                'Authorization': f'Bearer {groq_api_key}'
+                'Authorization': f'Bearer {groq_api_key}',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
             method='POST'
         )
