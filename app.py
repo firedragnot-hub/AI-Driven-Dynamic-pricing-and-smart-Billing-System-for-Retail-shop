@@ -3435,6 +3435,7 @@ def parse_bill_pdf(file_path):
 
 @app.route('/api/ml/reconcile-invoice', methods=['POST'])
 def reconcile_invoice():
+    import re
     user = get_current_user()
     if not require_admin(user):
         return jsonify({'error': 'Access denied'}), 403
