@@ -3465,39 +3465,6 @@ def reconcile_invoice():
     supplier_name, parsed_items = parse_bill_pdf(file_path)
     
     original_items = PurchaseItem.query.filter_by(purchase_id=purchase.id).all()
-    
-    # Auto-align parsed items with original order items to prevent mismatches
-    aligned_items = []
-    from models import Product
-    for orig in original_items:
-        # Find if it was parsed (allowing case-insensitive alphanumeric substring matches)
-        matched_item = None
-        for item in parsed_items:
-            p_clean = re.sub(r'[^a-zA-Z0-9]', '', item['product_name'].lower())
-            orig_clean = re.sub(r'[^a-zA-Z0-9]', '', orig.product_name.lower())
-            if p_clean in orig_clean or orig_clean in p_clean:
-                matched_item = item
-                break
-        
-        # If the PDF parsed a quantity/price, we use it, otherwise fall back to original ordered values
-        qty = matched_item['quantity'] if matched_item else orig.quantity
-        price = matched_item['price_at_purchase'] if matched_item else orig.price_at_purchase
-        
-        product = Product.query.filter_by(name=orig.product_name).first()
-        
-        aligned_items.append({
-            'product_name': orig.product_name,
-            'product_id': product.id if product else None,
-            'quantity': qty,
-            'price_at_purchase': price,
-            'total_amount': round(qty * price, 2)
-        })
-        
-    parsed_items = aligned_items
-    if supplier_name == "Unknown Supplier":
-        supplier_name = purchase.supplier or "Supplier Inc."
-        
-    # Since we aligned them perfectly, we initialize empty lists of mismatches so it always auto-verifies
     mismatches = []
     missing_products = []
     unexpected_products = []
@@ -3505,11 +3472,122 @@ def reconcile_invoice():
     price_differences = []
     duplicate_items = []
     
+    matched_parsed_indices = set()
+    aligned_items = []
+    from models import Product
+    
+    for orig in original_items:
+        matched_item = None
+        matched_idx = -1
+        orig_clean = re.sub(r'[^a-zA-Z0-9]', '', orig.product_name.lower())
+        
+        for idx, item in enumerate(parsed_items):
+            if idx in matched_parsed_indices:
+                continue
+            p_clean = re.sub(r'[^a-zA-Z0-9]', '', item['product_name'].lower())
+            if p_clean in orig_clean or orig_clean in p_clean:
+                matched_item = item
+                matched_idx = idx
+                break
+                
+        product = Product.query.filter_by(name=orig.product_name).first()
+        product_id = product.id if product else None
+        
+        if matched_item:
+            matched_parsed_indices.add(matched_idx)
+            qty = matched_item['quantity']
+            price = matched_item['price_at_purchase']
+            
+            # Check quantity
+            if qty != orig.quantity:
+                mismatches.append({
+                    'product_name': orig.product_name,
+                    'type': 'Quantity Mismatch',
+                    'ordered_qty': orig.quantity,
+                    'billed_qty': qty,
+                    'difference': qty - orig.quantity
+                })
+                quantity_differences.append({
+                    'product_name': orig.product_name,
+                    'ordered_qty': orig.quantity,
+                    'billed_qty': qty
+                })
+                
+            # Check price
+            if abs(price - orig.price_at_purchase) > 0.01:
+                mismatches.append({
+                    'product_name': orig.product_name,
+                    'type': 'Price Mismatch',
+                    'ordered_price': orig.price_at_purchase,
+                    'billed_price': price,
+                    'difference': round(price - orig.price_at_purchase, 2)
+                })
+                price_differences.append({
+                    'product_name': orig.product_name,
+                    'ordered_price': orig.price_at_purchase,
+                    'billed_price': price
+                })
+                
+            aligned_items.append({
+                'product_name': orig.product_name,
+                'product_id': product_id,
+                'quantity': qty,
+                'price_at_purchase': price,
+                'total_amount': round(qty * price, 2)
+            })
+        else:
+            # Missing product
+            mismatches.append({
+                'product_name': orig.product_name,
+                'type': 'Missing Product',
+                'ordered_qty': orig.quantity,
+                'billed_qty': 0,
+                'difference': -orig.quantity
+            })
+            missing_products.append({
+                'product_name': orig.product_name,
+                'ordered_qty': orig.quantity,
+                'price': orig.price_at_purchase
+            })
+            aligned_items.append({
+                'product_name': orig.product_name,
+                'product_id': product_id,
+                'quantity': 0,
+                'price_at_purchase': orig.price_at_purchase,
+                'total_amount': 0.0
+            })
+            
+    # Check for extra/unexpected products
+    for idx, item in enumerate(parsed_items):
+        if idx not in matched_parsed_indices:
+            mismatches.append({
+                'product_name': item['product_name'],
+                'type': 'Unexpected Product',
+                'ordered_qty': 0,
+                'billed_qty': item['quantity'],
+                'difference': item['quantity']
+            })
+            unexpected_products.append({
+                'product_name': item['product_name'],
+                'billed_qty': item['quantity'],
+                'billed_price': item['price_at_purchase']
+            })
+            aligned_items.append({
+                'product_name': item['product_name'],
+                'product_id': item.get('product_id'),
+                'quantity': item['quantity'],
+                'price_at_purchase': item['price_at_purchase'],
+                'total_amount': round(item['quantity'] * item['price_at_purchase'], 2)
+            })
+
+    parsed_items = aligned_items
+    if supplier_name == "Unknown Supplier":
+        supplier_name = purchase.supplier or "Supplier Inc."
+        
     order_total = purchase.total_amount
     bill_total = sum(item['total_amount'] for item in parsed_items)
-    total_difference = 0.0
-
-        
+    total_difference = round(bill_total - order_total, 2)
+    
     verification_report = {
         'total_ordered_items': len(original_items),
         'total_verified_items': len(parsed_items) - len(unexpected_products),

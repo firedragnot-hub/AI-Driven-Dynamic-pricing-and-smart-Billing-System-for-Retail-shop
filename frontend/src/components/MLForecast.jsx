@@ -987,162 +987,114 @@ export default function MLForecast({ token }) {
 
                   {/* Content */}
                   <div style={{ padding: '2rem', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {/* Summary Card */}
+                    {/* Order Verification Result Summary */}
                     <div style={{
                       background: '#f8fafc',
                       border: '1px solid #e2e8f0',
                       padding: '1.25rem',
                       borderRadius: '12px'
                     }}>
-                      <h5 style={{ margin: '0 0 0.75rem 0', fontWeight: 'bold', fontSize: '0.95rem' }}>Purchase Order Summary</h5>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                        <div>
-                          <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Total Items Ordered</span>
-                          <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
-                            {selectedBill ? selectedBill.verification_report?.total_ordered_items : reconciliationData.verification_report?.total_ordered_items}
+                      <h5 style={{ margin: '0 0 1rem 0', fontWeight: 'bold', fontSize: '0.95rem', color: '#1e293b' }}>
+                        Order Verification Result Summary
+                      </h5>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', textAlign: 'center' }}>
+                        <div style={{ padding: '0.75rem', background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '8px' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#991b1b', display: 'block', fontWeight: '600' }}>Missing Products</span>
+                          <span style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#991b1b' }}>
+                            {((selectedBill ? selectedBill.verification_report?.mismatches : reconciliationData?.verification_report?.mismatches) || []).filter(m => m.type === 'Missing Product').length}
                           </span>
                         </div>
-                        <div>
-                          <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Verified Items</span>
-                          <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#16a34a' }}>
-                            {selectedBill ? selectedBill.verification_report?.total_verified_items : reconciliationData.verification_report?.total_verified_items}
+                        <div style={{ padding: '0.75rem', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '8px' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#92400e', display: 'block', fontWeight: '600' }}>Extra Products</span>
+                          <span style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#92400e' }}>
+                            {((selectedBill ? selectedBill.verification_report?.mismatches : reconciliationData?.verification_report?.mismatches) || []).filter(m => m.type === 'Unexpected Product').length}
                           </span>
                         </div>
-                        <div>
-                          <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Status</span>
-                          <span style={{
-                            fontSize: '0.8rem',
-                            fontWeight: 'bold',
-                            padding: '2px 8px',
-                            borderRadius: '12px',
-                            backgroundColor: (selectedBill ? selectedBill.verification_status : reconciliationData.status) === 'Verified' ? '#dcfce7' : '#fee2e2',
-                            color: (selectedBill ? selectedBill.verification_status : reconciliationData.status) === 'Verified' ? '#15803d' : '#b91c1c',
-                            display: 'inline-block',
-                            marginTop: '4px'
-                          }}>
-                            {selectedBill ? selectedBill.verification_status : reconciliationData.status}
+                        <div style={{ padding: '0.75rem', background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: '8px' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#0f766e', display: 'block', fontWeight: '600' }}>Quantity Mismatches</span>
+                          <span style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#0f766e' }}>
+                            {((selectedBill ? selectedBill.verification_report?.mismatches : reconciliationData?.verification_report?.mismatches) || []).filter(m => m.type === 'Quantity Mismatch').length}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Missing Products Section */}
-                    {((selectedBill ? selectedBill.verification_report?.missing_products : reconciliationData.verification_report?.missing_products) || []).length > 0 && (
+                    {/* Detailed Discrepancies Table */}
+                    {((selectedBill ? selectedBill.verification_report?.mismatches : reconciliationData?.verification_report?.mismatches) || []).length > 0 ? (
                       <div>
-                        <h5 style={{ margin: '0 0 0.5rem 0', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                          <AlertCircle size={16} /> Missing Products (Ordered but not received)
+                        <h5 style={{ margin: '0 0 0.75rem 0', fontWeight: 'bold', fontSize: '0.9rem', color: '#1e293b' }}>
+                          Detailed Discrepancies Table
                         </h5>
-                        <div style={{ overflowX: 'auto', border: '1px solid #fee2e2', borderRadius: '8px' }}>
+                        <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
                           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                             <thead>
-                              <tr style={{ backgroundColor: '#fef2f2', borderBottom: '1px solid #fee2e2' }}>
-                                <th style={{ textAlign: 'left', padding: '8px 12px' }}>Product</th>
-                                <th style={{ textAlign: 'right', padding: '8px 12px' }}>Ordered Qty</th>
-                                <th style={{ textAlign: 'right', padding: '8px 12px' }}>Received Qty</th>
+                              <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}>
+                                <th style={{ textAlign: 'left', padding: '10px 12px', fontWeight: '600' }}>Product Name</th>
+                                <th style={{ textAlign: 'right', padding: '10px 12px', fontWeight: '600' }}>Ordered Qty</th>
+                                <th style={{ textAlign: 'right', padding: '10px 12px', fontWeight: '600' }}>Received Qty</th>
+                                <th style={{ textAlign: 'right', padding: '10px 12px', fontWeight: '600' }}>Difference</th>
+                                <th style={{ textAlign: 'left', padding: '10px 12px', fontWeight: '600' }}>Status</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {((selectedBill ? selectedBill.verification_report?.missing_products : reconciliationData.verification_report?.missing_products) || []).map((item, idx) => (
-                                <tr key={idx} style={{ borderBottom: '1px solid #fee2e2' }}>
-                                  <td style={{ padding: '8px 12px', fontWeight: '500' }}>{item.product_name}</td>
-                                  <td style={{ textAlign: 'right', padding: '8px 12px' }}>{item.ordered_qty}</td>
-                                  <td style={{ textAlign: 'right', padding: '8px 12px', color: '#b91c1c', fontWeight: 'bold' }}>0</td>
-                                </tr>
-                              ))}
+                              {((selectedBill ? selectedBill.verification_report?.mismatches : reconciliationData?.verification_report?.mismatches) || []).map((item, idx) => {
+                                let statusText = item.type;
+                                let statusColor = '#475569';
+                                let statusBg = '#f1f5f9';
+                                if (item.type === 'Missing Product') {
+                                  statusText = 'Missing';
+                                  statusColor = '#b91c1c';
+                                  statusBg = '#fee2e2';
+                                } else if (item.type === 'Unexpected Product') {
+                                  statusText = 'Extra';
+                                  statusColor = '#d97706';
+                                  statusBg = '#fef3c7';
+                                } else if (item.type === 'Quantity Mismatch') {
+                                  statusText = 'Quantity Mismatch';
+                                  statusColor = '#0d9488';
+                                  statusBg = '#ccfbf1';
+                                } else if (item.type === 'Price Mismatch') {
+                                  statusText = 'Price Mismatch';
+                                  statusColor = '#2563eb';
+                                  statusBg = '#dbeafe';
+                                }
+
+                                return (
+                                  <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '10px 12px', fontWeight: '500' }}>{item.product_name}</td>
+                                    <td style={{ textAlign: 'right', padding: '10px 12px' }}>
+                                      {item.ordered_qty !== undefined ? item.ordered_qty : (item.ordered_price !== undefined ? `₹${item.ordered_price}` : '-')}
+                                    </td>
+                                    <td style={{ textAlign: 'right', padding: '10px 12px' }}>
+                                      {item.billed_qty !== undefined ? item.billed_qty : (item.billed_price !== undefined ? `₹${item.billed_price}` : '-')}
+                                    </td>
+                                    <td style={{ textAlign: 'right', padding: '10px 12px', fontWeight: 'bold', color: item.difference > 0 ? '#16a34a' : '#b91c1c' }}>
+                                      {item.difference > 0 ? `+${item.difference}` : item.difference}
+                                    </td>
+                                    <td style={{ padding: '10px 12px' }}>
+                                      <span style={{
+                                        fontSize: '0.72rem',
+                                        fontWeight: 'bold',
+                                        padding: '2px 8px',
+                                        borderRadius: '12px',
+                                        color: statusColor,
+                                        backgroundColor: statusBg,
+                                        display: 'inline-block'
+                                      }}>
+                                        {statusText}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>
                       </div>
-                    )}
-
-                    {/* Unexpected Products Section */}
-                    {((selectedBill ? selectedBill.verification_report?.unexpected_products : reconciliationData.verification_report?.unexpected_products) || []).length > 0 && (
-                      <div>
-                        <h5 style={{ margin: '0 0 0.5rem 0', color: '#b45309', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                          <AlertCircle size={16} /> Unexpected Products (In bill but not ordered)
-                        </h5>
-                        <div style={{ overflowX: 'auto', border: '1px solid #fef3c7', borderRadius: '8px' }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                            <thead>
-                              <tr style={{ backgroundColor: '#fffbeb', borderBottom: '1px solid #fef3c7' }}>
-                                <th style={{ textAlign: 'left', padding: '8px 12px' }}>Product</th>
-                                <th style={{ textAlign: 'right', padding: '8px 12px' }}>Billed Qty</th>
-                                <th style={{ textAlign: 'right', padding: '8px 12px' }}>Billed Price</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {((selectedBill ? selectedBill.verification_report?.unexpected_products : reconciliationData.verification_report?.unexpected_products) || []).map((item, idx) => (
-                                <tr key={idx} style={{ borderBottom: '1px solid #fef3c7' }}>
-                                  <td style={{ padding: '8px 12px', fontWeight: '500' }}>{item.product_name}</td>
-                                  <td style={{ textAlign: 'right', padding: '8px 12px' }}>{item.billed_qty}</td>
-                                  <td style={{ textAlign: 'right', padding: '8px 12px' }}>₹{item.billed_price?.toLocaleString()}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Quantity Differences Section */}
-                    {((selectedBill ? selectedBill.verification_report?.quantity_differences : reconciliationData.verification_report?.quantity_differences) || []).length > 0 && (
-                      <div>
-                        <h5 style={{ margin: '0 0 0.5rem 0', color: '#0f766e', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                          <AlertCircle size={16} /> Quantity Differences
-                        </h5>
-                        <div style={{ overflowX: 'auto', border: '1px solid #ccfbf1', borderRadius: '8px' }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                            <thead>
-                              <tr style={{ backgroundColor: '#f0fdfa', borderBottom: '1px solid #ccfbf1' }}>
-                                <th style={{ textAlign: 'left', padding: '8px 12px' }}>Product</th>
-                                <th style={{ textAlign: 'right', padding: '8px 12px' }}>Ordered</th>
-                                <th style={{ textAlign: 'right', padding: '8px 12px' }}>Received</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {((selectedBill ? selectedBill.verification_report?.quantity_differences : reconciliationData.verification_report?.quantity_differences) || []).map((item, idx) => (
-                                <tr key={idx} style={{ borderBottom: '1px solid #ccfbf1' }}>
-                                  <td style={{ padding: '8px 12px', fontWeight: '500' }}>{item.product_name}</td>
-                                  <td style={{ textAlign: 'right', padding: '8px 12px' }}>{item.ordered_qty}</td>
-                                  <td style={{ textAlign: 'right', padding: '8px 12px', fontWeight: 'bold', color: item.billed_qty > item.ordered_qty ? '#0f766e' : '#b91c1c' }}>
-                                    {item.billed_qty}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Price Differences Section */}
-                    {((selectedBill ? selectedBill.verification_report?.price_differences : reconciliationData.verification_report?.price_differences) || []).length > 0 && (
-                      <div>
-                        <h5 style={{ margin: '0 0 0.5rem 0', color: '#1e40af', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                          <AlertCircle size={16} /> Price Differences
-                        </h5>
-                        <div style={{ overflowX: 'auto', border: '1px solid #dbeafe', borderRadius: '8px' }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                            <thead>
-                              <tr style={{ backgroundColor: '#eff6ff', borderBottom: '1px solid #dbeafe' }}>
-                                <th style={{ textAlign: 'left', padding: '8px 12px' }}>Product</th>
-                                <th style={{ textAlign: 'right', padding: '8px 12px' }}>Ordered Price</th>
-                                <th style={{ textAlign: 'right', padding: '8px 12px' }}>Billed Price</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {((selectedBill ? selectedBill.verification_report?.price_differences : reconciliationData.verification_report?.price_differences) || []).map((item, idx) => (
-                                <tr key={idx} style={{ borderBottom: '1px solid #dbeafe' }}>
-                                  <td style={{ padding: '8px 12px', fontWeight: '500' }}>{item.product_name}</td>
-                                  <td style={{ textAlign: 'right', padding: '8px 12px' }}>₹{item.ordered_price?.toLocaleString()}</td>
-                                  <td style={{ textAlign: 'right', padding: '8px 12px', fontWeight: 'bold', color: item.billed_price > item.ordered_price ? '#b91c1c' : '#16a34a' }}>
-                                    ₹{item.billed_price?.toLocaleString()}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '2rem', color: '#16a34a', fontWeight: 'bold', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+                        <span style={{ fontSize: '2rem' }}>✓</span>
+                        <span>All items and quantities matched successfully!</span>
                       </div>
                     )}
 
