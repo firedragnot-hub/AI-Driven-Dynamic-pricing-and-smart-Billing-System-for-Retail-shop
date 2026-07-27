@@ -116,7 +116,7 @@ export default function App() {
   // Load Cloudflare Turnstile & Google Identity Services dynamically
   useEffect(() => {
     // Turnstile script
-    if (!document.getElementById('cloudflare-turnstile-script')) {
+    if (import.meta.env.VITE_TURNSTILE_SITE_KEY && !document.getElementById('cloudflare-turnstile-script')) {
       const script = document.createElement('script');
       script.id = 'cloudflare-turnstile-script';
       script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
@@ -162,7 +162,7 @@ export default function App() {
 
   // Turnstile render logic
   useEffect(() => {
-    if ((authMode === 'login' || authMode === 'register') && !token && !verificationSent) {
+    if (import.meta.env.VITE_TURNSTILE_SITE_KEY && (authMode === 'login' || authMode === 'register') && !token && !verificationSent) {
       const timer = setTimeout(() => {
         const container = document.getElementById('turnstile-container');
         if (window.turnstile && container) {
@@ -172,7 +172,7 @@ export default function App() {
           
           try {
             window.turnstile.render(container, {
-              sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA', // standard testing key
+              sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
               callback: (tok) => {
                 setTurnstileToken(tok);
               }
@@ -572,7 +572,9 @@ export default function App() {
               </div>
 
               {/* Cloudflare Turnstile Container */}
-              <div id="turnstile-container" style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}></div>
+              {import.meta.env.VITE_TURNSTILE_SITE_KEY && (
+                <div id="turnstile-container" style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}></div>
+              )}
 
               <button type="submit" className="auth-submit-btn" disabled={authLoading}>
                 {authLoading ? 'Verifying...' : (authMode === 'login' ? 'Login' : 'Sign Up')}
