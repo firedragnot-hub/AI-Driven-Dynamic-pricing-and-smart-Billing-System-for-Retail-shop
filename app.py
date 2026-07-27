@@ -784,7 +784,7 @@ def explain_demand_prediction(date_str, predicted_demand_volume, day_of_week, mo
     }
     
     payload = {
-        "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+        "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip(),
         "messages": [
             {"role": "system", "content": "You are a business intelligence agent. You must output a single paragraph of text only."},
             {"role": "user", "content": prompt}
@@ -3941,7 +3941,7 @@ def get_notifications_summary():
     )
     
     payload = {
-        "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+        "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip(),
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.5,
         "max_tokens": 100
