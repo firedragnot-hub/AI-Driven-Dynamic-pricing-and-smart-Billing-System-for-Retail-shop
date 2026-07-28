@@ -98,6 +98,17 @@ export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
 
+  // Safely access Clerk user state when ClerkProvider is active
+  let clerkSignedIn = false;
+  let clerkUser = null;
+  try {
+    const clerk = useUser();
+    clerkSignedIn = clerk.isSignedIn;
+    clerkUser = clerk.user;
+  } catch (e) {
+    // ClerkProvider is not active in context
+  }
+
   // Sync Clerk authentication directly to customer portal
   useEffect(() => {
     if (clerkSignedIn && clerkUser && (!token || !user)) {
