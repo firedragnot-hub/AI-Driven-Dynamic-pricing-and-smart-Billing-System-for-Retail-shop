@@ -1157,25 +1157,67 @@ def send_order_email_notification(order_id, customer_name, email, phone, address
     def run():
         import urllib.request
         import json
+        import smtplib
+        import os
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        owner_email = os.getenv("OWNER_EMAIL") or os.getenv("MAIL_USERNAME") or "admin@retail.com"
+        smtp_server = os.getenv("SMTP_SERVER") or os.getenv("MAIL_SERVER")
+        smtp_port = int(os.getenv("SMTP_PORT") or os.getenv("MAIL_PORT") or 587)
+        smtp_user = os.getenv("SMTP_USER") or os.getenv("MAIL_USERNAME")
+        smtp_pass = os.getenv("SMTP_PASSWORD") or os.getenv("MAIL_PASSWORD")
+        web3_key = os.getenv("WEB3FORMS_ACCESS_KEY", "aa8acc90-e57a-4c4b-820b-94d5c588a1a6")
+
+        subject = f"🛒 New Order #{order_id} Received - TEGL Retail"
+        message_body = (
+            f"New online order received!\n\n"
+            f"Order Details:\n"
+            f"  Order ID: #{order_id}\n"
+            f"  Customer Name: {customer_name}\n"
+            f"  Customer Email: {email}\n"
+            f"  Phone Number: {phone}\n"
+            f"  Delivery Address: {address}\n"
+            f"  Total Amount: ₹{total_amount:.2f}\n\n"
+            f"Items Ordered:\n"
+            f"{items_summary}\n"
+            f"Thank you,\nTEGL Retail Solutions System"
+        )
+
+        # 1. Try Direct SMTP dispatch (Gmail, Outlook, Custom SMTP) if configured
+        if smtp_server and smtp_user and smtp_pass:
+            try:
+                recipients = list(set([r for r in [owner_email, email] if r and '@' in r]))
+                msg = MIMEMultipart()
+                msg['From'] = smtp_user
+                msg['To'] = ", ".join(recipients)
+                msg['Subject'] = subject
+                msg.attach(MIMEText(message_body, 'plain', 'utf-8'))
+
+                if smtp_port == 465:
+                    server = smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=10)
+                else:
+                    server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
+                    server.starttls()
+
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, recipients, msg.as_string())
+                server.quit()
+                print(f"[EMAIL DISPATCH] Successfully sent order #{order_id} notification via SMTP to {recipients}")
+                return
+            except Exception as smtp_err:
+                print(f"[EMAIL DISPATCH WARNING] SMTP send failed: {smtp_err}. Attempting Web3Forms API fallback...")
+
+        # 2. Web3Forms API fallback
         try:
             payload = {
-                "access_key": "aa8acc90-e57a-4c4b-820b-94d5c588a1a6",
-                "subject": f"New Order Placed - Order #{order_id}",
-                "from_name": "TEGL Retail Solutions",
-                "name": "System Notification",
-                "email": "noreply@teglretail.com",
-                "message": (
-                    f"New online order received!\n\n"
-                    f"Order Details:\n"
-                    f"  Order ID: {order_id}\n"
-                    f"  Customer: {customer_name}\n"
-                    f"  Email: {email}\n"
-                    f"  Phone: {phone}\n"
-                    f"  Delivery Address: {address}\n"
-                    f"  Total Amount: INR {total_amount}\n\n"
-                    f"Items Ordered:\n"
-                    f"{items_summary}"
-                )
+                "access_key": web3_key,
+                "subject": subject,
+                "from_name": "TEGL Retail Store",
+                "name": customer_name,
+                "email": email,
+                "to_email": owner_email,
+                "message": message_body
             }
             req = urllib.request.Request(
                 "https://api.web3forms.com/submit",
@@ -1183,9 +1225,10 @@ def send_order_email_notification(order_id, customer_name, email, phone, address
                 headers={"Content-Type": "application/json"}
             )
             with urllib.request.urlopen(req, timeout=10) as response:
-                print("Web3Forms email response status:", response.status)
+                res_body = response.read().decode('utf-8')
+                print(f"[EMAIL DISPATCH] Web3Forms API response status: {response.status}, response: {res_body}")
         except Exception as err:
-            print("Failed to send order email via Web3Forms:", str(err))
+            print(f"[EMAIL DISPATCH ERROR] Failed to send order email via Web3Forms: {err}")
 
     threading.Thread(target=run, daemon=True).start()
 
