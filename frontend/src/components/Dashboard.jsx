@@ -107,11 +107,15 @@ export default function Dashboard({ products, token, setActiveTab }) {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
       const dailyRes = await fetch('/api/sales/daily', { headers });
       const dailyData = await dailyRes.json();
-      setDailySales(dailyData.reverse()); // Show chronologically
+      if (Array.isArray(dailyData)) {
+        setDailySales([...dailyData].reverse()); // Show chronologically
+      }
 
       const monthlyRes = await fetch('/api/sales/monthly', { headers });
       const monthlyData = await monthlyRes.json();
-      setMonthlySales(monthlyData.reverse());
+      if (Array.isArray(monthlyData)) {
+        setMonthlySales([...monthlyData].reverse());
+      }
     } catch (error) {
       console.error('Error fetching sales data:', error);
     } finally {
