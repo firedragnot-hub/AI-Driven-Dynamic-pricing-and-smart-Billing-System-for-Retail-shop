@@ -6,9 +6,10 @@ import './index.css'
 import App from './App.jsx'
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+const isValidClerkKey = PUBLISHABLE_KEY && PUBLISHABLE_KEY.startsWith('pk_') && !PUBLISHABLE_KEY.includes('...')
 
-if (!PUBLISHABLE_KEY) {
-  console.error("Missing Publishable Key: Please set VITE_CLERK_PUBLISHABLE_KEY in your environment variables.")
+if (!isValidClerkKey) {
+  console.warn("Clerk Publishable Key is missing or invalid. Clerk features will be disabled.")
 }
 
 const content = (
@@ -19,7 +20,7 @@ const content = (
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    {PUBLISHABLE_KEY ? (
+    {isValidClerkKey ? (
       <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
         {content}
       </ClerkProvider>
