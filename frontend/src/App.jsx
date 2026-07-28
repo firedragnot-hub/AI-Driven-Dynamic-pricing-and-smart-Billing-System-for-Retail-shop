@@ -600,19 +600,23 @@ export default function App() {
                 <ChevronRight size={18} />
               </button>
 
-              {/* Clerk Authentication Option */}
-              <div style={{ display: 'flex', alignItems: 'center', margin: '15px 0' }}>
-                <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
-                <span style={{ padding: '0 10px', fontSize: '0.8rem', color: 'var(--text-muted, #aaa)' }}>OR SIGN IN WITH CLERK</span>
-                <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
-                <SignInButton mode="modal">
-                  <button type="button" className="auth-submit-btn" style={{ background: 'var(--secondary, #0f172a)', width: '100%' }}>
-                    Continue with Clerk
-                  </button>
-                </SignInButton>
-              </div>
+              {/* Clerk Authentication Option - Customer Only */}
+              {role === 'customer' && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', margin: '15px 0' }}>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
+                    <span style={{ padding: '0 10px', fontSize: '0.8rem', color: 'var(--text-muted, #aaa)' }}>OR SIGN IN WITH CLERK</span>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
+                    <SignInButton mode="modal">
+                      <button type="button" className="auth-submit-btn" style={{ background: 'var(--secondary, #0f172a)', width: '100%' }}>
+                        Continue with Clerk
+                      </button>
+                    </SignInButton>
+                  </div>
+                </>
+              )}
             </form>
           )}
 
@@ -627,7 +631,9 @@ export default function App() {
                 {role === 'customer' && authMode === 'register' && (
                   <p>Already have an account? <button onClick={() => { setAuthMode('login'); setAuthError(''); setTurnstileToken(''); }}>Sign In</button></p>
                 )}
-                <p>Forgot password? <button onClick={() => { setAuthMode('changePassword'); setAuthError(''); }}>Change password</button></p>
+                {role === 'customer' && (
+                  <p>Forgot password? <button onClick={() => { setAuthMode('changePassword'); setAuthError(''); }}>Change password</button></p>
+                )}
               </>
             )}
             
@@ -699,17 +705,6 @@ export default function App() {
             <span className="badge-role">Owner Portal</span>
           </div>
           <div className="portal-user-meta" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button style={{ padding: '6px 12px', borderRadius: '6px', background: 'var(--primary, #2563eb)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '500' }}>Sign In</button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button style={{ padding: '6px 12px', borderRadius: '6px', background: 'rgba(37, 99, 235, 0.1)', color: 'var(--primary, #2563eb)', border: '1px solid var(--primary, #2563eb)', cursor: 'pointer', fontWeight: '500' }}>Sign Up</button>
-              </SignUpButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
