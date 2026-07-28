@@ -10,6 +10,7 @@ const OrdersList = lazy(() => import('./components/OrdersList'));
 const GSTCompliance = lazy(() => import('./components/GSTCompliance'));
 const FinancialDashboard = lazy(() => import('./components/FinancialDashboard'));
 const ReviewsList = lazy(() => import('./components/ReviewsList'));
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react';
 import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield, Menu, X } from 'lucide-react';
 import './App.css';
 
@@ -348,7 +349,7 @@ export default function App() {
       try {
         data = JSON.parse(resText);
       } catch (jsonErr) {
-        throw new Error(resText || 'A server error occurred. Please check the backend console.');
+        throw new Error(resText.startsWith('<') ? 'Server error (Backend may be offline or returning HTML error).' : resText || 'A server error occurred. Please check backend.');
       }
       if (!res.ok) {
         if (res.status === 403 && data && data.unverified) {
@@ -701,6 +702,17 @@ export default function App() {
             <span className="badge-role">Owner Portal</span>
           </div>
           <div className="portal-user-meta" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button style={{ padding: '6px 12px', borderRadius: '6px', background: 'var(--primary, #2563eb)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '500' }}>Sign In</button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button style={{ padding: '6px 12px', borderRadius: '6px', background: 'rgba(37, 99, 235, 0.1)', color: 'var(--primary, #2563eb)', border: '1px solid var(--primary, #2563eb)', cursor: 'pointer', fontWeight: '500' }}>Sign Up</button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
