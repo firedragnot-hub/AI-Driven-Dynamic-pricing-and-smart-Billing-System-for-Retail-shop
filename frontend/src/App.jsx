@@ -95,7 +95,8 @@ function EmailVerification() {
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isSignedIn: clerkSignedIn, user: clerkUser } = useUser();
+  const [token, setToken] = useState(localStorage.getItem('token') || '');
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
 
   // Sync Clerk authentication directly to customer portal
   useEffect(() => {
@@ -113,7 +114,7 @@ export default function App() {
       setUser(customerUser);
       navigate('/');
     }
-  }, [clerkSignedIn, clerkUser]);
+  }, [clerkSignedIn, clerkUser, token, user]);
   
   // Auth Form State
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register' or 'changePassword'
