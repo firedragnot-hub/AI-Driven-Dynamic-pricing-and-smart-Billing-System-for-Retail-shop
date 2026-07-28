@@ -19,11 +19,17 @@ from google.auth.transport import requests as google_requests
 auth_bp = Blueprint('auth', __name__)
 JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-retail-key-2026")
 
+def get_client_ip():
+    if request.headers.getlist("X-Forwarded-For"):
+        return request.headers.getlist("X-Forwarded-For")[0].split(',')[0].strip()
+    return request.remote_addr or '127.0.0.1'
+
 # Initialize Limiter here, to be registered on the app in app.py
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=get_client_ip,
     storage_uri="memory://",
-    headers_enabled=True
+    headers_enabled=True,
+    swallow_errors=True
 )
 
 # Helper to verify Cloudflare Turnstile token

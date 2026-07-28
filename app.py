@@ -90,7 +90,10 @@ if db_url:
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 280
+}
 
 db.init_app(app)
 with app.app_context():
@@ -107,26 +110,43 @@ with app.app_context():
     except Exception as e:
         print("Error during db.create_all():", e)
         
-        # PostgreSQL migration helper for password_hash size increase
-        if db_url and ("postgresql" in db_url or "postgres" in db_url):
-            try:
-                db.session.execute(db.text("ALTER TABLE users ALTER COLUMN password_hash TYPE VARCHAR(255);"))
-                db.session.commit()
-            except Exception as mig_err:
-                db.session.rollback()
-                print("Migration warning (password_hash length):", str(mig_err))
-                
+    # PostgreSQL migration helper for password_hash size increase
+    if db_url and ("postgresql" in db_url or "postgres" in db_url):
         try:
-            from models import User
-            if not User.query.filter_by(username='admin').first():
-                print("Admin user not found. Seeding default demo data...")
-                from seed_data import seed_database_and_train
-                # Skip model training if running on Vercel to prevent request timeout
-                train = os.getenv('VERCEL') != '1'
-                seed_database_and_train(drop_tables=False, train_models=train)
-                print("Database successfully seeded with default credentials (admin/customer)!")
-        except Exception as seed_err:
-            print("Database seeding error:", str(seed_err))
+            db.session.execute(db.text("ALTER TABLE users ALTER COLUMN password_hash TYPE VARCHAR(255);"))
+            db.session.commit()
+        except Exception as mig_err:
+            db.session.rollback()
+            print("Migration warning (password_hash length):", str(mig_err))
+            
+    try:
+        from models import User
+        if not User.query.filter_by(username='admin').first():
+            print("Admin user not found. Seeding default admin user...")
+            from werkzeug.security import generate_password_hash
+            admin = User(
+                username='admin',
+                email='admin@retail.com',
+                password_hash=generate_password_hash('adminpassword'),
+                role='admin',
+                is_verified=True
+            )
+            db.session.add(admin)
+        if not User.query.filter_by(username='customer').first():
+            print("Customer user not found. Seeding default customer user...")
+            from werkzeug.security import generate_password_hash
+            customer = User(
+                username='customer',
+                email='customer@retail.com',
+                password_hash=generate_password_hash('customerpassword'),
+                role='customer',
+                is_verified=True
+            )
+            db.session.add(customer)
+        db.session.commit()
+    except Exception as seed_err:
+        db.session.rollback()
+        print("Database seeding error:", str(seed_err))
 
     # PostgreSQL migration helper to add missing columns to existing tables
     if db_url and ("postgresql" in db_url or "postgres" in db_url):

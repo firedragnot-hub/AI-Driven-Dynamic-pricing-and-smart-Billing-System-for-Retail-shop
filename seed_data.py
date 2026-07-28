@@ -5,10 +5,9 @@ from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 
-# Import Flask app and db
-from app import app, db
+# Import db and models
 from models import (
-    Product, Transaction, TransactionItem, User, BusinessConfig,
+    db, Product, Transaction, TransactionItem, User, BusinessConfig,
     Expense, Purchase, PurchaseItem, Order, OrderItem
 )
 from ml_models import train_dynamic_pricing_model, train_demand_prediction_model
