@@ -984,6 +984,15 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
                           {tx.errorMessage && <span style={{ display: 'block', fontSize: '0.75rem', color: '#ef4444', marginTop: '4px' }}>{tx.errorMessage}</span>}
                         </td>
                         <td style={{ textAlign: 'right' }}>
+                          {(tx.status === 'Pending' || tx.status === 'Failed') && (
+                            <button 
+                              className="btn btn-primary" 
+                              style={{ padding: '4px 10px', fontSize: '0.75rem', marginRight: '6px', marginBottom: 0 }} 
+                              onClick={() => resolveConflict(tx, 'force')}
+                            >
+                              Sync Now
+                            </button>
+                          )}
                           {tx.status === 'Conflict' && (
                             <button className="btn btn-warning" style={{ padding: '4px 10px', fontSize: '0.75rem', marginRight: '6px', marginBottom: 0 }} onClick={() => setConflictItem(tx)}>
                               Resolve
