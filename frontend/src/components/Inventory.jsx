@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash, PackagePlus, Download } from 'lucide-react';
 
 export default function Inventory({ products, refreshProducts, token }) {
+  useEffect(() => {
+    if (refreshProducts) {
+      refreshProducts();
+    }
+  }, []);
   const [modalOpen, setModalOpen] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
   

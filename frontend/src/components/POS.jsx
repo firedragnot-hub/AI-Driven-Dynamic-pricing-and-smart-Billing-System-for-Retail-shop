@@ -456,7 +456,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
           deductLocalStock(cart);
           setCart([]);
           resetCartForm();
-          refreshProducts();
+          if (refreshProducts) refreshProducts();
           syncInventoryDelta();
         } else if (res.status === 409 && data.conflict) {
           // Stock Conflict
