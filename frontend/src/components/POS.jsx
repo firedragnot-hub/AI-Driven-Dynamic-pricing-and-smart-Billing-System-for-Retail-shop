@@ -617,15 +617,17 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
         const data = await res.json();
         if (res.ok) {
           setSyncQueue(prev => prev.map(q => q.uuid === tx.uuid ? { ...q, status: 'Synced', id: data.id } : q));
-          alert("Transaction forced successfully!");
+          alert("Transaction synced successfully!");
         } else {
-          alert(`Force Sync Failed: ${data.error}`);
+          alert(`Sync Failed: ${data.error || 'Server error'}`);
         }
       } catch (e) {
-        alert("Server communication error.");
+        console.error("Resolve conflict error:", e);
+        alert(`Server communication error: ${e.message || e}`);
       } finally {
         setConflictItem(null);
         setLoading(false);
+        if (refreshProducts) refreshProducts();
         syncInventoryDelta(true);
       }
     }
