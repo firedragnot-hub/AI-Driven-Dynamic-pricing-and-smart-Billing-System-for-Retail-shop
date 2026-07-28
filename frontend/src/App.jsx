@@ -10,7 +10,7 @@ const OrdersList = lazy(() => import('./components/OrdersList'));
 const GSTCompliance = lazy(() => import('./components/GSTCompliance'));
 const FinancialDashboard = lazy(() => import('./components/FinancialDashboard'));
 const ReviewsList = lazy(() => import('./components/ReviewsList'));
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';
 import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield, Menu, X } from 'lucide-react';
 import './App.css';
 
@@ -95,8 +95,25 @@ function EmailVerification() {
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [token, setToken] = useState(localStorage.getItem('token') || '');
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
+  const { isSignedIn: clerkSignedIn, user: clerkUser } = useUser();
+
+  // Sync Clerk authentication directly to customer portal
+  useEffect(() => {
+    if (clerkSignedIn && clerkUser && (!token || !user)) {
+      const customerUser = {
+        id: clerkUser.id,
+        username: clerkUser.fullName || clerkUser.firstName || clerkUser.primaryEmailAddress?.emailAddress?.split('@')[0] || 'Customer',
+        email: clerkUser.primaryEmailAddress?.emailAddress || '',
+        role: 'customer'
+      };
+      const dummyToken = 'clerk_auth_' + clerkUser.id;
+      localStorage.setItem('token', dummyToken);
+      localStorage.setItem('user', JSON.stringify(customerUser));
+      setToken(dummyToken);
+      setUser(customerUser);
+      navigate('/');
+    }
+  }, [clerkSignedIn, clerkUser]);
   
   // Auth Form State
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register' or 'changePassword'

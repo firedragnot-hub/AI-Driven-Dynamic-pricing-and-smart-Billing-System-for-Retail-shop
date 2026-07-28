@@ -702,6 +702,13 @@ def checkout():
         db.session.add(order_item)
         
     db.session.commit()
+
+    # Emit socket event so Manage Orders updates in real-time
+    try:
+        socketio.emit('new_order', db_order.to_dict())
+    except Exception as e:
+        print("Socket emission error:", str(e))
+
     return jsonify(db_transaction.to_dict()), 201
 # --- Transactions & Returns Endpoints ---
 

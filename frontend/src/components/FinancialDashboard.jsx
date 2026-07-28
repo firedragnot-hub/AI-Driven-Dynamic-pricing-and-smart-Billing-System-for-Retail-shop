@@ -4,7 +4,7 @@ import {
   BarElement, Title, Tooltip, Legend, ArcElement, Filler
 } from 'chart.js';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
-import { Filter, Sparkles, TrendingUp, TrendingDown, Landmark, Receipt, Percent, Wallet, Package2, ShieldAlert } from 'lucide-react';
+import { Filter, Sparkles, TrendingUp, TrendingDown, Landmark, Receipt, Percent, Wallet, Package2, ShieldAlert, Download } from 'lucide-react';
 
 ChartJS.register(
   CategoryScale, LinearScale, PointElement, LineElement, 
@@ -299,7 +299,33 @@ export default function FinancialDashboard({ token }) {
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Enterprise financial reporting & cashflow tracking</p>
         </div>
         
-        <div className="finance-header-actions">
+        <div className="finance-header-actions" style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            onClick={async () => {
+              try {
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                const res = await fetch('/api/reports/download?type=sales&format=pdf', { headers });
+                if (res.ok) {
+                  const blob = await res.blob();
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'financial_pl_report.pdf';
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                } else {
+                  alert('Failed to download P&L report');
+                }
+              } catch(e) {
+                console.error(e);
+              }
+            }}
+            className="finance-btn-secondary" 
+            style={{ color: '#10b981', borderColor: '#10b981', background: 'rgba(16, 185, 129, 0.05)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Download size={16} /> Download P&L PDF
+          </button>
           <button className="finance-btn-secondary" style={{ color: '#8b5cf6', borderColor: '#8b5cf6', background: 'rgba(139, 92, 246, 0.05)' }}>
             <Sparkles size={16} /> AI Accountant
           </button>
