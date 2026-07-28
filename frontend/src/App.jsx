@@ -144,7 +144,7 @@ export default function App() {
           clearInterval(timer);
           try {
             window.google.accounts.id.initialize({
-              client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy-google-client-id.apps.googleusercontent.com',
+              client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '62895284257-92r8hv8ja2l7guhgfkspmvoierbsqv6i.apps.googleusercontent.com',
               callback: handleGoogleLogin
             });
             window.google.accounts.id.renderButton(
@@ -158,7 +158,7 @@ export default function App() {
       }, 500);
       return () => clearInterval(timer);
     }
-  }, [authMode, token]);
+  }, [authMode, token, authRole]);
 
   // Turnstile render logic
   useEffect(() => {
@@ -193,6 +193,11 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setEmail('');
+    setUsername('');
+    setPassword('');
+    setAuthError('');
+    setVerificationSent(false);
     if (location.pathname === '/owner/login') {
       setAuthRole('admin');
     } else if (location.pathname === '/login') {
@@ -257,9 +262,15 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ credential: response.credential })
       });
-      const data = await res.json();
+      const resText = await res.text();
+      let data;
+      try {
+        data = JSON.parse(resText);
+      } catch (jsonErr) {
+        throw new Error(resText || 'Google Sign-In failed');
+      }
       if (!res.ok) {
-        throw new Error(data.error || 'Google Sign-In failed');
+        throw new Error((data && data.error) || 'Google Sign-In failed');
       }
 
       if (authRole === 'customer' && data.user.role === 'admin') {
@@ -289,19 +300,25 @@ export default function App() {
   };
 
   const handleResendVerification = async () => {
-    setResendSuccess('');
     setAuthError('');
+    setResendSuccess('');
     try {
       const res = await fetch('/api/auth/resend-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: unverifiedEmail })
       });
-      const data = await res.json();
+      const resText = await res.text();
+      let data;
+      try {
+        data = JSON.parse(resText);
+      } catch (jsonErr) {
+        throw new Error(resText || 'Failed to resend verification link.');
+      }
       if (res.ok) {
         setResendSuccess('Verification link resent successfully! Please check your email.');
       } else {
-        setAuthError(data.error || 'Failed to resend verification link.');
+        setAuthError((data && data.error) || 'Failed to resend verification link.');
       }
     } catch (err) {
       setAuthError(err.message);
@@ -326,12 +343,12 @@ export default function App() {
         body: JSON.stringify(payload)
       });
       
+      const resText = await res.text();
       let data;
       try {
-        data = await res.json();
+        data = JSON.parse(resText);
       } catch (jsonErr) {
-        const textErr = await res.text();
-        throw new Error(textErr || 'A server error occurred. Please check the backend console.');
+        throw new Error(resText || 'A server error occurred. Please check the backend console.');
       }
       if (!res.ok) {
         if (res.status === 403 && data && data.unverified) {
@@ -587,8 +604,8 @@ export default function App() {
                 <ChevronRight size={18} />
               </button>
 
-              {/* Google Sign-In Button (Customer Login Only) */}
-              {authMode === 'login' && role === 'customer' && (
+              {/* Google Sign-In Button */}
+              {authMode === 'login' && (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', margin: '15px 0' }}>
                     <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
