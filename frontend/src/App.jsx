@@ -595,27 +595,24 @@ export default function App() {
                 />
               </div>
 
-              {/* Cloudflare Turnstile Container */}
-              {import.meta.env.VITE_TURNSTILE_SITE_KEY && (
-                <div id="turnstile-container" style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}></div>
-              )}
-
               <button type="submit" className="auth-submit-btn" disabled={authLoading}>
                 {authLoading ? 'Verifying...' : (authMode === 'login' ? 'Login' : 'Sign Up')}
                 <ChevronRight size={18} />
               </button>
 
-              {/* Google Sign-In Button */}
-              {authMode === 'login' && (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', margin: '15px 0' }}>
-                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
-                    <span style={{ padding: '0 10px', fontSize: '0.8rem', color: 'var(--text-muted, #aaa)' }}>OR</span>
-                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
-                  </div>
-                  <div id="google-signin-btn" style={{ minHeight: '40px', width: '100%' }}></div>
-                </>
-              )}
+              {/* Clerk Authentication Option */}
+              <div style={{ display: 'flex', alignItems: 'center', margin: '15px 0' }}>
+                <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
+                <span style={{ padding: '0 10px', fontSize: '0.8rem', color: 'var(--text-muted, #aaa)' }}>OR SIGN IN WITH CLERK</span>
+                <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
+                <SignInButton mode="modal">
+                  <button type="button" className="auth-submit-btn" style={{ background: 'var(--secondary, #0f172a)', width: '100%' }}>
+                    Continue with Clerk
+                  </button>
+                </SignInButton>
+              </div>
             </form>
           )}
 
