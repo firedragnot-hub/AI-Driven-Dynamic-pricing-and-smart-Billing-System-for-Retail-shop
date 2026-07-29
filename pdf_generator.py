@@ -564,8 +564,9 @@ def generate_pnl_pdf_report(pnl_data, biz_config):
         fontName='Helvetica-Bold'
     )
     
+    period_str = pnl_data.get('period_label') if isinstance(pnl_data, dict) and pnl_data.get('period_label') else "FY 2026-27"
     story.append(Paragraph("PROFIT & LOSS STATEMENT", title_style))
-    story.append(Paragraph(f"For the Period: FY 2026-27 | Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", subtitle_style))
+    story.append(Paragraph(f"For the Period: {period_str} | Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", subtitle_style))
     
     biz_name = biz_config.business_name if biz_config else "TEGL Retail Solutions"
     biz_gstin = biz_config.gstin if biz_config else "27AAPCS1010A1Z0"

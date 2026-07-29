@@ -163,21 +163,19 @@ with app.app_context():
             db.session.execute(db.text("ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT;"))
             db.session.commit()
             print("PostgreSQL migrations applied successfully!")
-        except Exception as pg_mig_err:
+        except Exception as alter_err:
             db.session.rollback()
-            print("PostgreSQL migration warning:", str(pg_mig_err))
+            print("Migration column addition error:", str(alter_err))
 
     # Migration helper to add missing columns to purchases (SQLite only)
     if not db_url or "sqlite" in db_url:
         try:
-            # Check if purchases table needs columns
             import sqlite3
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
             cursor.execute("PRAGMA table_info(purchases)")
             columns = [row[1] for row in cursor.fetchall()]
             
-            # Add columns if they do not exist
             if 'verification_status' not in columns:
                 cursor.execute("ALTER TABLE purchases ADD COLUMN verification_status VARCHAR(30) DEFAULT 'Pending Receipt'")
             if 'verified_at' not in columns:
@@ -186,13 +184,12 @@ with app.app_context():
                 cursor.execute("ALTER TABLE purchases ADD COLUMN verified_by VARCHAR(80)")
             if 'discrepancy_count' not in columns:
                 cursor.execute("ALTER TABLE purchases ADD COLUMN discrepancy_count INTEGER DEFAULT 0")
-            # Check if orders table needs columns
+
             cursor.execute("PRAGMA table_info(orders)")
             order_columns = [row[1] for row in cursor.fetchall()]
             if 'sale_type' not in order_columns:
                 cursor.execute("ALTER TABLE orders ADD COLUMN sale_type VARCHAR(20) DEFAULT 'online'")
                 
-            # Check if return_logs table needs columns
             cursor.execute("PRAGMA table_info(return_logs)")
             return_logs_columns = [row[1] for row in cursor.fetchall()]
             if 'order_id' not in return_logs_columns:
@@ -211,7 +208,6 @@ with app.app_context():
                             timestamp DATETIME NOT NULL
                         )
                     """)
-                    # Try to copy existing rows
                     try:
                         cursor.execute("""
                             INSERT INTO return_logs (id, transaction_id, product_id, quantity, refund_amount, reason, timestamp)
@@ -234,7 +230,7 @@ with app.app_context():
                             timestamp DATETIME NOT NULL
                         )
                     """)
-            # Check if users table needs columns
+
             cursor.execute("PRAGMA table_info(users)")
             user_columns = [row[1] for row in cursor.fetchall()]
             if 'is_verified' not in user_columns:
@@ -243,7 +239,6 @@ with app.app_context():
                 cursor.execute("ALTER TABLE users ADD COLUMN verification_token VARCHAR(255)")
             cursor.execute("UPDATE users SET is_verified = 1 WHERE is_verified IS NULL OR username IN ('admin', 'customer')")
             
-            # Check if products table needs description column
             cursor.execute("PRAGMA table_info(products)")
             product_columns = [row[1] for row in cursor.fetchall()]
             if 'description' not in product_columns:
@@ -253,6 +248,37 @@ with app.app_context():
             conn.close()
         except Exception as e:
             print("Database migration error:", str(e))
+
+# --- Global JSON Error Handlers ---
+@app.errorhandler(400)
+def bad_request_error(e):
+    msg = str(e.description) if hasattr(e, 'description') and e.description else "Bad Request"
+    return jsonify({"success": False, "error": msg}), 400
+
+@app.errorhandler(401)
+def unauthorized_error(e):
+    msg = str(e.description) if hasattr(e, 'description') and e.description else "Unauthorized"
+    return jsonify({"success": False, "error": msg}), 401
+
+@app.errorhandler(403)
+def forbidden_error(e):
+    msg = str(e.description) if hasattr(e, 'description') and e.description else "Forbidden"
+    return jsonify({"success": False, "error": msg}), 403
+
+@app.errorhandler(404)
+def not_found_error(e):
+    if request.path.startswith('/api/'):
+        return jsonify({"success": False, "error": "The requested API endpoint was not found"}), 404
+    return jsonify({"success": False, "error": "Resource not found"}), 404
+
+@app.errorhandler(405)
+def method_not_allowed_error(e):
+    return jsonify({"success": False, "error": "HTTP method not allowed for this endpoint"}), 405
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    app.logger.error(f"Internal server error: {e}")
+    return jsonify({"success": False, "error": "An internal server error occurred"}), 500
 
 
 @app.route('/api/diag', methods=['GET'])
@@ -1087,41 +1113,51 @@ def train_models():
 
 @app.route('/api/sales/daily', methods=['GET'])
 def get_daily_sales():
-    date_expr_daily = db_strftime('%Y-%m-%d', Transaction.timestamp)
-    results = db.session.query(
-        date_expr_daily.label('date'),
-        func.sum(Transaction.total_amount).label('revenue'),
-        func.count(Transaction.id).label('transaction_count')
-    ).group_by(date_expr_daily).order_by(Transaction.timestamp.desc()).limit(30).all()
-    
-    sales_history = []
-    for date_str, revenue, count in results:
-        sales_history.append({
-            'date': date_str,
-            'revenue': round(float(revenue), 2),
-            'transaction_count': count
-        })
+    try:
+        date_expr_daily = db_strftime('%Y-%m-%d', Transaction.timestamp)
+        results = db.session.query(
+            date_expr_daily.label('date'),
+            func.sum(Transaction.total_amount).label('revenue'),
+            func.count(Transaction.id).label('transaction_count')
+        ).group_by(date_expr_daily).order_by(date_expr_daily.desc()).limit(30).all()
         
-    return jsonify(sales_history), 200
+        sales_history = []
+        for date_str, revenue, count in results:
+            if date_str:
+                sales_history.append({
+                    'date': str(date_str),
+                    'revenue': round(float(revenue or 0.0), 2),
+                    'transaction_count': int(count or 0)
+                })
+            
+        return jsonify(sales_history), 200
+    except Exception as e:
+        app.logger.error(f"Error in get_daily_sales: {e}")
+        return jsonify([]), 200
 
 @app.route('/api/sales/monthly', methods=['GET'])
 def get_monthly_sales():
-    month_expr = db_strftime('%Y-%m', Transaction.timestamp)
-    results = db.session.query(
-        month_expr.label('month'),
-        func.sum(Transaction.total_amount).label('revenue'),
-        func.count(Transaction.id).label('transaction_count')
-    ).group_by(month_expr).order_by(month_expr.desc()).all()
-    
-    sales_history = []
-    for month_str, revenue, count in results:
-        sales_history.append({
-            'month': month_str,
-            'revenue': round(float(revenue), 2),
-            'transaction_count': count
-        })
+    try:
+        month_expr = db_strftime('%Y-%m', Transaction.timestamp)
+        results = db.session.query(
+            month_expr.label('month'),
+            func.sum(Transaction.total_amount).label('revenue'),
+            func.count(Transaction.id).label('transaction_count')
+        ).group_by(month_expr).order_by(month_expr.desc()).all()
         
-    return jsonify(sales_history), 200
+        sales_history = []
+        for month_str, revenue, count in results:
+            if month_str:
+                sales_history.append({
+                    'month': str(month_str),
+                    'revenue': round(float(revenue or 0.0), 2),
+                    'transaction_count': int(count or 0)
+                })
+            
+        return jsonify(sales_history), 200
+    except Exception as e:
+        app.logger.error(f"Error in get_monthly_sales: {e}")
+        return jsonify([]), 200
 
 
 # --- E-commerce Orders Endpoints ---
@@ -1267,8 +1303,18 @@ def create_order():
         return jsonify({'error': 'Authentication required. Please log in to place an order.'}), 401
         
     user = User.query.get(user_payload['user_id'])
-    if not user or not user.is_verified:
-        return jsonify({'error': 'Email verification is required to place an order. Please verify your email first.'}), 403
+    if not user:
+        app.logger.warning(f"[ORDER CREATION] User not found for user_id={user_payload.get('user_id')}")
+        return jsonify({'success': False, 'error': 'User profile not found.'}), 404
+        
+    if not user.is_verified:
+        app.logger.warning(f"[ORDER CREATION DENIED] Unverified email for user_id={user.id}, email={user.email}")
+        return jsonify({
+            'success': False,
+            'error': 'Email verification is required to place an order. Please verify your email first.',
+            'unverified': True,
+            'email': user.email
+        }), 403
     
     data = request.get_json() or {}
     customer_name = data.get('customer_name')
@@ -2900,20 +2946,52 @@ def gst_pnl():
     if not require_admin(user):
         return jsonify({'error': 'Access denied'}), 403
         
-    cached_res = dashboard_cache.get('gst_pnl')
-    if cached_res:
-        return jsonify(cached_res), 200
+    start_date_raw = request.args.get('start_date')
+    end_date_raw = request.args.get('end_date')
+    start_dt = None
+    end_dt = None
+    
+    if start_date_raw:
+        try:
+            start_dt = datetime.strptime(start_date_raw, '%Y-%m-%d')
+        except ValueError:
+            return jsonify({'success': False, 'error': 'Invalid start_date format. Use YYYY-MM-DD'}), 400
+
+    if end_date_raw:
+        try:
+            end_dt = datetime.strptime(end_date_raw, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+        except ValueError:
+            return jsonify({'success': False, 'error': 'Invalid end_date format. Use YYYY-MM-DD'}), 400
+
+    if start_dt and end_dt and start_dt > end_dt:
+        return jsonify({'success': False, 'error': 'Start date cannot be after end date'}), 400
+
+    if not start_date_raw and not end_date_raw:
+        cached_res = dashboard_cache.get('gst_pnl')
+        if cached_res:
+            return jsonify(cached_res), 200
 
     config = BusinessConfig.query.first()
     biz_state = config.state if config else 'Maharashtra'
     
     from sqlalchemy.orm import joinedload
-    pos_transactions = Transaction.query.options(
+    tx_q = Transaction.query.options(
         joinedload(Transaction.items).joinedload(TransactionItem.product)
-    ).all()
-    orders = Order.query.options(
+    )
+    if start_dt:
+        tx_q = tx_q.filter(Transaction.timestamp >= start_dt)
+    if end_dt:
+        tx_q = tx_q.filter(Transaction.timestamp <= end_dt)
+    pos_transactions = tx_q.all()
+
+    ord_q = Order.query.options(
         joinedload(Order.items).joinedload(OrderItem.product)
-    ).filter(Order.status != 'Cancelled').all()
+    ).filter(Order.status != 'Cancelled')
+    if start_dt:
+        ord_q = ord_q.filter(Order.created_at >= start_dt)
+    if end_dt:
+        ord_q = ord_q.filter(Order.created_at <= end_dt)
+    orders = ord_q.all()
     
     gross_sales = 0.0
     taxable_revenue = 0.0
@@ -2937,7 +3015,12 @@ def gst_pnl():
             base_cost = item.product.base_cost if item.product else 0.0
             cogs += base_cost * item.quantity
             
-    expenses = Expense.query.all()
+    exp_q = Expense.query
+    if start_dt:
+        exp_q = exp_q.filter(Expense.date >= start_dt.date())
+    if end_dt:
+        exp_q = exp_q.filter(Expense.date <= end_dt.date())
+    expenses = exp_q.all()
     total_expenses = 0.0
     
     expense_categories = {}
@@ -2959,7 +3042,8 @@ def gst_pnl():
         'net_profit': round(net_profit, 2),
         'expense_breakdown': [{'category': k, 'amount': round(v, 2)} for k, v in expense_categories.items()]
     }
-    dashboard_cache.set('gst_pnl', res_data)
+    if not start_date_raw and not end_date_raw:
+        dashboard_cache.set('gst_pnl', res_data)
     return jsonify(res_data), 200
 
 @app.route('/api/gst/returns/<string:return_type>', methods=['GET'])
@@ -3154,8 +3238,39 @@ def download_gst_pdf():
     config = BusinessConfig.query.first()
     
     if report_type == 'pnl':
-        pos_transactions = Transaction.query.all()
-        orders = Order.query.filter(Order.status != 'Cancelled').all()
+        start_date_raw = request.args.get('start_date')
+        end_date_raw = request.args.get('end_date')
+        start_dt = None
+        end_dt = None
+        
+        if start_date_raw:
+            try:
+                start_dt = datetime.strptime(start_date_raw, '%Y-%m-%d')
+            except ValueError:
+                return jsonify({'success': False, 'error': 'Invalid start_date format. Use YYYY-MM-DD'}), 400
+
+        if end_date_raw:
+            try:
+                end_dt = datetime.strptime(end_date_raw, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+            except ValueError:
+                return jsonify({'success': False, 'error': 'Invalid end_date format. Use YYYY-MM-DD'}), 400
+
+        if start_dt and end_dt and start_dt > end_dt:
+            return jsonify({'success': False, 'error': 'Start date cannot be after end date'}), 400
+
+        tx_q = Transaction.query
+        if start_dt:
+            tx_q = tx_q.filter(Transaction.timestamp >= start_dt)
+        if end_dt:
+            tx_q = tx_q.filter(Transaction.timestamp <= end_dt)
+        pos_transactions = tx_q.all()
+
+        ord_q = Order.query.filter(Order.status != 'Cancelled')
+        if start_dt:
+            ord_q = ord_q.filter(Order.created_at >= start_dt)
+        if end_dt:
+            ord_q = ord_q.filter(Order.created_at <= end_dt)
+        orders = ord_q.all()
         
         gross_sales = 0.0
         taxable_revenue = 0.0
@@ -3178,7 +3293,13 @@ def download_gst_pdf():
                 base_cost = item.product.base_cost if item.product else 0.0
                 cogs += base_cost * item.quantity
                 
-        expenses = Expense.query.all()
+        exp_q = Expense.query
+        if start_dt:
+            exp_q = exp_q.filter(Expense.date >= start_dt.date())
+        if end_dt:
+            exp_q = exp_q.filter(Expense.date <= end_dt.date())
+        expenses = exp_q.all()
+        
         total_expenses = 0.0
         expense_categories = {}
         for e in expenses:
@@ -3186,6 +3307,14 @@ def download_gst_pdf():
             total_expenses += amount_excl_tax
             cat = e.category
             expense_categories[cat] = expense_categories.get(cat, 0.0) + amount_excl_tax
+
+        period_label = "FY 2026-27"
+        if start_date_raw and end_date_raw:
+            period_label = f"{start_date_raw} to {end_date_raw}"
+        elif start_date_raw:
+            period_label = f"From {start_date_raw}"
+        elif end_date_raw:
+            period_label = f"Up to {end_date_raw}"
             
         pnl_data = {
             'revenue': round(taxable_revenue, 2),
@@ -3193,14 +3322,15 @@ def download_gst_pdf():
             'gross_profit': round(taxable_revenue - cogs, 2),
             'operating_expenses': round(total_expenses, 2),
             'net_profit': round((taxable_revenue - cogs) - total_expenses, 2),
-            'expense_breakdown': [{'category': k, 'amount': round(v, 2)} for k, v in expense_categories.items()]
+            'expense_breakdown': [{'category': k, 'amount': round(v, 2)} for k, v in expense_categories.items()],
+            'period_label': period_label
         }
         pdf_buf = generate_pnl_pdf_report(pnl_data, config)
         return send_file(
             pdf_buf,
             mimetype='application/pdf',
             as_attachment=True,
-            download_name='Profit_and_Loss_Statement.pdf'
+            download_name=f'Profit_and_Loss_Statement_{start_date_raw or "all"}_to_{end_date_raw or "all"}.pdf'
         )
     else:
         summary = compute_gst_summary_data()

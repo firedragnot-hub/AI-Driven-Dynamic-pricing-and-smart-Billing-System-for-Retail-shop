@@ -1,0 +1,764 @@
+id,merchant_name,merchant_gstin,invoice_no,date,category,total_amount,gst_rate,gst_amount,cgst,sgst,igst,itc_eligible
+1,Prime Properties Ltd,,RENT-8-2022,2022-08-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+2,Store Employees Salaries,,SAL-8-2022,2022-08-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+3,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-8-2022,2022-08-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+4,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-8-2022,2022-08-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+5,HDFC Bank Corp,,EXP-5,2022-08-01T16:00:30.171307,Banking Charges,359.36,0.0,0.0,0.0,0.0,0.0,False
+6,Speedy Delivery Partners,,EXP-6,2022-08-02T10:59:30.171307,Delivery Charges,988.47,0.0,0.0,0.0,0.0,0.0,False
+7,Printech Solutions,,EXP-7,2022-08-03T10:59:30.171307,Printing & Stationery,468.15,0.0,0.0,0.0,0.0,0.0,False
+8,HDFC Bank Corp,,EXP-8,2022-08-05T18:02:30.171307,Banking Charges,290.92,0.0,0.0,0.0,0.0,0.0,False
+9,Printech Solutions,,EXP-9,2022-08-06T17:20:30.171307,Printing & Stationery,367.56,0.0,0.0,0.0,0.0,0.0,False
+10,Printech Solutions,,EXP-10,2022-08-07T14:12:30.171307,Printing & Stationery,732.15,0.0,0.0,0.0,0.0,0.0,False
+11,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-8-2022,2022-08-10T14:00:00.171307,Electricity Bill,6255.77,18.0,954.27,477.13,477.13,0.0,True
+12,Speedy Delivery Partners,,EXP-12,2022-08-10T15:11:30.171307,Delivery Charges,614.34,0.0,0.0,0.0,0.0,0.0,False
+13,Speedy Delivery Partners,,EXP-13,2022-08-11T10:04:30.171307,Delivery Charges,544.72,0.0,0.0,0.0,0.0,0.0,False
+14,Google Ads India,,EXP-14,2022-08-12T14:56:30.171307,Marketing,1426.49,0.0,0.0,0.0,0.0,0.0,False
+15,Local Carton Wholesalers,,EXP-15,2022-08-13T16:42:30.171307,Packaging Material,861.43,0.0,0.0,0.0,0.0,0.0,False
+16,Printech Solutions,,EXP-16,2022-08-14T12:12:30.171307,Printing & Stationery,200.56,0.0,0.0,0.0,0.0,0.0,False
+17,Printech Solutions,,EXP-17,2022-08-19T12:09:30.171307,Printing & Stationery,219.55,0.0,0.0,0.0,0.0,0.0,False
+18,HDFC Bank Corp,,EXP-18,2022-08-20T11:34:30.171307,Banking Charges,120.56,0.0,0.0,0.0,0.0,0.0,False
+19,Printech Solutions,,EXP-19,2022-08-25T14:05:30.171307,Printing & Stationery,739.75,0.0,0.0,0.0,0.0,0.0,False
+20,Local Carton Wholesalers,,EXP-20,2022-08-29T18:43:30.171307,Packaging Material,1233.66,0.0,0.0,0.0,0.0,0.0,False
+21,Prime Properties Ltd,,RENT-9-2022,2022-09-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+22,Store Employees Salaries,,SAL-9-2022,2022-09-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+23,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-9-2022,2022-09-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+24,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-9-2022,2022-09-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+25,Google Ads India,,EXP-25,2022-09-01T17:11:30.171307,Marketing,3162.95,0.0,0.0,0.0,0.0,0.0,False
+26,Local Handyman Services,,EXP-26,2022-09-05T09:26:30.171307,Repairs & Maintenance,2003.95,0.0,0.0,0.0,0.0,0.0,False
+27,Local Handyman Services,,EXP-27,2022-09-08T11:09:30.171307,Repairs & Maintenance,1618.81,0.0,0.0,0.0,0.0,0.0,False
+28,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-9-2022,2022-09-10T14:00:00.171307,Electricity Bill,6578.23,18.0,1003.46,501.73,501.73,0.0,True
+29,Printech Solutions,,EXP-29,2022-09-10T09:09:30.171307,Printing & Stationery,223.1,0.0,0.0,0.0,0.0,0.0,False
+30,Printech Solutions,,EXP-30,2022-09-11T13:03:30.171307,Printing & Stationery,745.05,0.0,0.0,0.0,0.0,0.0,False
+31,Local Handyman Services,,EXP-31,2022-09-13T12:09:30.171307,Repairs & Maintenance,1007.28,0.0,0.0,0.0,0.0,0.0,False
+32,City Logistics,,EXP-32,2022-09-16T09:03:30.171307,Transportation & Fuel,1531.82,0.0,0.0,0.0,0.0,0.0,False
+33,City Logistics,,EXP-33,2022-09-19T16:51:30.171307,Transportation & Fuel,1427.99,0.0,0.0,0.0,0.0,0.0,False
+34,Printech Solutions,,EXP-34,2022-09-25T16:57:30.171307,Printing & Stationery,317.19,0.0,0.0,0.0,0.0,0.0,False
+35,Printech Solutions,,EXP-35,2022-09-26T09:11:30.171307,Printing & Stationery,334.73,0.0,0.0,0.0,0.0,0.0,False
+36,Google Ads India,,EXP-36,2022-09-28T13:01:30.171307,Marketing,2272.77,0.0,0.0,0.0,0.0,0.0,False
+37,Printech Solutions,,EXP-37,2022-09-29T12:27:30.171307,Printing & Stationery,510.52,0.0,0.0,0.0,0.0,0.0,False
+38,Prime Properties Ltd,,RENT-10-2022,2022-10-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+39,Store Employees Salaries,,SAL-10-2022,2022-10-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+40,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-10-2022,2022-10-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+41,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-10-2022,2022-10-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+42,Google Ads India,,EXP-42,2022-10-01T18:50:30.171307,Marketing,2900.98,0.0,0.0,0.0,0.0,0.0,False
+43,Local Handyman Services,,EXP-43,2022-10-05T11:46:30.171307,Repairs & Maintenance,654.92,0.0,0.0,0.0,0.0,0.0,False
+44,Printech Solutions,,EXP-44,2022-10-06T09:13:30.171307,Printing & Stationery,482.8,0.0,0.0,0.0,0.0,0.0,False
+45,HDFC Bank Corp,,EXP-45,2022-10-09T12:57:30.171307,Banking Charges,196.7,0.0,0.0,0.0,0.0,0.0,False
+46,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-10-2022,2022-10-10T14:00:00.171307,Electricity Bill,7412.38,18.0,1130.7,565.35,565.35,0.0,True
+47,HDFC Bank Corp,,EXP-47,2022-10-10T14:40:30.171307,Banking Charges,115.99,0.0,0.0,0.0,0.0,0.0,False
+48,Printech Solutions,,EXP-48,2022-10-12T09:55:30.171307,Printing & Stationery,734.61,0.0,0.0,0.0,0.0,0.0,False
+49,Local Handyman Services,,EXP-49,2022-10-13T17:08:30.171307,Repairs & Maintenance,1719.57,0.0,0.0,0.0,0.0,0.0,False
+50,Local Handyman Services,,EXP-50,2022-10-14T10:31:30.171307,Repairs & Maintenance,2164.68,0.0,0.0,0.0,0.0,0.0,False
+51,Printech Solutions,,EXP-51,2022-10-16T13:19:30.171307,Printing & Stationery,374.31,0.0,0.0,0.0,0.0,0.0,False
+52,City Logistics,,EXP-52,2022-10-20T09:15:30.171307,Transportation & Fuel,1479.05,0.0,0.0,0.0,0.0,0.0,False
+53,Speedy Delivery Partners,,EXP-53,2022-10-21T13:13:30.171307,Delivery Charges,988.54,0.0,0.0,0.0,0.0,0.0,False
+54,Local Handyman Services,,EXP-54,2022-10-22T13:52:30.171307,Repairs & Maintenance,357.99,0.0,0.0,0.0,0.0,0.0,False
+55,Local Handyman Services,,EXP-55,2022-10-23T16:30:30.171307,Repairs & Maintenance,940.39,0.0,0.0,0.0,0.0,0.0,False
+56,Speedy Delivery Partners,,EXP-56,2022-10-27T10:36:30.171307,Delivery Charges,696.71,0.0,0.0,0.0,0.0,0.0,False
+57,HDFC Bank Corp,,EXP-57,2022-10-28T16:07:30.171307,Banking Charges,377.03,0.0,0.0,0.0,0.0,0.0,False
+58,Local Carton Wholesalers,,EXP-58,2022-10-31T12:53:30.171307,Packaging Material,1143.72,0.0,0.0,0.0,0.0,0.0,False
+59,Prime Properties Ltd,,RENT-11-2022,2022-11-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+60,Store Employees Salaries,,SAL-11-2022,2022-11-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+61,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-11-2022,2022-11-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+62,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-11-2022,2022-11-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+63,Local Handyman Services,,EXP-63,2022-11-04T18:53:30.171307,Repairs & Maintenance,1991.74,0.0,0.0,0.0,0.0,0.0,False
+64,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-11-2022,2022-11-10T14:00:00.171307,Electricity Bill,8462.05,18.0,1290.82,645.41,645.41,0.0,True
+65,City Logistics,,EXP-65,2022-11-12T15:51:30.171307,Transportation & Fuel,1493.74,0.0,0.0,0.0,0.0,0.0,False
+66,Local Carton Wholesalers,,EXP-66,2022-11-24T16:11:30.171307,Packaging Material,1418.11,0.0,0.0,0.0,0.0,0.0,False
+67,Printech Solutions,,EXP-67,2022-11-25T14:03:30.171307,Printing & Stationery,558.57,0.0,0.0,0.0,0.0,0.0,False
+68,Speedy Delivery Partners,,EXP-68,2022-11-28T13:43:30.171307,Delivery Charges,822.11,0.0,0.0,0.0,0.0,0.0,False
+69,Prime Properties Ltd,,RENT-12-2022,2022-12-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+70,Store Employees Salaries,,SAL-12-2022,2022-12-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+71,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-12-2022,2022-12-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+72,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-12-2022,2022-12-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+73,Local Carton Wholesalers,,EXP-73,2022-12-04T12:50:30.171307,Packaging Material,697.29,0.0,0.0,0.0,0.0,0.0,False
+74,Local Carton Wholesalers,,EXP-74,2022-12-05T11:59:30.171307,Packaging Material,1379.8,0.0,0.0,0.0,0.0,0.0,False
+75,Local Carton Wholesalers,,EXP-75,2022-12-09T15:43:30.171307,Packaging Material,450.65,0.0,0.0,0.0,0.0,0.0,False
+76,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-12-2022,2022-12-10T14:00:00.171307,Electricity Bill,9272.38,18.0,1414.43,707.22,707.22,0.0,True
+77,Local Handyman Services,,EXP-77,2022-12-12T16:39:30.171307,Repairs & Maintenance,329.84,0.0,0.0,0.0,0.0,0.0,False
+78,Local Carton Wholesalers,,EXP-78,2022-12-19T14:08:30.171307,Packaging Material,897.18,0.0,0.0,0.0,0.0,0.0,False
+79,Local Handyman Services,,EXP-79,2022-12-22T16:40:30.171307,Repairs & Maintenance,1761.65,0.0,0.0,0.0,0.0,0.0,False
+80,HDFC Bank Corp,,EXP-80,2022-12-24T17:30:30.171307,Banking Charges,468.92,0.0,0.0,0.0,0.0,0.0,False
+81,Printech Solutions,,EXP-81,2022-12-30T14:10:30.171307,Printing & Stationery,532.99,0.0,0.0,0.0,0.0,0.0,False
+82,Prime Properties Ltd,,RENT-1-2023,2023-01-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+83,Store Employees Salaries,,SAL-1-2023,2023-01-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+84,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-1-2023,2023-01-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+85,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-1-2023,2023-01-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+86,Local Handyman Services,,EXP-86,2023-01-02T17:55:30.171307,Repairs & Maintenance,1235.37,0.0,0.0,0.0,0.0,0.0,False
+87,Speedy Delivery Partners,,EXP-87,2023-01-06T09:49:30.171307,Delivery Charges,825.16,0.0,0.0,0.0,0.0,0.0,False
+88,Printech Solutions,,EXP-88,2023-01-09T11:32:30.171307,Printing & Stationery,474.29,0.0,0.0,0.0,0.0,0.0,False
+89,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-1-2023,2023-01-10T14:00:00.171307,Electricity Bill,9103.98,18.0,1388.74,694.37,694.37,0.0,True
+90,Local Handyman Services,,EXP-90,2023-01-10T18:49:30.171307,Repairs & Maintenance,2393.71,0.0,0.0,0.0,0.0,0.0,False
+91,Speedy Delivery Partners,,EXP-91,2023-01-11T12:01:30.171307,Delivery Charges,688.73,0.0,0.0,0.0,0.0,0.0,False
+92,Speedy Delivery Partners,,EXP-92,2023-01-15T09:51:30.171307,Delivery Charges,588.6,0.0,0.0,0.0,0.0,0.0,False
+93,Local Handyman Services,,EXP-93,2023-01-17T18:22:30.171307,Repairs & Maintenance,2197.29,0.0,0.0,0.0,0.0,0.0,False
+94,Printech Solutions,,EXP-94,2023-01-18T12:27:30.171307,Printing & Stationery,748.29,0.0,0.0,0.0,0.0,0.0,False
+95,Printech Solutions,,EXP-95,2023-01-19T09:09:30.171307,Printing & Stationery,208.74,0.0,0.0,0.0,0.0,0.0,False
+96,City Logistics,,EXP-96,2023-01-20T14:52:30.171307,Transportation & Fuel,768.22,0.0,0.0,0.0,0.0,0.0,False
+97,Speedy Delivery Partners,,EXP-97,2023-01-27T16:10:30.171307,Delivery Charges,865.11,0.0,0.0,0.0,0.0,0.0,False
+98,Speedy Delivery Partners,,EXP-98,2023-01-28T11:09:30.171307,Delivery Charges,691.01,0.0,0.0,0.0,0.0,0.0,False
+99,Local Carton Wholesalers,,EXP-99,2023-01-31T18:40:30.171307,Packaging Material,1320.15,0.0,0.0,0.0,0.0,0.0,False
+100,Prime Properties Ltd,,RENT-2-2023,2023-02-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+101,Store Employees Salaries,,SAL-2-2023,2023-02-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+102,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-2-2023,2023-02-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+103,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-2-2023,2023-02-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+104,Google Ads India,,EXP-104,2023-02-01T11:47:30.171307,Marketing,4368.88,0.0,0.0,0.0,0.0,0.0,False
+105,Speedy Delivery Partners,,EXP-105,2023-02-03T09:06:30.171307,Delivery Charges,464.28,0.0,0.0,0.0,0.0,0.0,False
+106,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-2-2023,2023-02-10T14:00:00.171307,Electricity Bill,7702.38,18.0,1174.94,587.47,587.47,0.0,True
+107,Local Carton Wholesalers,,EXP-107,2023-02-11T14:52:30.171307,Packaging Material,1209.32,0.0,0.0,0.0,0.0,0.0,False
+108,City Logistics,,EXP-108,2023-02-12T14:12:30.171307,Transportation & Fuel,534.41,0.0,0.0,0.0,0.0,0.0,False
+109,Local Handyman Services,,EXP-109,2023-02-16T09:02:30.171307,Repairs & Maintenance,684.58,0.0,0.0,0.0,0.0,0.0,False
+110,Google Ads India,,EXP-110,2023-02-19T12:04:30.171307,Marketing,1605.2,0.0,0.0,0.0,0.0,0.0,False
+111,Local Handyman Services,,EXP-111,2023-02-20T17:46:30.171307,Repairs & Maintenance,880.46,0.0,0.0,0.0,0.0,0.0,False
+112,Local Carton Wholesalers,,EXP-112,2023-02-24T18:53:30.171307,Packaging Material,1322.66,0.0,0.0,0.0,0.0,0.0,False
+113,HDFC Bank Corp,,EXP-113,2023-02-27T13:47:30.171307,Banking Charges,292.49,0.0,0.0,0.0,0.0,0.0,False
+114,Prime Properties Ltd,,RENT-3-2023,2023-03-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+115,Store Employees Salaries,,SAL-3-2023,2023-03-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+116,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-3-2023,2023-03-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+117,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-3-2023,2023-03-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+118,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-3-2023,2023-03-10T14:00:00.171307,Electricity Bill,7823.88,18.0,1193.47,596.74,596.74,0.0,True
+119,Local Handyman Services,,EXP-119,2023-03-15T13:42:30.171307,Repairs & Maintenance,951.11,0.0,0.0,0.0,0.0,0.0,False
+120,Speedy Delivery Partners,,EXP-120,2023-03-16T12:13:30.171307,Delivery Charges,470.71,0.0,0.0,0.0,0.0,0.0,False
+121,Google Ads India,,EXP-121,2023-03-19T11:17:30.171307,Marketing,3429.88,0.0,0.0,0.0,0.0,0.0,False
+122,Printech Solutions,,EXP-122,2023-03-21T17:36:30.171307,Printing & Stationery,362.2,0.0,0.0,0.0,0.0,0.0,False
+123,Speedy Delivery Partners,,EXP-123,2023-03-22T10:46:30.171307,Delivery Charges,747.18,0.0,0.0,0.0,0.0,0.0,False
+124,HDFC Bank Corp,,EXP-124,2023-03-27T10:25:30.171307,Banking Charges,415.09,0.0,0.0,0.0,0.0,0.0,False
+125,Local Carton Wholesalers,,EXP-125,2023-03-28T17:56:30.171307,Packaging Material,780.25,0.0,0.0,0.0,0.0,0.0,False
+126,Local Handyman Services,,EXP-126,2023-03-31T15:27:30.171307,Repairs & Maintenance,1376.5,0.0,0.0,0.0,0.0,0.0,False
+127,Prime Properties Ltd,,RENT-4-2023,2023-04-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+128,Store Employees Salaries,,SAL-4-2023,2023-04-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+129,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-4-2023,2023-04-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+130,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-4-2023,2023-04-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+131,Local Carton Wholesalers,,EXP-131,2023-04-01T14:50:30.171307,Packaging Material,1037.63,0.0,0.0,0.0,0.0,0.0,False
+132,HDFC Bank Corp,,EXP-132,2023-04-03T12:11:30.171307,Banking Charges,174.9,0.0,0.0,0.0,0.0,0.0,False
+133,City Logistics,,EXP-133,2023-04-04T13:32:30.171307,Transportation & Fuel,515.63,0.0,0.0,0.0,0.0,0.0,False
+134,Speedy Delivery Partners,,EXP-134,2023-04-08T18:42:30.171307,Delivery Charges,1051.8,0.0,0.0,0.0,0.0,0.0,False
+135,Google Ads India,,EXP-135,2023-04-09T16:26:30.171307,Marketing,2636.28,0.0,0.0,0.0,0.0,0.0,False
+136,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-4-2023,2023-04-10T14:00:00.171307,Electricity Bill,8501.14,18.0,1296.78,648.39,648.39,0.0,True
+137,HDFC Bank Corp,,EXP-137,2023-04-14T13:36:30.171307,Banking Charges,295.91,0.0,0.0,0.0,0.0,0.0,False
+138,Speedy Delivery Partners,,EXP-138,2023-04-20T16:42:30.171307,Delivery Charges,410.52,0.0,0.0,0.0,0.0,0.0,False
+139,Local Carton Wholesalers,,EXP-139,2023-04-23T14:33:30.171307,Packaging Material,477.72,0.0,0.0,0.0,0.0,0.0,False
+140,HDFC Bank Corp,,EXP-140,2023-04-24T18:57:30.171307,Banking Charges,237.62,0.0,0.0,0.0,0.0,0.0,False
+141,City Logistics,,EXP-141,2023-04-25T15:06:30.171307,Transportation & Fuel,1424.41,0.0,0.0,0.0,0.0,0.0,False
+142,City Logistics,,EXP-142,2023-04-28T12:39:30.171307,Transportation & Fuel,1254.53,0.0,0.0,0.0,0.0,0.0,False
+143,Prime Properties Ltd,,RENT-5-2023,2023-05-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+144,Store Employees Salaries,,SAL-5-2023,2023-05-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+145,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-5-2023,2023-05-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+146,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-5-2023,2023-05-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+147,City Logistics,,EXP-147,2023-05-03T11:45:30.171307,Transportation & Fuel,1589.33,0.0,0.0,0.0,0.0,0.0,False
+148,Speedy Delivery Partners,,EXP-148,2023-05-04T11:14:30.171307,Delivery Charges,587.89,0.0,0.0,0.0,0.0,0.0,False
+149,HDFC Bank Corp,,EXP-149,2023-05-06T15:24:30.171307,Banking Charges,318.41,0.0,0.0,0.0,0.0,0.0,False
+150,Google Ads India,,EXP-150,2023-05-09T09:49:30.171307,Marketing,1805.38,0.0,0.0,0.0,0.0,0.0,False
+151,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-5-2023,2023-05-10T14:00:00.171307,Electricity Bill,6724.73,18.0,1025.81,512.9,512.9,0.0,True
+152,City Logistics,,EXP-152,2023-05-14T17:23:30.171307,Transportation & Fuel,1091.17,0.0,0.0,0.0,0.0,0.0,False
+153,Local Carton Wholesalers,,EXP-153,2023-05-16T15:43:30.171307,Packaging Material,470.23,0.0,0.0,0.0,0.0,0.0,False
+154,Printech Solutions,,EXP-154,2023-05-17T17:29:30.171307,Printing & Stationery,316.77,0.0,0.0,0.0,0.0,0.0,False
+155,HDFC Bank Corp,,EXP-155,2023-05-24T12:26:30.171307,Banking Charges,149.63,0.0,0.0,0.0,0.0,0.0,False
+156,Prime Properties Ltd,,RENT-6-2023,2023-06-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+157,Store Employees Salaries,,SAL-6-2023,2023-06-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+158,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-6-2023,2023-06-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+159,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-6-2023,2023-06-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+160,HDFC Bank Corp,,EXP-160,2023-06-02T11:30:30.171307,Banking Charges,229.47,0.0,0.0,0.0,0.0,0.0,False
+161,HDFC Bank Corp,,EXP-161,2023-06-04T10:44:30.171307,Banking Charges,442.02,0.0,0.0,0.0,0.0,0.0,False
+162,Printech Solutions,,EXP-162,2023-06-05T12:35:30.171307,Printing & Stationery,774.8,0.0,0.0,0.0,0.0,0.0,False
+163,Local Carton Wholesalers,,EXP-163,2023-06-07T12:09:30.171307,Packaging Material,536.73,0.0,0.0,0.0,0.0,0.0,False
+164,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-6-2023,2023-06-10T14:00:00.171307,Electricity Bill,6322.98,18.0,964.52,482.26,482.26,0.0,True
+165,HDFC Bank Corp,,EXP-165,2023-06-12T12:52:30.171307,Banking Charges,465.37,0.0,0.0,0.0,0.0,0.0,False
+166,Speedy Delivery Partners,,EXP-166,2023-06-13T14:27:30.171307,Delivery Charges,1121.58,0.0,0.0,0.0,0.0,0.0,False
+167,Speedy Delivery Partners,,EXP-167,2023-06-14T16:55:30.171307,Delivery Charges,719.12,0.0,0.0,0.0,0.0,0.0,False
+168,HDFC Bank Corp,,EXP-168,2023-06-16T12:46:30.171307,Banking Charges,353.6,0.0,0.0,0.0,0.0,0.0,False
+169,Speedy Delivery Partners,,EXP-169,2023-06-24T09:10:30.171307,Delivery Charges,1098.7,0.0,0.0,0.0,0.0,0.0,False
+170,Speedy Delivery Partners,,EXP-170,2023-06-25T14:59:30.171307,Delivery Charges,580.41,0.0,0.0,0.0,0.0,0.0,False
+171,HDFC Bank Corp,,EXP-171,2023-06-28T15:01:30.171307,Banking Charges,297.06,0.0,0.0,0.0,0.0,0.0,False
+172,Google Ads India,,EXP-172,2023-06-29T15:23:30.171307,Marketing,1027.04,0.0,0.0,0.0,0.0,0.0,False
+173,Prime Properties Ltd,,RENT-7-2023,2023-07-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+174,Store Employees Salaries,,SAL-7-2023,2023-07-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+175,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-7-2023,2023-07-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+176,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-7-2023,2023-07-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+177,Speedy Delivery Partners,,EXP-177,2023-07-02T09:33:30.171307,Delivery Charges,640.1,0.0,0.0,0.0,0.0,0.0,False
+178,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-7-2023,2023-07-10T14:00:00.171307,Electricity Bill,7084.41,18.0,1080.67,540.34,540.34,0.0,True
+179,City Logistics,,EXP-179,2023-07-12T18:48:30.171307,Transportation & Fuel,608.7,0.0,0.0,0.0,0.0,0.0,False
+180,Google Ads India,,EXP-180,2023-07-15T12:06:30.171307,Marketing,3495.95,0.0,0.0,0.0,0.0,0.0,False
+181,Printech Solutions,,EXP-181,2023-07-16T17:51:30.171307,Printing & Stationery,775.2,0.0,0.0,0.0,0.0,0.0,False
+182,Local Handyman Services,,EXP-182,2023-07-17T18:06:30.171307,Repairs & Maintenance,1492.97,0.0,0.0,0.0,0.0,0.0,False
+183,Speedy Delivery Partners,,EXP-183,2023-07-21T18:47:30.171307,Delivery Charges,379.27,0.0,0.0,0.0,0.0,0.0,False
+184,Local Carton Wholesalers,,EXP-184,2023-07-22T11:21:30.171307,Packaging Material,937.53,0.0,0.0,0.0,0.0,0.0,False
+185,Google Ads India,,EXP-185,2023-07-23T10:01:30.171307,Marketing,3164.37,0.0,0.0,0.0,0.0,0.0,False
+186,Local Carton Wholesalers,,EXP-186,2023-07-24T10:42:30.171307,Packaging Material,833.43,0.0,0.0,0.0,0.0,0.0,False
+187,Printech Solutions,,EXP-187,2023-07-27T18:43:30.171307,Printing & Stationery,573.99,0.0,0.0,0.0,0.0,0.0,False
+188,City Logistics,,EXP-188,2023-07-29T09:58:30.171307,Transportation & Fuel,552.42,0.0,0.0,0.0,0.0,0.0,False
+189,Prime Properties Ltd,,RENT-8-2023,2023-08-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+190,Store Employees Salaries,,SAL-8-2023,2023-08-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+191,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-8-2023,2023-08-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+192,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-8-2023,2023-08-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+193,Printech Solutions,,EXP-193,2023-08-05T11:44:30.171307,Printing & Stationery,649.62,0.0,0.0,0.0,0.0,0.0,False
+194,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-8-2023,2023-08-10T14:00:00.171307,Electricity Bill,6344.06,18.0,967.74,483.87,483.87,0.0,True
+195,HDFC Bank Corp,,EXP-195,2023-08-11T11:04:30.171307,Banking Charges,231.45,0.0,0.0,0.0,0.0,0.0,False
+196,Google Ads India,,EXP-196,2023-08-12T15:10:30.171307,Marketing,2364.72,0.0,0.0,0.0,0.0,0.0,False
+197,Local Carton Wholesalers,,EXP-197,2023-08-15T10:21:30.171307,Packaging Material,1043.59,0.0,0.0,0.0,0.0,0.0,False
+198,Local Handyman Services,,EXP-198,2023-08-16T17:01:30.171307,Repairs & Maintenance,2219.14,0.0,0.0,0.0,0.0,0.0,False
+199,Local Handyman Services,,EXP-199,2023-08-25T18:51:30.171307,Repairs & Maintenance,2383.26,0.0,0.0,0.0,0.0,0.0,False
+200,Speedy Delivery Partners,,EXP-200,2023-08-26T16:22:30.171307,Delivery Charges,500.93,0.0,0.0,0.0,0.0,0.0,False
+201,Printech Solutions,,EXP-201,2023-08-29T18:58:30.171307,Printing & Stationery,669.0,0.0,0.0,0.0,0.0,0.0,False
+202,Speedy Delivery Partners,,EXP-202,2023-08-30T09:07:30.171307,Delivery Charges,527.57,0.0,0.0,0.0,0.0,0.0,False
+203,Prime Properties Ltd,,RENT-9-2023,2023-09-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+204,Store Employees Salaries,,SAL-9-2023,2023-09-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+205,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-9-2023,2023-09-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+206,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-9-2023,2023-09-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+207,HDFC Bank Corp,,EXP-207,2023-09-01T10:37:30.171307,Banking Charges,477.3,0.0,0.0,0.0,0.0,0.0,False
+208,Local Handyman Services,,EXP-208,2023-09-02T13:33:30.171307,Repairs & Maintenance,1623.56,0.0,0.0,0.0,0.0,0.0,False
+209,HDFC Bank Corp,,EXP-209,2023-09-06T10:34:30.171307,Banking Charges,113.48,0.0,0.0,0.0,0.0,0.0,False
+210,Google Ads India,,EXP-210,2023-09-07T18:00:30.171307,Marketing,2976.59,0.0,0.0,0.0,0.0,0.0,False
+211,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-9-2023,2023-09-10T14:00:00.171307,Electricity Bill,7185.44,18.0,1096.08,548.04,548.04,0.0,True
+212,Google Ads India,,EXP-212,2023-09-12T13:20:30.171307,Marketing,2312.51,0.0,0.0,0.0,0.0,0.0,False
+213,Printech Solutions,,EXP-213,2023-09-18T17:54:30.171307,Printing & Stationery,732.29,0.0,0.0,0.0,0.0,0.0,False
+214,Local Handyman Services,,EXP-214,2023-09-26T15:30:30.171307,Repairs & Maintenance,1782.92,0.0,0.0,0.0,0.0,0.0,False
+215,City Logistics,,EXP-215,2023-09-28T12:18:30.171307,Transportation & Fuel,656.2,0.0,0.0,0.0,0.0,0.0,False
+216,City Logistics,,EXP-216,2023-09-30T09:40:30.171307,Transportation & Fuel,1362.52,0.0,0.0,0.0,0.0,0.0,False
+217,Prime Properties Ltd,,RENT-10-2023,2023-10-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+218,Store Employees Salaries,,SAL-10-2023,2023-10-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+219,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-10-2023,2023-10-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+220,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-10-2023,2023-10-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+221,City Logistics,,EXP-221,2023-10-06T14:34:30.171307,Transportation & Fuel,1275.6,0.0,0.0,0.0,0.0,0.0,False
+222,Google Ads India,,EXP-222,2023-10-07T15:33:30.171307,Marketing,3599.41,0.0,0.0,0.0,0.0,0.0,False
+223,Local Handyman Services,,EXP-223,2023-10-08T15:34:30.171307,Repairs & Maintenance,1530.48,0.0,0.0,0.0,0.0,0.0,False
+224,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-10-2023,2023-10-10T14:00:00.171307,Electricity Bill,6450.61,18.0,983.99,492.0,492.0,0.0,True
+225,Printech Solutions,,EXP-225,2023-10-15T09:20:30.171307,Printing & Stationery,539.07,0.0,0.0,0.0,0.0,0.0,False
+226,Local Carton Wholesalers,,EXP-226,2023-10-17T14:46:30.171307,Packaging Material,1205.67,0.0,0.0,0.0,0.0,0.0,False
+227,Google Ads India,,EXP-227,2023-10-18T09:33:30.171307,Marketing,3258.34,0.0,0.0,0.0,0.0,0.0,False
+228,Printech Solutions,,EXP-228,2023-10-25T09:05:30.171307,Printing & Stationery,460.41,0.0,0.0,0.0,0.0,0.0,False
+229,Local Carton Wholesalers,,EXP-229,2023-10-29T09:27:30.171307,Packaging Material,912.46,0.0,0.0,0.0,0.0,0.0,False
+230,Speedy Delivery Partners,,EXP-230,2023-10-31T12:08:30.171307,Delivery Charges,732.01,0.0,0.0,0.0,0.0,0.0,False
+231,Prime Properties Ltd,,RENT-11-2023,2023-11-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+232,Store Employees Salaries,,SAL-11-2023,2023-11-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+233,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-11-2023,2023-11-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+234,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-11-2023,2023-11-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+235,Google Ads India,,EXP-235,2023-11-01T13:16:30.171307,Marketing,1613.25,0.0,0.0,0.0,0.0,0.0,False
+236,Local Handyman Services,,EXP-236,2023-11-02T13:05:30.171307,Repairs & Maintenance,2294.77,0.0,0.0,0.0,0.0,0.0,False
+237,Speedy Delivery Partners,,EXP-237,2023-11-06T16:51:30.171307,Delivery Charges,307.89,0.0,0.0,0.0,0.0,0.0,False
+238,Local Carton Wholesalers,,EXP-238,2023-11-07T14:45:30.171307,Packaging Material,1310.57,0.0,0.0,0.0,0.0,0.0,False
+239,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-11-2023,2023-11-10T14:00:00.171307,Electricity Bill,6797.78,18.0,1036.95,518.48,518.48,0.0,True
+240,Local Handyman Services,,EXP-240,2023-11-10T16:19:30.171307,Repairs & Maintenance,877.27,0.0,0.0,0.0,0.0,0.0,False
+241,HDFC Bank Corp,,EXP-241,2023-11-11T16:02:30.171307,Banking Charges,207.98,0.0,0.0,0.0,0.0,0.0,False
+242,Local Handyman Services,,EXP-242,2023-11-12T14:04:30.171307,Repairs & Maintenance,1046.87,0.0,0.0,0.0,0.0,0.0,False
+243,Local Carton Wholesalers,,EXP-243,2023-11-14T14:11:30.171307,Packaging Material,725.66,0.0,0.0,0.0,0.0,0.0,False
+244,Local Handyman Services,,EXP-244,2023-11-15T09:03:30.171307,Repairs & Maintenance,2224.7,0.0,0.0,0.0,0.0,0.0,False
+245,HDFC Bank Corp,,EXP-245,2023-11-17T17:57:30.171307,Banking Charges,245.69,0.0,0.0,0.0,0.0,0.0,False
+246,Printech Solutions,,EXP-246,2023-11-19T09:44:30.171307,Printing & Stationery,555.33,0.0,0.0,0.0,0.0,0.0,False
+247,Printech Solutions,,EXP-247,2023-11-22T13:07:30.171307,Printing & Stationery,589.67,0.0,0.0,0.0,0.0,0.0,False
+248,Speedy Delivery Partners,,EXP-248,2023-11-28T12:30:30.171307,Delivery Charges,385.15,0.0,0.0,0.0,0.0,0.0,False
+249,Local Handyman Services,,EXP-249,2023-11-30T18:38:30.171307,Repairs & Maintenance,1119.99,0.0,0.0,0.0,0.0,0.0,False
+250,Prime Properties Ltd,,RENT-12-2023,2023-12-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+251,Store Employees Salaries,,SAL-12-2023,2023-12-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+252,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-12-2023,2023-12-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+253,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-12-2023,2023-12-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+254,HDFC Bank Corp,,EXP-254,2023-12-01T14:37:30.171307,Banking Charges,131.51,0.0,0.0,0.0,0.0,0.0,False
+255,City Logistics,,EXP-255,2023-12-04T13:31:30.171307,Transportation & Fuel,500.33,0.0,0.0,0.0,0.0,0.0,False
+256,HDFC Bank Corp,,EXP-256,2023-12-08T09:04:30.171307,Banking Charges,485.75,0.0,0.0,0.0,0.0,0.0,False
+257,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-12-2023,2023-12-10T14:00:00.171307,Electricity Bill,7749.32,18.0,1182.1,591.05,591.05,0.0,True
+258,Local Carton Wholesalers,,EXP-258,2023-12-12T16:41:30.171307,Packaging Material,1105.74,0.0,0.0,0.0,0.0,0.0,False
+259,Google Ads India,,EXP-259,2023-12-14T12:26:30.171307,Marketing,2548.26,0.0,0.0,0.0,0.0,0.0,False
+260,Google Ads India,,EXP-260,2023-12-15T16:07:30.171307,Marketing,2304.76,0.0,0.0,0.0,0.0,0.0,False
+261,Local Handyman Services,,EXP-261,2023-12-17T17:47:30.171307,Repairs & Maintenance,640.83,0.0,0.0,0.0,0.0,0.0,False
+262,Local Carton Wholesalers,,EXP-262,2023-12-20T12:25:30.171307,Packaging Material,885.82,0.0,0.0,0.0,0.0,0.0,False
+263,Local Handyman Services,,EXP-263,2023-12-26T09:11:30.171307,Repairs & Maintenance,1114.36,0.0,0.0,0.0,0.0,0.0,False
+264,Local Carton Wholesalers,,EXP-264,2023-12-27T14:41:30.171307,Packaging Material,1171.08,0.0,0.0,0.0,0.0,0.0,False
+265,City Logistics,,EXP-265,2023-12-30T12:17:30.171307,Transportation & Fuel,1705.69,0.0,0.0,0.0,0.0,0.0,False
+266,Google Ads India,,EXP-266,2023-12-31T14:00:30.171307,Marketing,3908.72,0.0,0.0,0.0,0.0,0.0,False
+267,Prime Properties Ltd,,RENT-1-2024,2024-01-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+268,Store Employees Salaries,,SAL-1-2024,2024-01-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+269,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-1-2024,2024-01-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+270,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-1-2024,2024-01-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+271,Printech Solutions,,EXP-271,2024-01-02T17:57:30.171307,Printing & Stationery,608.64,0.0,0.0,0.0,0.0,0.0,False
+272,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-1-2024,2024-01-10T14:00:00.171307,Electricity Bill,8777.16,18.0,1338.89,669.45,669.45,0.0,True
+273,Local Carton Wholesalers,,EXP-273,2024-01-10T16:42:30.171307,Packaging Material,1467.49,0.0,0.0,0.0,0.0,0.0,False
+274,Printech Solutions,,EXP-274,2024-01-15T17:54:30.171307,Printing & Stationery,765.14,0.0,0.0,0.0,0.0,0.0,False
+275,Speedy Delivery Partners,,EXP-275,2024-01-16T16:13:30.171307,Delivery Charges,458.38,0.0,0.0,0.0,0.0,0.0,False
+276,City Logistics,,EXP-276,2024-01-19T16:54:30.171307,Transportation & Fuel,1350.05,0.0,0.0,0.0,0.0,0.0,False
+277,Local Handyman Services,,EXP-277,2024-01-20T18:52:30.171307,Repairs & Maintenance,1091.5,0.0,0.0,0.0,0.0,0.0,False
+278,Local Handyman Services,,EXP-278,2024-01-21T12:41:30.171307,Repairs & Maintenance,1013.28,0.0,0.0,0.0,0.0,0.0,False
+279,City Logistics,,EXP-279,2024-01-23T18:07:30.171307,Transportation & Fuel,1439.64,0.0,0.0,0.0,0.0,0.0,False
+280,City Logistics,,EXP-280,2024-01-25T15:07:30.171307,Transportation & Fuel,929.16,0.0,0.0,0.0,0.0,0.0,False
+281,Local Carton Wholesalers,,EXP-281,2024-01-27T14:34:30.171307,Packaging Material,1080.78,0.0,0.0,0.0,0.0,0.0,False
+282,Printech Solutions,,EXP-282,2024-01-31T12:54:30.171307,Printing & Stationery,260.93,0.0,0.0,0.0,0.0,0.0,False
+283,Prime Properties Ltd,,RENT-2-2024,2024-02-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+284,Store Employees Salaries,,SAL-2-2024,2024-02-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+285,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-2-2024,2024-02-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+286,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-2-2024,2024-02-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+287,Local Carton Wholesalers,,EXP-287,2024-02-03T12:58:30.171307,Packaging Material,1397.43,0.0,0.0,0.0,0.0,0.0,False
+288,HDFC Bank Corp,,EXP-288,2024-02-06T18:32:30.171307,Banking Charges,279.24,0.0,0.0,0.0,0.0,0.0,False
+289,Printech Solutions,,EXP-289,2024-02-08T12:52:30.171307,Printing & Stationery,799.53,0.0,0.0,0.0,0.0,0.0,False
+290,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-2-2024,2024-02-10T14:00:00.171307,Electricity Bill,6274.73,18.0,957.16,478.58,478.58,0.0,True
+291,Local Handyman Services,,EXP-291,2024-02-10T15:06:30.171307,Repairs & Maintenance,2396.06,0.0,0.0,0.0,0.0,0.0,False
+292,HDFC Bank Corp,,EXP-292,2024-02-11T11:35:30.171307,Banking Charges,408.27,0.0,0.0,0.0,0.0,0.0,False
+293,Speedy Delivery Partners,,EXP-293,2024-02-17T16:00:30.171307,Delivery Charges,1038.69,0.0,0.0,0.0,0.0,0.0,False
+294,HDFC Bank Corp,,EXP-294,2024-02-18T17:31:30.171307,Banking Charges,351.46,0.0,0.0,0.0,0.0,0.0,False
+295,Local Handyman Services,,EXP-295,2024-02-20T12:07:30.171307,Repairs & Maintenance,2350.55,0.0,0.0,0.0,0.0,0.0,False
+296,HDFC Bank Corp,,EXP-296,2024-02-22T15:20:30.171307,Banking Charges,265.09,0.0,0.0,0.0,0.0,0.0,False
+297,HDFC Bank Corp,,EXP-297,2024-02-24T13:33:30.171307,Banking Charges,287.16,0.0,0.0,0.0,0.0,0.0,False
+298,Prime Properties Ltd,,RENT-3-2024,2024-03-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+299,Store Employees Salaries,,SAL-3-2024,2024-03-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+300,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-3-2024,2024-03-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+301,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-3-2024,2024-03-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+302,Local Carton Wholesalers,,EXP-302,2024-03-02T13:32:30.171307,Packaging Material,547.74,0.0,0.0,0.0,0.0,0.0,False
+303,Printech Solutions,,EXP-303,2024-03-06T12:06:30.171307,Printing & Stationery,231.5,0.0,0.0,0.0,0.0,0.0,False
+304,Printech Solutions,,EXP-304,2024-03-09T13:33:30.171307,Printing & Stationery,252.26,0.0,0.0,0.0,0.0,0.0,False
+305,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-3-2024,2024-03-10T14:00:00.171307,Electricity Bill,8120.74,18.0,1238.76,619.38,619.38,0.0,True
+306,Printech Solutions,,EXP-306,2024-03-14T14:12:30.171307,Printing & Stationery,582.01,0.0,0.0,0.0,0.0,0.0,False
+307,Speedy Delivery Partners,,EXP-307,2024-03-17T09:04:30.171307,Delivery Charges,1194.66,0.0,0.0,0.0,0.0,0.0,False
+308,Local Handyman Services,,EXP-308,2024-03-20T15:18:30.171307,Repairs & Maintenance,1022.63,0.0,0.0,0.0,0.0,0.0,False
+309,Speedy Delivery Partners,,EXP-309,2024-03-22T10:43:30.171307,Delivery Charges,472.93,0.0,0.0,0.0,0.0,0.0,False
+310,Printech Solutions,,EXP-310,2024-03-23T11:13:30.171307,Printing & Stationery,594.91,0.0,0.0,0.0,0.0,0.0,False
+311,Google Ads India,,EXP-311,2024-03-25T13:29:30.171307,Marketing,2536.6,0.0,0.0,0.0,0.0,0.0,False
+312,Speedy Delivery Partners,,EXP-312,2024-03-28T14:58:30.171307,Delivery Charges,460.05,0.0,0.0,0.0,0.0,0.0,False
+313,Speedy Delivery Partners,,EXP-313,2024-03-30T14:06:30.171307,Delivery Charges,378.75,0.0,0.0,0.0,0.0,0.0,False
+314,Prime Properties Ltd,,RENT-4-2024,2024-04-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+315,Store Employees Salaries,,SAL-4-2024,2024-04-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+316,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-4-2024,2024-04-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+317,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-4-2024,2024-04-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+318,HDFC Bank Corp,,EXP-318,2024-04-03T14:22:30.171307,Banking Charges,198.06,0.0,0.0,0.0,0.0,0.0,False
+319,City Logistics,,EXP-319,2024-04-05T10:25:30.171307,Transportation & Fuel,1324.11,0.0,0.0,0.0,0.0,0.0,False
+320,Printech Solutions,,EXP-320,2024-04-09T10:15:30.171307,Printing & Stationery,796.5,0.0,0.0,0.0,0.0,0.0,False
+321,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-4-2024,2024-04-10T14:00:00.171307,Electricity Bill,7171.03,18.0,1093.89,546.95,546.95,0.0,True
+322,Local Handyman Services,,EXP-322,2024-04-10T09:53:30.171307,Repairs & Maintenance,521.01,0.0,0.0,0.0,0.0,0.0,False
+323,Speedy Delivery Partners,,EXP-323,2024-04-11T09:10:30.171307,Delivery Charges,1066.64,0.0,0.0,0.0,0.0,0.0,False
+324,Google Ads India,,EXP-324,2024-04-22T17:04:30.171307,Marketing,3199.2,0.0,0.0,0.0,0.0,0.0,False
+325,HDFC Bank Corp,,EXP-325,2024-04-28T15:06:30.171307,Banking Charges,398.08,0.0,0.0,0.0,0.0,0.0,False
+326,Local Handyman Services,,EXP-326,2024-04-30T17:31:30.171307,Repairs & Maintenance,1338.85,0.0,0.0,0.0,0.0,0.0,False
+327,Prime Properties Ltd,,RENT-5-2024,2024-05-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+328,Store Employees Salaries,,SAL-5-2024,2024-05-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+329,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-5-2024,2024-05-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+330,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-5-2024,2024-05-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+331,Speedy Delivery Partners,,EXP-331,2024-05-06T16:19:30.171307,Delivery Charges,651.16,0.0,0.0,0.0,0.0,0.0,False
+332,HDFC Bank Corp,,EXP-332,2024-05-08T12:25:30.171307,Banking Charges,138.06,0.0,0.0,0.0,0.0,0.0,False
+333,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-5-2024,2024-05-10T14:00:00.171307,Electricity Bill,8908.36,18.0,1358.9,679.45,679.45,0.0,True
+334,Google Ads India,,EXP-334,2024-05-15T10:10:30.171307,Marketing,3548.53,0.0,0.0,0.0,0.0,0.0,False
+335,Printech Solutions,,EXP-335,2024-05-18T09:52:30.171307,Printing & Stationery,367.45,0.0,0.0,0.0,0.0,0.0,False
+336,Speedy Delivery Partners,,EXP-336,2024-05-19T12:25:30.171307,Delivery Charges,336.55,0.0,0.0,0.0,0.0,0.0,False
+337,Speedy Delivery Partners,,EXP-337,2024-05-21T17:36:30.171307,Delivery Charges,372.57,0.0,0.0,0.0,0.0,0.0,False
+338,Local Carton Wholesalers,,EXP-338,2024-05-25T13:47:30.171307,Packaging Material,1348.11,0.0,0.0,0.0,0.0,0.0,False
+339,HDFC Bank Corp,,EXP-339,2024-05-26T17:29:30.171307,Banking Charges,397.04,0.0,0.0,0.0,0.0,0.0,False
+340,Prime Properties Ltd,,RENT-6-2024,2024-06-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+341,Store Employees Salaries,,SAL-6-2024,2024-06-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+342,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-6-2024,2024-06-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+343,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-6-2024,2024-06-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+344,Speedy Delivery Partners,,EXP-344,2024-06-02T18:09:30.171307,Delivery Charges,972.97,0.0,0.0,0.0,0.0,0.0,False
+345,Local Carton Wholesalers,,EXP-345,2024-06-05T14:13:30.171307,Packaging Material,1396.01,0.0,0.0,0.0,0.0,0.0,False
+346,Google Ads India,,EXP-346,2024-06-06T11:45:30.171307,Marketing,3615.99,0.0,0.0,0.0,0.0,0.0,False
+347,City Logistics,,EXP-347,2024-06-08T11:56:30.171307,Transportation & Fuel,794.05,0.0,0.0,0.0,0.0,0.0,False
+348,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-6-2024,2024-06-10T14:00:00.171307,Electricity Bill,8739.09,18.0,1333.08,666.54,666.54,0.0,True
+349,HDFC Bank Corp,,EXP-349,2024-06-10T11:12:30.171307,Banking Charges,483.69,0.0,0.0,0.0,0.0,0.0,False
+350,Local Handyman Services,,EXP-350,2024-06-13T16:40:30.171307,Repairs & Maintenance,1287.74,0.0,0.0,0.0,0.0,0.0,False
+351,City Logistics,,EXP-351,2024-06-16T14:21:30.171307,Transportation & Fuel,1338.51,0.0,0.0,0.0,0.0,0.0,False
+352,City Logistics,,EXP-352,2024-06-19T16:40:30.171307,Transportation & Fuel,1386.62,0.0,0.0,0.0,0.0,0.0,False
+353,Local Handyman Services,,EXP-353,2024-06-21T13:03:30.171307,Repairs & Maintenance,781.97,0.0,0.0,0.0,0.0,0.0,False
+354,Printech Solutions,,EXP-354,2024-06-24T18:36:30.171307,Printing & Stationery,614.55,0.0,0.0,0.0,0.0,0.0,False
+355,HDFC Bank Corp,,EXP-355,2024-06-25T12:44:30.171307,Banking Charges,252.43,0.0,0.0,0.0,0.0,0.0,False
+356,Printech Solutions,,EXP-356,2024-06-26T13:00:30.171307,Printing & Stationery,683.7,0.0,0.0,0.0,0.0,0.0,False
+357,Google Ads India,,EXP-357,2024-06-27T12:01:30.171307,Marketing,3629.63,0.0,0.0,0.0,0.0,0.0,False
+358,City Logistics,,EXP-358,2024-06-28T10:05:30.171307,Transportation & Fuel,1222.56,0.0,0.0,0.0,0.0,0.0,False
+359,Speedy Delivery Partners,,EXP-359,2024-06-29T15:52:30.171307,Delivery Charges,1090.28,0.0,0.0,0.0,0.0,0.0,False
+360,Prime Properties Ltd,,RENT-7-2024,2024-07-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+361,Store Employees Salaries,,SAL-7-2024,2024-07-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+362,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-7-2024,2024-07-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+363,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-7-2024,2024-07-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+364,Local Carton Wholesalers,,EXP-364,2024-07-05T16:32:30.171307,Packaging Material,760.52,0.0,0.0,0.0,0.0,0.0,False
+365,HDFC Bank Corp,,EXP-365,2024-07-06T14:03:30.171307,Banking Charges,337.62,0.0,0.0,0.0,0.0,0.0,False
+366,Printech Solutions,,EXP-366,2024-07-07T09:50:30.171307,Printing & Stationery,203.59,0.0,0.0,0.0,0.0,0.0,False
+367,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-7-2024,2024-07-10T14:00:00.171307,Electricity Bill,8732.79,18.0,1332.12,666.06,666.06,0.0,True
+368,Printech Solutions,,EXP-368,2024-07-12T11:22:30.171307,Printing & Stationery,690.21,0.0,0.0,0.0,0.0,0.0,False
+369,Local Carton Wholesalers,,EXP-369,2024-07-16T10:25:30.171307,Packaging Material,992.35,0.0,0.0,0.0,0.0,0.0,False
+370,Local Carton Wholesalers,,EXP-370,2024-07-17T09:59:30.171307,Packaging Material,1162.53,0.0,0.0,0.0,0.0,0.0,False
+371,HDFC Bank Corp,,EXP-371,2024-07-23T10:35:30.171307,Banking Charges,404.78,0.0,0.0,0.0,0.0,0.0,False
+372,Speedy Delivery Partners,,EXP-372,2024-07-24T11:21:30.171307,Delivery Charges,1067.41,0.0,0.0,0.0,0.0,0.0,False
+373,HDFC Bank Corp,,EXP-373,2024-07-26T17:10:30.171307,Banking Charges,402.15,0.0,0.0,0.0,0.0,0.0,False
+374,Prime Properties Ltd,,RENT-8-2024,2024-08-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+375,Store Employees Salaries,,SAL-8-2024,2024-08-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+376,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-8-2024,2024-08-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+377,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-8-2024,2024-08-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+378,Google Ads India,,EXP-378,2024-08-04T16:26:30.171307,Marketing,1264.1,0.0,0.0,0.0,0.0,0.0,False
+379,Google Ads India,,EXP-379,2024-08-05T10:54:30.171307,Marketing,1364.55,0.0,0.0,0.0,0.0,0.0,False
+380,Speedy Delivery Partners,,EXP-380,2024-08-07T16:26:30.171307,Delivery Charges,645.35,0.0,0.0,0.0,0.0,0.0,False
+381,Google Ads India,,EXP-381,2024-08-09T13:37:30.171307,Marketing,4299.62,0.0,0.0,0.0,0.0,0.0,False
+382,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-8-2024,2024-08-10T14:00:00.171307,Electricity Bill,9302.35,18.0,1419.0,709.5,709.5,0.0,True
+383,Printech Solutions,,EXP-383,2024-08-10T15:41:30.171307,Printing & Stationery,511.19,0.0,0.0,0.0,0.0,0.0,False
+384,Local Carton Wholesalers,,EXP-384,2024-08-11T15:08:30.171307,Packaging Material,901.3,0.0,0.0,0.0,0.0,0.0,False
+385,City Logistics,,EXP-385,2024-08-14T17:08:30.171307,Transportation & Fuel,819.35,0.0,0.0,0.0,0.0,0.0,False
+386,Google Ads India,,EXP-386,2024-08-16T09:42:30.171307,Marketing,3795.31,0.0,0.0,0.0,0.0,0.0,False
+387,Local Handyman Services,,EXP-387,2024-08-18T17:21:30.171307,Repairs & Maintenance,607.25,0.0,0.0,0.0,0.0,0.0,False
+388,Printech Solutions,,EXP-388,2024-08-19T10:50:30.171307,Printing & Stationery,794.76,0.0,0.0,0.0,0.0,0.0,False
+389,Local Handyman Services,,EXP-389,2024-08-22T15:02:30.171307,Repairs & Maintenance,1240.61,0.0,0.0,0.0,0.0,0.0,False
+390,Printech Solutions,,EXP-390,2024-08-27T18:34:30.171307,Printing & Stationery,469.8,0.0,0.0,0.0,0.0,0.0,False
+391,Printech Solutions,,EXP-391,2024-08-28T18:16:30.171307,Printing & Stationery,504.6,0.0,0.0,0.0,0.0,0.0,False
+392,Prime Properties Ltd,,RENT-9-2024,2024-09-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+393,Store Employees Salaries,,SAL-9-2024,2024-09-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+394,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-9-2024,2024-09-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+395,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-9-2024,2024-09-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+396,Speedy Delivery Partners,,EXP-396,2024-09-07T13:40:30.171307,Delivery Charges,969.85,0.0,0.0,0.0,0.0,0.0,False
+397,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-9-2024,2024-09-10T14:00:00.171307,Electricity Bill,6363.91,18.0,970.77,485.38,485.38,0.0,True
+398,HDFC Bank Corp,,EXP-398,2024-09-13T12:20:30.171307,Banking Charges,262.12,0.0,0.0,0.0,0.0,0.0,False
+399,City Logistics,,EXP-399,2024-09-18T18:15:30.171307,Transportation & Fuel,1091.84,0.0,0.0,0.0,0.0,0.0,False
+400,Speedy Delivery Partners,,EXP-400,2024-09-20T13:19:30.171307,Delivery Charges,986.16,0.0,0.0,0.0,0.0,0.0,False
+401,Printech Solutions,,EXP-401,2024-09-25T12:48:30.171307,Printing & Stationery,446.36,0.0,0.0,0.0,0.0,0.0,False
+402,Prime Properties Ltd,,RENT-10-2024,2024-10-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+403,Store Employees Salaries,,SAL-10-2024,2024-10-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+404,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-10-2024,2024-10-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+405,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-10-2024,2024-10-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+406,HDFC Bank Corp,,EXP-406,2024-10-02T09:57:30.171307,Banking Charges,411.77,0.0,0.0,0.0,0.0,0.0,False
+407,Speedy Delivery Partners,,EXP-407,2024-10-04T18:37:30.171307,Delivery Charges,479.25,0.0,0.0,0.0,0.0,0.0,False
+408,City Logistics,,EXP-408,2024-10-05T11:34:30.171307,Transportation & Fuel,664.95,0.0,0.0,0.0,0.0,0.0,False
+409,HDFC Bank Corp,,EXP-409,2024-10-09T16:13:30.171307,Banking Charges,423.06,0.0,0.0,0.0,0.0,0.0,False
+410,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-10-2024,2024-10-10T14:00:00.171307,Electricity Bill,7222.61,18.0,1101.75,550.88,550.88,0.0,True
+411,Local Handyman Services,,EXP-411,2024-10-10T13:09:30.171307,Repairs & Maintenance,1143.69,0.0,0.0,0.0,0.0,0.0,False
+412,HDFC Bank Corp,,EXP-412,2024-10-12T18:27:30.171307,Banking Charges,445.7,0.0,0.0,0.0,0.0,0.0,False
+413,Speedy Delivery Partners,,EXP-413,2024-10-15T11:44:30.171307,Delivery Charges,434.8,0.0,0.0,0.0,0.0,0.0,False
+414,Google Ads India,,EXP-414,2024-10-16T17:44:30.171307,Marketing,3374.14,0.0,0.0,0.0,0.0,0.0,False
+415,Local Handyman Services,,EXP-415,2024-10-19T11:14:30.171307,Repairs & Maintenance,1536.96,0.0,0.0,0.0,0.0,0.0,False
+416,Google Ads India,,EXP-416,2024-10-27T16:09:30.171307,Marketing,2333.89,0.0,0.0,0.0,0.0,0.0,False
+417,Google Ads India,,EXP-417,2024-10-30T15:12:30.171307,Marketing,3493.7,0.0,0.0,0.0,0.0,0.0,False
+418,Prime Properties Ltd,,RENT-11-2024,2024-11-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+419,Store Employees Salaries,,SAL-11-2024,2024-11-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+420,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-11-2024,2024-11-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+421,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-11-2024,2024-11-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+422,City Logistics,,EXP-422,2024-11-01T13:19:30.171307,Transportation & Fuel,620.17,0.0,0.0,0.0,0.0,0.0,False
+423,HDFC Bank Corp,,EXP-423,2024-11-02T09:00:30.171307,Banking Charges,329.62,0.0,0.0,0.0,0.0,0.0,False
+424,Printech Solutions,,EXP-424,2024-11-06T17:40:30.171307,Printing & Stationery,471.76,0.0,0.0,0.0,0.0,0.0,False
+425,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-11-2024,2024-11-10T14:00:00.171307,Electricity Bill,7938.52,18.0,1210.96,605.48,605.48,0.0,True
+426,HDFC Bank Corp,,EXP-426,2024-11-13T15:26:30.171307,Banking Charges,176.42,0.0,0.0,0.0,0.0,0.0,False
+427,City Logistics,,EXP-427,2024-11-17T09:16:30.171307,Transportation & Fuel,1262.97,0.0,0.0,0.0,0.0,0.0,False
+428,Google Ads India,,EXP-428,2024-11-19T18:00:30.171307,Marketing,2700.24,0.0,0.0,0.0,0.0,0.0,False
+429,Local Handyman Services,,EXP-429,2024-11-20T13:03:30.171307,Repairs & Maintenance,2137.96,0.0,0.0,0.0,0.0,0.0,False
+430,Local Carton Wholesalers,,EXP-430,2024-11-24T10:03:30.171307,Packaging Material,1476.28,0.0,0.0,0.0,0.0,0.0,False
+431,Local Handyman Services,,EXP-431,2024-11-30T09:22:30.171307,Repairs & Maintenance,1424.53,0.0,0.0,0.0,0.0,0.0,False
+432,Prime Properties Ltd,,RENT-12-2024,2024-12-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+433,Store Employees Salaries,,SAL-12-2024,2024-12-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+434,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-12-2024,2024-12-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+435,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-12-2024,2024-12-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+436,City Logistics,,EXP-436,2024-12-01T14:14:30.171307,Transportation & Fuel,1345.98,0.0,0.0,0.0,0.0,0.0,False
+437,City Logistics,,EXP-437,2024-12-02T12:11:30.171307,Transportation & Fuel,1102.69,0.0,0.0,0.0,0.0,0.0,False
+438,Speedy Delivery Partners,,EXP-438,2024-12-04T14:40:30.171307,Delivery Charges,940.78,0.0,0.0,0.0,0.0,0.0,False
+439,Speedy Delivery Partners,,EXP-439,2024-12-08T16:03:30.171307,Delivery Charges,520.65,0.0,0.0,0.0,0.0,0.0,False
+440,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-12-2024,2024-12-10T14:00:00.171307,Electricity Bill,8304.21,18.0,1266.74,633.37,633.37,0.0,True
+441,City Logistics,,EXP-441,2024-12-10T09:41:30.171307,Transportation & Fuel,589.77,0.0,0.0,0.0,0.0,0.0,False
+442,Local Handyman Services,,EXP-442,2024-12-11T09:45:30.171307,Repairs & Maintenance,888.14,0.0,0.0,0.0,0.0,0.0,False
+443,Local Carton Wholesalers,,EXP-443,2024-12-13T09:10:30.171307,Packaging Material,580.78,0.0,0.0,0.0,0.0,0.0,False
+444,Google Ads India,,EXP-444,2024-12-14T14:02:30.171307,Marketing,1422.18,0.0,0.0,0.0,0.0,0.0,False
+445,Local Handyman Services,,EXP-445,2024-12-15T16:47:30.171307,Repairs & Maintenance,1780.86,0.0,0.0,0.0,0.0,0.0,False
+446,Printech Solutions,,EXP-446,2024-12-20T16:49:30.171307,Printing & Stationery,662.35,0.0,0.0,0.0,0.0,0.0,False
+447,Printech Solutions,,EXP-447,2024-12-22T18:13:30.171307,Printing & Stationery,620.76,0.0,0.0,0.0,0.0,0.0,False
+448,Speedy Delivery Partners,,EXP-448,2024-12-24T10:00:30.171307,Delivery Charges,706.56,0.0,0.0,0.0,0.0,0.0,False
+449,Google Ads India,,EXP-449,2024-12-25T10:30:30.171307,Marketing,2128.7,0.0,0.0,0.0,0.0,0.0,False
+450,Prime Properties Ltd,,RENT-1-2025,2025-01-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+451,Store Employees Salaries,,SAL-1-2025,2025-01-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+452,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-1-2025,2025-01-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+453,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-1-2025,2025-01-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+454,Local Handyman Services,,EXP-454,2025-01-02T16:43:30.171307,Repairs & Maintenance,2108.31,0.0,0.0,0.0,0.0,0.0,False
+455,Printech Solutions,,EXP-455,2025-01-07T15:54:30.171307,Printing & Stationery,382.6,0.0,0.0,0.0,0.0,0.0,False
+456,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-1-2025,2025-01-10T14:00:00.171307,Electricity Bill,8387.38,18.0,1279.43,639.72,639.72,0.0,True
+457,Printech Solutions,,EXP-457,2025-01-10T14:13:30.171307,Printing & Stationery,432.54,0.0,0.0,0.0,0.0,0.0,False
+458,Local Carton Wholesalers,,EXP-458,2025-01-12T13:29:30.171307,Packaging Material,427.7,0.0,0.0,0.0,0.0,0.0,False
+459,City Logistics,,EXP-459,2025-01-15T18:02:30.171307,Transportation & Fuel,698.95,0.0,0.0,0.0,0.0,0.0,False
+460,Local Carton Wholesalers,,EXP-460,2025-01-17T13:47:30.171307,Packaging Material,1480.74,0.0,0.0,0.0,0.0,0.0,False
+461,City Logistics,,EXP-461,2025-01-18T09:57:30.171307,Transportation & Fuel,1496.77,0.0,0.0,0.0,0.0,0.0,False
+462,Google Ads India,,EXP-462,2025-01-21T10:09:30.171307,Marketing,1860.14,0.0,0.0,0.0,0.0,0.0,False
+463,Google Ads India,,EXP-463,2025-01-26T10:48:30.171307,Marketing,3401.09,0.0,0.0,0.0,0.0,0.0,False
+464,Speedy Delivery Partners,,EXP-464,2025-01-27T14:23:30.171307,Delivery Charges,780.16,0.0,0.0,0.0,0.0,0.0,False
+465,Google Ads India,,EXP-465,2025-01-30T11:24:30.171307,Marketing,2380.77,0.0,0.0,0.0,0.0,0.0,False
+466,Prime Properties Ltd,,RENT-2-2025,2025-02-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+467,Store Employees Salaries,,SAL-2-2025,2025-02-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+468,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-2-2025,2025-02-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+469,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-2-2025,2025-02-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+470,City Logistics,,EXP-470,2025-02-01T15:18:30.171307,Transportation & Fuel,1667.21,0.0,0.0,0.0,0.0,0.0,False
+471,City Logistics,,EXP-471,2025-02-04T10:13:30.171307,Transportation & Fuel,617.31,0.0,0.0,0.0,0.0,0.0,False
+472,City Logistics,,EXP-472,2025-02-06T13:06:30.171307,Transportation & Fuel,539.46,0.0,0.0,0.0,0.0,0.0,False
+473,Local Carton Wholesalers,,EXP-473,2025-02-07T17:53:30.171307,Packaging Material,1073.3,0.0,0.0,0.0,0.0,0.0,False
+474,Google Ads India,,EXP-474,2025-02-08T10:50:30.171307,Marketing,1968.82,0.0,0.0,0.0,0.0,0.0,False
+475,Speedy Delivery Partners,,EXP-475,2025-02-09T11:36:30.171307,Delivery Charges,405.94,0.0,0.0,0.0,0.0,0.0,False
+476,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-2-2025,2025-02-10T14:00:00.171307,Electricity Bill,9432.45,18.0,1438.85,719.42,719.42,0.0,True
+477,Printech Solutions,,EXP-477,2025-02-13T13:15:30.171307,Printing & Stationery,568.02,0.0,0.0,0.0,0.0,0.0,False
+478,HDFC Bank Corp,,EXP-478,2025-02-16T15:50:30.171307,Banking Charges,429.17,0.0,0.0,0.0,0.0,0.0,False
+479,Printech Solutions,,EXP-479,2025-02-20T16:56:30.171307,Printing & Stationery,215.29,0.0,0.0,0.0,0.0,0.0,False
+480,Local Carton Wholesalers,,EXP-480,2025-02-22T11:34:30.171307,Packaging Material,1096.89,0.0,0.0,0.0,0.0,0.0,False
+481,HDFC Bank Corp,,EXP-481,2025-02-26T14:51:30.171307,Banking Charges,427.72,0.0,0.0,0.0,0.0,0.0,False
+482,Speedy Delivery Partners,,EXP-482,2025-02-28T16:05:30.171307,Delivery Charges,860.12,0.0,0.0,0.0,0.0,0.0,False
+483,Prime Properties Ltd,,RENT-3-2025,2025-03-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+484,Store Employees Salaries,,SAL-3-2025,2025-03-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+485,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-3-2025,2025-03-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+486,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-3-2025,2025-03-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+487,City Logistics,,EXP-487,2025-03-02T16:00:30.171307,Transportation & Fuel,761.22,0.0,0.0,0.0,0.0,0.0,False
+488,HDFC Bank Corp,,EXP-488,2025-03-03T15:56:30.171307,Banking Charges,415.18,0.0,0.0,0.0,0.0,0.0,False
+489,Google Ads India,,EXP-489,2025-03-05T15:42:30.171307,Marketing,2301.53,0.0,0.0,0.0,0.0,0.0,False
+490,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-3-2025,2025-03-10T14:00:00.171307,Electricity Bill,6279.09,18.0,957.83,478.92,478.92,0.0,True
+491,Local Handyman Services,,EXP-491,2025-03-12T10:00:30.171307,Repairs & Maintenance,403.27,0.0,0.0,0.0,0.0,0.0,False
+492,Google Ads India,,EXP-492,2025-03-13T18:36:30.171307,Marketing,3566.28,0.0,0.0,0.0,0.0,0.0,False
+493,HDFC Bank Corp,,EXP-493,2025-03-19T14:21:30.171307,Banking Charges,144.87,0.0,0.0,0.0,0.0,0.0,False
+494,Speedy Delivery Partners,,EXP-494,2025-03-22T15:52:30.171307,Delivery Charges,627.53,0.0,0.0,0.0,0.0,0.0,False
+495,Local Carton Wholesalers,,EXP-495,2025-03-24T11:18:30.171307,Packaging Material,499.01,0.0,0.0,0.0,0.0,0.0,False
+496,Local Handyman Services,,EXP-496,2025-03-28T09:10:30.171307,Repairs & Maintenance,1071.7,0.0,0.0,0.0,0.0,0.0,False
+497,City Logistics,,EXP-497,2025-03-30T18:14:30.171307,Transportation & Fuel,1193.42,0.0,0.0,0.0,0.0,0.0,False
+498,City Logistics,,EXP-498,2025-03-31T11:26:30.171307,Transportation & Fuel,821.63,0.0,0.0,0.0,0.0,0.0,False
+499,Prime Properties Ltd,,RENT-4-2025,2025-04-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+500,Store Employees Salaries,,SAL-4-2025,2025-04-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+501,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-4-2025,2025-04-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+502,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-4-2025,2025-04-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+503,Printech Solutions,,EXP-503,2025-04-01T17:34:30.171307,Printing & Stationery,219.92,0.0,0.0,0.0,0.0,0.0,False
+504,Local Handyman Services,,EXP-504,2025-04-02T11:52:30.171307,Repairs & Maintenance,324.91,0.0,0.0,0.0,0.0,0.0,False
+505,Google Ads India,,EXP-505,2025-04-03T14:14:30.171307,Marketing,3176.18,0.0,0.0,0.0,0.0,0.0,False
+506,Google Ads India,,EXP-506,2025-04-05T17:43:30.171307,Marketing,1808.45,0.0,0.0,0.0,0.0,0.0,False
+507,Speedy Delivery Partners,,EXP-507,2025-04-07T10:21:30.171307,Delivery Charges,1139.82,0.0,0.0,0.0,0.0,0.0,False
+508,Printech Solutions,,EXP-508,2025-04-09T18:52:30.171307,Printing & Stationery,503.57,0.0,0.0,0.0,0.0,0.0,False
+509,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-4-2025,2025-04-10T14:00:00.171307,Electricity Bill,8669.1,18.0,1322.41,661.21,661.21,0.0,True
+510,HDFC Bank Corp,,EXP-510,2025-04-10T13:13:30.171307,Banking Charges,333.36,0.0,0.0,0.0,0.0,0.0,False
+511,City Logistics,,EXP-511,2025-04-12T13:59:30.171307,Transportation & Fuel,962.99,0.0,0.0,0.0,0.0,0.0,False
+512,Google Ads India,,EXP-512,2025-04-16T18:18:30.171307,Marketing,2737.55,0.0,0.0,0.0,0.0,0.0,False
+513,City Logistics,,EXP-513,2025-04-22T15:45:30.171307,Transportation & Fuel,1020.12,0.0,0.0,0.0,0.0,0.0,False
+514,Google Ads India,,EXP-514,2025-04-24T14:04:30.171307,Marketing,2055.79,0.0,0.0,0.0,0.0,0.0,False
+515,City Logistics,,EXP-515,2025-04-25T14:22:30.171307,Transportation & Fuel,1190.47,0.0,0.0,0.0,0.0,0.0,False
+516,Prime Properties Ltd,,RENT-5-2025,2025-05-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+517,Store Employees Salaries,,SAL-5-2025,2025-05-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+518,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-5-2025,2025-05-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+519,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-5-2025,2025-05-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+520,Speedy Delivery Partners,,EXP-520,2025-05-03T18:36:30.171307,Delivery Charges,793.95,0.0,0.0,0.0,0.0,0.0,False
+521,Google Ads India,,EXP-521,2025-05-04T15:11:30.171307,Marketing,3258.41,0.0,0.0,0.0,0.0,0.0,False
+522,Google Ads India,,EXP-522,2025-05-05T12:12:30.171307,Marketing,3428.32,0.0,0.0,0.0,0.0,0.0,False
+523,Google Ads India,,EXP-523,2025-05-09T17:14:30.171307,Marketing,1748.08,0.0,0.0,0.0,0.0,0.0,False
+524,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-5-2025,2025-05-10T14:00:00.171307,Electricity Bill,7248.06,18.0,1105.64,552.82,552.82,0.0,True
+525,Google Ads India,,EXP-525,2025-05-14T14:55:30.171307,Marketing,3311.53,0.0,0.0,0.0,0.0,0.0,False
+526,Speedy Delivery Partners,,EXP-526,2025-05-16T17:55:30.171307,Delivery Charges,445.75,0.0,0.0,0.0,0.0,0.0,False
+527,Local Handyman Services,,EXP-527,2025-05-26T15:53:30.171307,Repairs & Maintenance,1115.35,0.0,0.0,0.0,0.0,0.0,False
+528,Speedy Delivery Partners,,EXP-528,2025-05-28T15:39:30.171307,Delivery Charges,410.58,0.0,0.0,0.0,0.0,0.0,False
+529,HDFC Bank Corp,,EXP-529,2025-05-29T09:03:30.171307,Banking Charges,396.21,0.0,0.0,0.0,0.0,0.0,False
+530,Google Ads India,,EXP-530,2025-05-31T09:29:30.171307,Marketing,2565.95,0.0,0.0,0.0,0.0,0.0,False
+531,Prime Properties Ltd,,RENT-6-2025,2025-06-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+532,Store Employees Salaries,,SAL-6-2025,2025-06-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+533,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-6-2025,2025-06-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+534,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-6-2025,2025-06-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+535,City Logistics,,EXP-535,2025-06-03T15:45:30.171307,Transportation & Fuel,1146.36,0.0,0.0,0.0,0.0,0.0,False
+536,Speedy Delivery Partners,,EXP-536,2025-06-04T16:40:30.171307,Delivery Charges,888.37,0.0,0.0,0.0,0.0,0.0,False
+537,Local Carton Wholesalers,,EXP-537,2025-06-06T10:04:30.171307,Packaging Material,628.59,0.0,0.0,0.0,0.0,0.0,False
+538,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-6-2025,2025-06-10T14:00:00.171307,Electricity Bill,8809.77,18.0,1343.86,671.93,671.93,0.0,True
+539,City Logistics,,EXP-539,2025-06-10T12:45:30.171307,Transportation & Fuel,1079.37,0.0,0.0,0.0,0.0,0.0,False
+540,HDFC Bank Corp,,EXP-540,2025-06-13T16:01:30.171307,Banking Charges,149.04,0.0,0.0,0.0,0.0,0.0,False
+541,Local Handyman Services,,EXP-541,2025-06-17T10:09:30.171307,Repairs & Maintenance,1433.99,0.0,0.0,0.0,0.0,0.0,False
+542,Speedy Delivery Partners,,EXP-542,2025-06-21T15:37:30.171307,Delivery Charges,878.82,0.0,0.0,0.0,0.0,0.0,False
+543,Speedy Delivery Partners,,EXP-543,2025-06-25T10:08:30.171307,Delivery Charges,575.13,0.0,0.0,0.0,0.0,0.0,False
+544,City Logistics,,EXP-544,2025-06-26T10:10:30.171307,Transportation & Fuel,1616.13,0.0,0.0,0.0,0.0,0.0,False
+545,Prime Properties Ltd,,RENT-7-2025,2025-07-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+546,Store Employees Salaries,,SAL-7-2025,2025-07-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+547,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-7-2025,2025-07-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+548,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-7-2025,2025-07-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+549,Printech Solutions,,EXP-549,2025-07-02T10:04:30.171307,Printing & Stationery,239.61,0.0,0.0,0.0,0.0,0.0,False
+550,Local Handyman Services,,EXP-550,2025-07-03T12:46:30.171307,Repairs & Maintenance,1237.4,0.0,0.0,0.0,0.0,0.0,False
+551,City Logistics,,EXP-551,2025-07-09T15:09:30.171307,Transportation & Fuel,1187.15,0.0,0.0,0.0,0.0,0.0,False
+552,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-7-2025,2025-07-10T14:00:00.171307,Electricity Bill,7631.06,18.0,1164.06,582.03,582.03,0.0,True
+553,City Logistics,,EXP-553,2025-07-10T16:46:30.171307,Transportation & Fuel,525.85,0.0,0.0,0.0,0.0,0.0,False
+554,Printech Solutions,,EXP-554,2025-07-13T10:12:30.171307,Printing & Stationery,239.04,0.0,0.0,0.0,0.0,0.0,False
+555,HDFC Bank Corp,,EXP-555,2025-07-17T10:55:30.171307,Banking Charges,462.03,0.0,0.0,0.0,0.0,0.0,False
+556,Local Handyman Services,,EXP-556,2025-07-19T09:09:30.171307,Repairs & Maintenance,637.74,0.0,0.0,0.0,0.0,0.0,False
+557,Speedy Delivery Partners,,EXP-557,2025-07-24T16:40:30.171307,Delivery Charges,852.76,0.0,0.0,0.0,0.0,0.0,False
+558,Local Carton Wholesalers,,EXP-558,2025-07-26T09:29:30.171307,Packaging Material,1277.14,0.0,0.0,0.0,0.0,0.0,False
+559,Local Handyman Services,,EXP-559,2025-07-28T09:14:30.171307,Repairs & Maintenance,594.9,0.0,0.0,0.0,0.0,0.0,False
+560,Local Carton Wholesalers,,EXP-560,2025-07-29T16:54:30.171307,Packaging Material,726.52,0.0,0.0,0.0,0.0,0.0,False
+561,Printech Solutions,,EXP-561,2025-07-30T12:19:30.171307,Printing & Stationery,611.19,0.0,0.0,0.0,0.0,0.0,False
+562,Prime Properties Ltd,,RENT-8-2025,2025-08-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+563,Store Employees Salaries,,SAL-8-2025,2025-08-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+564,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-8-2025,2025-08-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+565,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-8-2025,2025-08-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+566,City Logistics,,EXP-566,2025-08-05T13:51:30.171307,Transportation & Fuel,1647.49,0.0,0.0,0.0,0.0,0.0,False
+567,Local Carton Wholesalers,,EXP-567,2025-08-06T18:34:30.171307,Packaging Material,1259.92,0.0,0.0,0.0,0.0,0.0,False
+568,Google Ads India,,EXP-568,2025-08-07T14:15:30.171307,Marketing,2589.74,0.0,0.0,0.0,0.0,0.0,False
+569,City Logistics,,EXP-569,2025-08-09T15:32:30.171307,Transportation & Fuel,1167.68,0.0,0.0,0.0,0.0,0.0,False
+570,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-8-2025,2025-08-10T14:00:00.171307,Electricity Bill,8970.32,18.0,1368.35,684.17,684.17,0.0,True
+571,Speedy Delivery Partners,,EXP-571,2025-08-12T14:28:30.171307,Delivery Charges,461.33,0.0,0.0,0.0,0.0,0.0,False
+572,Local Handyman Services,,EXP-572,2025-08-14T14:59:30.171307,Repairs & Maintenance,2469.53,0.0,0.0,0.0,0.0,0.0,False
+573,Printech Solutions,,EXP-573,2025-08-16T14:03:30.171307,Printing & Stationery,322.58,0.0,0.0,0.0,0.0,0.0,False
+574,Google Ads India,,EXP-574,2025-08-18T11:29:30.171307,Marketing,4271.32,0.0,0.0,0.0,0.0,0.0,False
+575,Local Handyman Services,,EXP-575,2025-08-21T09:56:30.171307,Repairs & Maintenance,565.82,0.0,0.0,0.0,0.0,0.0,False
+576,Printech Solutions,,EXP-576,2025-08-22T10:57:30.171307,Printing & Stationery,553.61,0.0,0.0,0.0,0.0,0.0,False
+577,Local Handyman Services,,EXP-577,2025-08-27T10:32:30.171307,Repairs & Maintenance,1307.49,0.0,0.0,0.0,0.0,0.0,False
+578,Local Carton Wholesalers,,EXP-578,2025-08-28T11:57:30.171307,Packaging Material,1390.73,0.0,0.0,0.0,0.0,0.0,False
+579,HDFC Bank Corp,,EXP-579,2025-08-29T18:33:30.171307,Banking Charges,409.18,0.0,0.0,0.0,0.0,0.0,False
+580,City Logistics,,EXP-580,2025-08-31T16:48:30.171307,Transportation & Fuel,743.77,0.0,0.0,0.0,0.0,0.0,False
+581,Prime Properties Ltd,,RENT-9-2025,2025-09-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+582,Store Employees Salaries,,SAL-9-2025,2025-09-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+583,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-9-2025,2025-09-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+584,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-9-2025,2025-09-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+585,HDFC Bank Corp,,EXP-585,2025-09-01T18:35:30.171307,Banking Charges,434.92,0.0,0.0,0.0,0.0,0.0,False
+586,Local Handyman Services,,EXP-586,2025-09-02T15:11:30.171307,Repairs & Maintenance,1173.88,0.0,0.0,0.0,0.0,0.0,False
+587,Local Carton Wholesalers,,EXP-587,2025-09-03T16:50:30.171307,Packaging Material,1271.04,0.0,0.0,0.0,0.0,0.0,False
+588,City Logistics,,EXP-588,2025-09-05T16:32:30.171307,Transportation & Fuel,1608.74,0.0,0.0,0.0,0.0,0.0,False
+589,City Logistics,,EXP-589,2025-09-09T10:38:30.171307,Transportation & Fuel,862.0,0.0,0.0,0.0,0.0,0.0,False
+590,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-9-2025,2025-09-10T14:00:00.171307,Electricity Bill,6149.77,18.0,938.1,469.05,469.05,0.0,True
+591,City Logistics,,EXP-591,2025-09-11T12:28:30.171307,Transportation & Fuel,1634.44,0.0,0.0,0.0,0.0,0.0,False
+592,HDFC Bank Corp,,EXP-592,2025-09-13T13:46:30.171307,Banking Charges,278.13,0.0,0.0,0.0,0.0,0.0,False
+593,HDFC Bank Corp,,EXP-593,2025-09-19T18:24:30.171307,Banking Charges,360.7,0.0,0.0,0.0,0.0,0.0,False
+594,Printech Solutions,,EXP-594,2025-09-20T16:54:30.171307,Printing & Stationery,386.72,0.0,0.0,0.0,0.0,0.0,False
+595,Printech Solutions,,EXP-595,2025-09-22T10:37:30.171307,Printing & Stationery,244.79,0.0,0.0,0.0,0.0,0.0,False
+596,Google Ads India,,EXP-596,2025-09-25T18:32:30.171307,Marketing,3328.0,0.0,0.0,0.0,0.0,0.0,False
+597,Printech Solutions,,EXP-597,2025-09-26T12:07:30.171307,Printing & Stationery,777.77,0.0,0.0,0.0,0.0,0.0,False
+598,Speedy Delivery Partners,,EXP-598,2025-09-27T17:38:30.171307,Delivery Charges,858.61,0.0,0.0,0.0,0.0,0.0,False
+599,Local Handyman Services,,EXP-599,2025-09-28T13:12:30.171307,Repairs & Maintenance,611.25,0.0,0.0,0.0,0.0,0.0,False
+600,Prime Properties Ltd,,RENT-10-2025,2025-10-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+601,Store Employees Salaries,,SAL-10-2025,2025-10-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+602,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-10-2025,2025-10-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+603,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-10-2025,2025-10-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+604,Speedy Delivery Partners,,EXP-604,2025-10-01T18:29:30.171307,Delivery Charges,735.17,0.0,0.0,0.0,0.0,0.0,False
+605,Speedy Delivery Partners,,EXP-605,2025-10-02T10:55:30.171307,Delivery Charges,862.45,0.0,0.0,0.0,0.0,0.0,False
+606,Local Carton Wholesalers,,EXP-606,2025-10-04T09:05:30.171307,Packaging Material,1005.27,0.0,0.0,0.0,0.0,0.0,False
+607,Google Ads India,,EXP-607,2025-10-05T12:00:30.171307,Marketing,1885.72,0.0,0.0,0.0,0.0,0.0,False
+608,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-10-2025,2025-10-10T14:00:00.171307,Electricity Bill,6370.26,18.0,971.73,485.87,485.87,0.0,True
+609,City Logistics,,EXP-609,2025-10-10T18:08:30.171307,Transportation & Fuel,1141.77,0.0,0.0,0.0,0.0,0.0,False
+610,Printech Solutions,,EXP-610,2025-10-13T10:29:30.171307,Printing & Stationery,604.92,0.0,0.0,0.0,0.0,0.0,False
+611,Local Handyman Services,,EXP-611,2025-10-14T18:34:30.171307,Repairs & Maintenance,950.98,0.0,0.0,0.0,0.0,0.0,False
+612,Local Carton Wholesalers,,EXP-612,2025-10-15T10:12:30.171307,Packaging Material,1116.37,0.0,0.0,0.0,0.0,0.0,False
+613,HDFC Bank Corp,,EXP-613,2025-10-17T18:09:30.171307,Banking Charges,167.06,0.0,0.0,0.0,0.0,0.0,False
+614,City Logistics,,EXP-614,2025-10-19T17:46:30.171307,Transportation & Fuel,1141.29,0.0,0.0,0.0,0.0,0.0,False
+615,Printech Solutions,,EXP-615,2025-10-21T16:23:30.171307,Printing & Stationery,792.64,0.0,0.0,0.0,0.0,0.0,False
+616,Speedy Delivery Partners,,EXP-616,2025-10-22T15:14:30.171307,Delivery Charges,1005.68,0.0,0.0,0.0,0.0,0.0,False
+617,Speedy Delivery Partners,,EXP-617,2025-10-25T13:18:30.171307,Delivery Charges,703.43,0.0,0.0,0.0,0.0,0.0,False
+618,City Logistics,,EXP-618,2025-10-26T11:05:30.171307,Transportation & Fuel,1336.82,0.0,0.0,0.0,0.0,0.0,False
+619,Local Handyman Services,,EXP-619,2025-10-30T16:57:30.171307,Repairs & Maintenance,1290.82,0.0,0.0,0.0,0.0,0.0,False
+620,City Logistics,,EXP-620,2025-10-31T12:28:30.171307,Transportation & Fuel,1674.75,0.0,0.0,0.0,0.0,0.0,False
+621,Prime Properties Ltd,,RENT-11-2025,2025-11-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+622,Store Employees Salaries,,SAL-11-2025,2025-11-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+623,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-11-2025,2025-11-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+624,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-11-2025,2025-11-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+625,Local Handyman Services,,EXP-625,2025-11-03T11:54:30.171307,Repairs & Maintenance,1372.92,0.0,0.0,0.0,0.0,0.0,False
+626,Local Carton Wholesalers,,EXP-626,2025-11-04T10:33:30.171307,Packaging Material,1352.03,0.0,0.0,0.0,0.0,0.0,False
+627,City Logistics,,EXP-627,2025-11-08T16:59:30.171307,Transportation & Fuel,1247.9,0.0,0.0,0.0,0.0,0.0,False
+628,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-11-2025,2025-11-10T14:00:00.171307,Electricity Bill,9005.86,18.0,1373.78,686.89,686.89,0.0,True
+629,Local Carton Wholesalers,,EXP-629,2025-11-10T15:14:30.171307,Packaging Material,1077.42,0.0,0.0,0.0,0.0,0.0,False
+630,Printech Solutions,,EXP-630,2025-11-11T11:16:30.171307,Printing & Stationery,660.37,0.0,0.0,0.0,0.0,0.0,False
+631,City Logistics,,EXP-631,2025-11-29T18:13:30.171307,Transportation & Fuel,1336.99,0.0,0.0,0.0,0.0,0.0,False
+632,Prime Properties Ltd,,RENT-12-2025,2025-12-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+633,Store Employees Salaries,,SAL-12-2025,2025-12-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+634,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-12-2025,2025-12-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+635,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-12-2025,2025-12-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+636,City Logistics,,EXP-636,2025-12-01T18:03:30.171307,Transportation & Fuel,1323.61,0.0,0.0,0.0,0.0,0.0,False
+637,Local Carton Wholesalers,,EXP-637,2025-12-05T09:02:30.171307,Packaging Material,1188.39,0.0,0.0,0.0,0.0,0.0,False
+638,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-12-2025,2025-12-10T14:00:00.171307,Electricity Bill,7217.17,18.0,1100.92,550.46,550.46,0.0,True
+639,Google Ads India,,EXP-639,2025-12-14T17:34:30.171307,Marketing,2713.23,0.0,0.0,0.0,0.0,0.0,False
+640,HDFC Bank Corp,,EXP-640,2025-12-16T12:26:30.171307,Banking Charges,341.25,0.0,0.0,0.0,0.0,0.0,False
+641,Local Carton Wholesalers,,EXP-641,2025-12-17T17:39:30.171307,Packaging Material,1178.82,0.0,0.0,0.0,0.0,0.0,False
+642,Local Carton Wholesalers,,EXP-642,2025-12-19T16:04:30.171307,Packaging Material,692.02,0.0,0.0,0.0,0.0,0.0,False
+643,Local Handyman Services,,EXP-643,2025-12-22T11:06:30.171307,Repairs & Maintenance,2035.91,0.0,0.0,0.0,0.0,0.0,False
+644,Prime Properties Ltd,,RENT-1-2026,2026-01-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+645,Store Employees Salaries,,SAL-1-2026,2026-01-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+646,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-1-2026,2026-01-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+647,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-1-2026,2026-01-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+648,Local Carton Wholesalers,,EXP-648,2026-01-01T17:55:30.171307,Packaging Material,491.94,0.0,0.0,0.0,0.0,0.0,False
+649,City Logistics,,EXP-649,2026-01-02T16:15:30.171307,Transportation & Fuel,1450.48,0.0,0.0,0.0,0.0,0.0,False
+650,HDFC Bank Corp,,EXP-650,2026-01-06T10:54:30.171307,Banking Charges,135.27,0.0,0.0,0.0,0.0,0.0,False
+651,Speedy Delivery Partners,,EXP-651,2026-01-08T18:40:30.171307,Delivery Charges,306.32,0.0,0.0,0.0,0.0,0.0,False
+652,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-1-2026,2026-01-10T14:00:00.171307,Electricity Bill,6957.52,18.0,1061.32,530.66,530.66,0.0,True
+653,Local Carton Wholesalers,,EXP-653,2026-01-10T15:22:30.171307,Packaging Material,1117.38,0.0,0.0,0.0,0.0,0.0,False
+654,Google Ads India,,EXP-654,2026-01-11T09:10:30.171307,Marketing,2358.35,0.0,0.0,0.0,0.0,0.0,False
+655,HDFC Bank Corp,,EXP-655,2026-01-14T17:52:30.171307,Banking Charges,282.5,0.0,0.0,0.0,0.0,0.0,False
+656,Speedy Delivery Partners,,EXP-656,2026-01-16T17:38:30.171307,Delivery Charges,363.23,0.0,0.0,0.0,0.0,0.0,False
+657,Speedy Delivery Partners,,EXP-657,2026-01-17T11:21:30.171307,Delivery Charges,954.74,0.0,0.0,0.0,0.0,0.0,False
+658,Local Carton Wholesalers,,EXP-658,2026-01-18T17:12:30.171307,Packaging Material,1011.6,0.0,0.0,0.0,0.0,0.0,False
+659,Local Carton Wholesalers,,EXP-659,2026-01-21T10:10:30.171307,Packaging Material,1435.32,0.0,0.0,0.0,0.0,0.0,False
+660,Local Carton Wholesalers,,EXP-660,2026-01-22T17:45:30.171307,Packaging Material,1401.05,0.0,0.0,0.0,0.0,0.0,False
+661,Google Ads India,,EXP-661,2026-01-24T09:58:30.171307,Marketing,3090.17,0.0,0.0,0.0,0.0,0.0,False
+662,Speedy Delivery Partners,,EXP-662,2026-01-25T11:38:30.171307,Delivery Charges,952.09,0.0,0.0,0.0,0.0,0.0,False
+663,City Logistics,,EXP-663,2026-01-27T15:01:30.171307,Transportation & Fuel,1009.52,0.0,0.0,0.0,0.0,0.0,False
+664,City Logistics,,EXP-664,2026-01-28T15:45:30.171307,Transportation & Fuel,1247.6,0.0,0.0,0.0,0.0,0.0,False
+665,Speedy Delivery Partners,,EXP-665,2026-01-29T09:44:30.171307,Delivery Charges,359.99,0.0,0.0,0.0,0.0,0.0,False
+666,Prime Properties Ltd,,RENT-2-2026,2026-02-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+667,Store Employees Salaries,,SAL-2-2026,2026-02-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+668,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-2-2026,2026-02-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+669,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-2-2026,2026-02-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+670,HDFC Bank Corp,,EXP-670,2026-02-01T14:11:30.171307,Banking Charges,115.68,0.0,0.0,0.0,0.0,0.0,False
+671,Local Carton Wholesalers,,EXP-671,2026-02-02T18:26:30.171307,Packaging Material,424.78,0.0,0.0,0.0,0.0,0.0,False
+672,Local Carton Wholesalers,,EXP-672,2026-02-03T16:02:30.171307,Packaging Material,643.44,0.0,0.0,0.0,0.0,0.0,False
+673,Local Carton Wholesalers,,EXP-673,2026-02-07T12:25:30.171307,Packaging Material,594.03,0.0,0.0,0.0,0.0,0.0,False
+674,Local Handyman Services,,EXP-674,2026-02-08T10:58:30.171307,Repairs & Maintenance,807.89,0.0,0.0,0.0,0.0,0.0,False
+675,Google Ads India,,EXP-675,2026-02-09T14:07:30.171307,Marketing,4143.24,0.0,0.0,0.0,0.0,0.0,False
+676,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-2-2026,2026-02-10T14:00:00.171307,Electricity Bill,7072.32,18.0,1078.83,539.41,539.41,0.0,True
+677,HDFC Bank Corp,,EXP-677,2026-02-13T15:00:30.171307,Banking Charges,484.15,0.0,0.0,0.0,0.0,0.0,False
+678,Printech Solutions,,EXP-678,2026-02-16T10:14:30.171307,Printing & Stationery,552.84,0.0,0.0,0.0,0.0,0.0,False
+679,Google Ads India,,EXP-679,2026-02-18T14:47:30.171307,Marketing,2879.67,0.0,0.0,0.0,0.0,0.0,False
+680,Local Carton Wholesalers,,EXP-680,2026-02-19T18:29:30.171307,Packaging Material,1003.66,0.0,0.0,0.0,0.0,0.0,False
+681,Speedy Delivery Partners,,EXP-681,2026-02-20T17:40:30.171307,Delivery Charges,379.07,0.0,0.0,0.0,0.0,0.0,False
+682,HDFC Bank Corp,,EXP-682,2026-02-22T10:05:30.171307,Banking Charges,474.05,0.0,0.0,0.0,0.0,0.0,False
+683,Local Carton Wholesalers,,EXP-683,2026-02-23T16:26:30.171307,Packaging Material,1291.72,0.0,0.0,0.0,0.0,0.0,False
+684,Prime Properties Ltd,,RENT-3-2026,2026-03-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+685,Store Employees Salaries,,SAL-3-2026,2026-03-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+686,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-3-2026,2026-03-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+687,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-3-2026,2026-03-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+688,Local Carton Wholesalers,,EXP-688,2026-03-01T11:08:30.171307,Packaging Material,464.38,0.0,0.0,0.0,0.0,0.0,False
+689,City Logistics,,EXP-689,2026-03-03T13:11:30.171307,Transportation & Fuel,1517.62,0.0,0.0,0.0,0.0,0.0,False
+690,Google Ads India,,EXP-690,2026-03-04T13:38:30.171307,Marketing,3512.75,0.0,0.0,0.0,0.0,0.0,False
+691,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-3-2026,2026-03-10T14:00:00.171307,Electricity Bill,7531.32,18.0,1148.85,574.42,574.42,0.0,True
+692,City Logistics,,EXP-692,2026-03-12T10:36:30.171307,Transportation & Fuel,846.37,0.0,0.0,0.0,0.0,0.0,False
+693,City Logistics,,EXP-693,2026-03-13T17:44:30.171307,Transportation & Fuel,1291.0,0.0,0.0,0.0,0.0,0.0,False
+694,Local Carton Wholesalers,,EXP-694,2026-03-16T11:32:30.171307,Packaging Material,952.06,0.0,0.0,0.0,0.0,0.0,False
+695,Printech Solutions,,EXP-695,2026-03-19T16:27:30.171307,Printing & Stationery,461.77,0.0,0.0,0.0,0.0,0.0,False
+696,City Logistics,,EXP-696,2026-03-21T13:32:30.171307,Transportation & Fuel,1077.16,0.0,0.0,0.0,0.0,0.0,False
+697,Printech Solutions,,EXP-697,2026-03-30T14:18:30.171307,Printing & Stationery,257.73,0.0,0.0,0.0,0.0,0.0,False
+698,Prime Properties Ltd,,RENT-4-2026,2026-04-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+699,Store Employees Salaries,,SAL-4-2026,2026-04-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+700,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-4-2026,2026-04-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+701,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-4-2026,2026-04-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+702,Google Ads India,,EXP-702,2026-04-02T11:27:30.171307,Marketing,3460.39,0.0,0.0,0.0,0.0,0.0,False
+703,HDFC Bank Corp,,EXP-703,2026-04-08T12:22:30.171307,Banking Charges,169.92,0.0,0.0,0.0,0.0,0.0,False
+704,HDFC Bank Corp,,EXP-704,2026-04-09T09:35:30.171307,Banking Charges,366.7,0.0,0.0,0.0,0.0,0.0,False
+705,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-4-2026,2026-04-10T14:00:00.171307,Electricity Bill,7054.77,18.0,1076.15,538.08,538.08,0.0,True
+706,Printech Solutions,,EXP-706,2026-04-14T11:17:30.171307,Printing & Stationery,743.49,0.0,0.0,0.0,0.0,0.0,False
+707,Local Carton Wholesalers,,EXP-707,2026-04-22T09:11:30.171307,Packaging Material,1117.67,0.0,0.0,0.0,0.0,0.0,False
+708,HDFC Bank Corp,,EXP-708,2026-04-25T09:38:30.171307,Banking Charges,111.99,0.0,0.0,0.0,0.0,0.0,False
+709,Google Ads India,,EXP-709,2026-04-27T15:04:30.171307,Marketing,1361.49,0.0,0.0,0.0,0.0,0.0,False
+710,HDFC Bank Corp,,EXP-710,2026-04-28T17:06:30.171307,Banking Charges,195.37,0.0,0.0,0.0,0.0,0.0,False
+711,Local Handyman Services,,EXP-711,2026-04-29T14:35:30.171307,Repairs & Maintenance,567.76,0.0,0.0,0.0,0.0,0.0,False
+712,Prime Properties Ltd,,RENT-5-2026,2026-05-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+713,Store Employees Salaries,,SAL-5-2026,2026-05-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+714,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-5-2026,2026-05-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+715,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-5-2026,2026-05-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+716,Speedy Delivery Partners,,EXP-716,2026-05-01T16:22:30.171307,Delivery Charges,893.69,0.0,0.0,0.0,0.0,0.0,False
+717,Printech Solutions,,EXP-717,2026-05-06T15:05:30.171307,Printing & Stationery,399.87,0.0,0.0,0.0,0.0,0.0,False
+718,Google Ads India,,EXP-718,2026-05-07T12:51:30.171307,Marketing,1137.83,0.0,0.0,0.0,0.0,0.0,False
+719,HDFC Bank Corp,,EXP-719,2026-05-08T16:33:30.171307,Banking Charges,165.07,0.0,0.0,0.0,0.0,0.0,False
+720,Speedy Delivery Partners,,EXP-720,2026-05-09T12:04:30.171307,Delivery Charges,429.08,0.0,0.0,0.0,0.0,0.0,False
+721,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-5-2026,2026-05-10T14:00:00.171307,Electricity Bill,8349.96,18.0,1273.72,636.86,636.86,0.0,True
+722,City Logistics,,EXP-722,2026-05-12T09:35:30.171307,Transportation & Fuel,1082.38,0.0,0.0,0.0,0.0,0.0,False
+723,City Logistics,,EXP-723,2026-05-13T12:23:30.171307,Transportation & Fuel,1058.0,0.0,0.0,0.0,0.0,0.0,False
+724,Printech Solutions,,EXP-724,2026-05-22T18:44:30.171307,Printing & Stationery,388.26,0.0,0.0,0.0,0.0,0.0,False
+725,City Logistics,,EXP-725,2026-05-23T09:40:30.171307,Transportation & Fuel,1520.02,0.0,0.0,0.0,0.0,0.0,False
+726,Speedy Delivery Partners,,EXP-726,2026-05-26T09:56:30.171307,Delivery Charges,773.54,0.0,0.0,0.0,0.0,0.0,False
+727,Printech Solutions,,EXP-727,2026-05-27T10:13:30.171307,Printing & Stationery,494.07,0.0,0.0,0.0,0.0,0.0,False
+728,Local Carton Wholesalers,,EXP-728,2026-05-29T12:15:30.171307,Packaging Material,1267.76,0.0,0.0,0.0,0.0,0.0,False
+729,Printech Solutions,,EXP-729,2026-05-30T16:20:30.171307,Printing & Stationery,703.58,0.0,0.0,0.0,0.0,0.0,False
+730,Prime Properties Ltd,,RENT-6-2026,2026-06-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+731,Store Employees Salaries,,SAL-6-2026,2026-06-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+732,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-6-2026,2026-06-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+733,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-6-2026,2026-06-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+734,Local Carton Wholesalers,,EXP-734,2026-06-06T16:46:30.171307,Packaging Material,513.87,0.0,0.0,0.0,0.0,0.0,False
+735,Printech Solutions,,EXP-735,2026-06-08T15:06:30.171307,Printing & Stationery,276.81,0.0,0.0,0.0,0.0,0.0,False
+736,Google Ads India,,EXP-736,2026-06-09T15:36:30.171307,Marketing,1044.16,0.0,0.0,0.0,0.0,0.0,False
+737,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-6-2026,2026-06-10T14:00:00.171307,Electricity Bill,6308.32,18.0,962.29,481.14,481.14,0.0,True
+738,City Logistics,,EXP-738,2026-06-11T09:11:30.171307,Transportation & Fuel,1164.56,0.0,0.0,0.0,0.0,0.0,False
+739,City Logistics,,EXP-739,2026-06-12T13:32:30.171307,Transportation & Fuel,879.18,0.0,0.0,0.0,0.0,0.0,False
+740,HDFC Bank Corp,,EXP-740,2026-06-14T09:32:30.171307,Banking Charges,164.11,0.0,0.0,0.0,0.0,0.0,False
+741,Printech Solutions,,EXP-741,2026-06-15T14:43:30.171307,Printing & Stationery,437.2,0.0,0.0,0.0,0.0,0.0,False
+742,Google Ads India,,EXP-742,2026-06-17T17:24:30.171307,Marketing,3769.39,0.0,0.0,0.0,0.0,0.0,False
+743,Local Handyman Services,,EXP-743,2026-06-21T10:27:30.171307,Repairs & Maintenance,1489.52,0.0,0.0,0.0,0.0,0.0,False
+744,Printech Solutions,,EXP-744,2026-06-22T16:31:30.171307,Printing & Stationery,643.31,0.0,0.0,0.0,0.0,0.0,False
+745,Prime Properties Ltd,,RENT-7-2026,2026-07-01T10:00:00.171307,Rent,30000.0,0.0,0.0,0.0,0.0,0.0,False
+746,Store Employees Salaries,,SAL-7-2026,2026-07-01T10:00:00.171307,Payroll,45000.0,0.0,0.0,0.0,0.0,0.0,False
+747,TEGL SaaS Solutions,27SaaS1234F1ZN,SAAS-7-2026,2026-07-01T10:00:00.171307,Software Subscription,2000.0,18.0,305.08,152.54,152.54,0.0,True
+748,Jio Fiber Corp,27AAACJ8898F1ZN,JIO-7-2026,2026-07-01T11:00:00.171307,Internet Bill,1500.0,18.0,228.81,114.4,114.4,0.0,True
+749,Google Ads India,,EXP-749,2026-07-01T12:42:30.171307,Marketing,3755.86,0.0,0.0,0.0,0.0,0.0,False
+750,HDFC Bank Corp,,EXP-750,2026-07-06T17:55:30.171307,Banking Charges,462.95,0.0,0.0,0.0,0.0,0.0,False
+751,Local Handyman Services,,EXP-751,2026-07-07T09:12:30.171307,Repairs & Maintenance,1243.83,0.0,0.0,0.0,0.0,0.0,False
+752,HDFC Bank Corp,,EXP-752,2026-07-08T17:57:30.171307,Banking Charges,266.78,0.0,0.0,0.0,0.0,0.0,False
+753,Adani Electricity Ltd,27MUDEL9990A1Z2,ADANI-7-2026,2026-07-10T14:00:00.171307,Electricity Bill,7634.1,18.0,1164.52,582.26,582.26,0.0,True
+754,Printech Solutions,,EXP-754,2026-07-10T17:03:30.171307,Printing & Stationery,630.63,0.0,0.0,0.0,0.0,0.0,False
+755,Google Ads India,,EXP-755,2026-07-11T17:49:30.171307,Marketing,3650.48,0.0,0.0,0.0,0.0,0.0,False
+756,HDFC Bank Corp,,EXP-756,2026-07-13T15:56:30.171307,Banking Charges,422.08,0.0,0.0,0.0,0.0,0.0,False
+757,HDFC Bank Corp,,EXP-757,2026-07-14T13:20:30.171307,Banking Charges,444.08,0.0,0.0,0.0,0.0,0.0,False
+758,Printech Solutions,,EXP-758,2026-07-16T16:19:30.171307,Printing & Stationery,244.84,0.0,0.0,0.0,0.0,0.0,False
+759,City Logistics,,EXP-759,2026-07-17T13:24:30.171307,Transportation & Fuel,1597.23,0.0,0.0,0.0,0.0,0.0,False
+760,City Logistics,,EXP-760,2026-07-19T15:56:30.171307,Transportation & Fuel,784.45,0.0,0.0,0.0,0.0,0.0,False
+761,Local Carton Wholesalers,,EXP-761,2026-07-23T16:19:30.171307,Packaging Material,1215.9,0.0,0.0,0.0,0.0,0.0,False
+762,Local Carton Wholesalers,,EXP-762,2026-07-24T09:51:30.171307,Packaging Material,771.9,0.0,0.0,0.0,0.0,0.0,False
+763,City Logistics,,EXP-763,2026-07-25T11:39:30.171307,Transportation & Fuel,1084.27,0.0,0.0,0.0,0.0,0.0,False

@@ -31,22 +31,36 @@ def seed_database_and_train(drop_tables=True, train_models=True):
     
     print("Seeding default users...")
     from werkzeug.security import generate_password_hash
-    if not User.query.filter_by(username='admin').first():
+    admin = User.query.filter_by(username='admin').first()
+    if not admin:
         admin = User(
             username='admin',
             email='admin@retail.com',
             password_hash=generate_password_hash('adminpassword'),
-            role='admin'
+            role='admin',
+            is_verified=True
         )
         db.session.add(admin)
-    if not User.query.filter_by(username='customer').first():
+    else:
+        admin.is_verified = True
+
+    customer = User.query.filter_by(username='customer').first()
+    if not customer:
         customer = User(
             username='customer',
             email='customer@retail.com',
             password_hash=generate_password_hash('customerpassword'),
-            role='customer'
+            role='customer',
+            is_verified=True
         )
         db.session.add(customer)
+    else:
+        customer.is_verified = True
+
+    # Ensure all existing users are set to verified for development consistency
+    for u in User.query.all():
+        u.is_verified = True
+
     db.session.commit()
     
     # 1. Parse products from amazon.csv
@@ -408,5 +422,6 @@ def seed_database_and_train(drop_tables=True, train_models=True):
         print("All ML models trained and operational!")
 
 if __name__ == '__main__':
+    from app import app
     with app.app_context():
         seed_database_and_train()

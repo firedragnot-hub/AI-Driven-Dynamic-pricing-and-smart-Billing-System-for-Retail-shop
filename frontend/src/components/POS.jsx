@@ -51,13 +51,26 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
   const [returnReasonMap, setReturnReasonMap] = useState({});
   const qrScannerRef = useRef(null);
 
+  const safeFetchJson = async (res) => {
+    try {
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        return await res.json();
+      }
+      const text = await res.text();
+      return { error: `Server response error (${res.status}): ${text.substring(0, 80)}` };
+    } catch (err) {
+      return { error: `Failed to read response: ${err.message}` };
+    }
+  };
+
   const fetchTxHistory = async () => {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
       const res = await fetch('/api/transactions', { headers });
       if (res.ok) {
-        const data = await res.json();
-        setTransactions(data);
+        const data = await safeFetchJson(res);
+        if (Array.isArray(data)) setTransactions(data);
       }
     } catch (e) {
       console.error("Error fetching transactions", e);
@@ -447,7 +460,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
           },
           body: JSON.stringify(invoicePayload)
         });
-        const data = await res.json();
+        const data = await safeFetchJson(res);
         
         if (res.ok) {
           // Success Online
@@ -563,7 +576,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
           })
         });
 
-        const data = await res.json();
+        const data = await safeFetchJson(res);
         if (res.ok) {
           updatedQueue[indexInQueue] = { ...tx, status: 'Synced', id: data.id };
         } else if (res.status === 409 && data.conflict) {
@@ -614,7 +627,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
             force: true // Pass force to skip server stock check
           })
         });
-        const data = await res.json();
+        const data = await safeFetchJson(res);
         if (res.ok) {
           setSyncQueue(prev => prev.map(q => q.uuid === tx.uuid ? { ...q, status: 'Synced', id: data.id } : q));
           alert("Transaction synced successfully!");

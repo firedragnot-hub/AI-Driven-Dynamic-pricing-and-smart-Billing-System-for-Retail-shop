@@ -35,6 +35,13 @@ export default function GSTCompliance({ token }) {
   const [addingExpense, setAddingExpense] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
+  // P&L Date Range Modal States
+  const [showPnlModal, setShowPnlModal] = useState(false);
+  const [pnlStartDate, setPnlStartDate] = useState('');
+  const [pnlEndDate, setPnlEndDate] = useState('');
+  const [pnlModalError, setPnlModalError] = useState('');
+  const [pnlGenerating, setPnlGenerating] = useState(false);
+
   
   // Purchase form inputs
   const [pSupplier, setPSupplier] = useState('');
@@ -322,8 +329,32 @@ export default function GSTCompliance({ token }) {
   };
 
   const downloadPDFReport = (type) => {
+    if (type === 'pnl') {
+      setPnlModalError('');
+      setShowPnlModal(true);
+      return;
+    }
     const url = `/api/gst/download-pdf?type=${type}&token=${token}`;
     window.open(url, '_blank');
+  };
+
+  const handleGeneratePnlPdf = () => {
+    if (pnlStartDate && pnlEndDate && pnlStartDate > pnlEndDate) {
+      setPnlModalError('Start Date cannot be after End Date.');
+      return;
+    }
+    setPnlModalError('');
+    setPnlGenerating(true);
+
+    let url = `/api/gst/download-pdf?type=pnl&token=${token}`;
+    if (pnlStartDate) url += `&start_date=${pnlStartDate}`;
+    if (pnlEndDate) url += `&end_date=${pnlEndDate}`;
+
+    window.open(url, '_blank');
+    setTimeout(() => {
+      setPnlGenerating(false);
+      setShowPnlModal(false);
+    }, 1000);
   };
 
   const downloadCSVReport = (type) => {
@@ -1737,6 +1768,65 @@ export default function GSTCompliance({ token }) {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* P&L Date Range Selector Modal */}
+      {showPnlModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Generate P&L PDF Report</h3>
+            <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '20px' }}>Select a date range for the Profit & Loss statement, or leave blank for full history.</p>
+
+            {pnlModalError && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
+                {pnlModalError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Start Date</label>
+                <input 
+                  type="date" 
+                  value={pnlStartDate} 
+                  onChange={(e) => setPnlStartDate(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>End Date</label>
+                <input 
+                  type="date" 
+                  value={pnlEndDate} 
+                  onChange={(e) => setPnlEndDate(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem' }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button 
+                type="button"
+                className="btn btn-secondary" 
+                onClick={() => setShowPnlModal(false)}
+                disabled={pnlGenerating}
+                style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button"
+                className="btn btn-accent" 
+                onClick={handleGeneratePnlPdf}
+                disabled={pnlGenerating}
+                style={{ padding: '8px 20px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                {pnlGenerating ? 'Generating...' : 'Download PDF'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

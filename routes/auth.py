@@ -8,14 +8,6 @@ from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User
 
-# Import Flask-Limiter for rate limiting
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-
-# Import Google Auth libraries
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-
 auth_bp = Blueprint('auth', __name__)
 JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-retail-key-2026")
 
@@ -24,13 +16,24 @@ def get_client_ip():
         return request.headers.getlist("X-Forwarded-For")[0].split(',')[0].strip()
     return request.remote_addr or '127.0.0.1'
 
-# Initialize Limiter here, to be registered on the app in app.py
-limiter = Limiter(
-    key_func=get_client_ip,
-    storage_uri="memory://",
-    headers_enabled=True,
-    swallow_errors=True
-)
+# Import Flask-Limiter for rate limiting
+try:
+    from flask_limiter import Limiter
+    limiter = Limiter(
+        key_func=get_client_ip,
+        storage_uri="memory://",
+        headers_enabled=True,
+        swallow_errors=True
+    )
+except ImportError:
+    class DummyLimiter:
+        def limit(self, *args, **kwargs):
+            def decorator(f):
+                return f
+            return decorator
+        def init_app(self, app):
+            pass
+    limiter = DummyLimiter()
 
 # Helper to verify Cloudflare Turnstile token
 def verify_turnstile(token):
