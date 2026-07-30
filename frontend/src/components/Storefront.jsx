@@ -168,7 +168,22 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
   const productMap = useMemo(() => { const m = {}; products.forEach((p) => { m[p.id] = p; }); return m; }, [products]);
   const cartItems = Object.entries(cart).map(([id, qty]) => ({ product: productMap[parseInt(id)], qty })).filter(x => x.product);
   const subtotal = cartItems.reduce((sum, { product, qty }) => sum + product.current_price * qty, 0);
-  const [form, setForm] = useState({ customer_name: user?.username || '', email: user?.email || '', phone: '', address: '' });
+  const [form, setForm] = useState({ 
+    customer_name: user?.username || user?.name || '', 
+    email: user?.email || '', 
+    phone: user?.phone || '', 
+    address: user?.address || '' 
+  });
+
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        customer_name: prev.customer_name || user.username || user.name || '',
+        email: prev.email || user.email || ''
+      }));
+    }
+  }, [user]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
