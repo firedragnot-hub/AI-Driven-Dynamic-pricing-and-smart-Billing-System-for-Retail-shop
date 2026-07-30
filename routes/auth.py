@@ -69,7 +69,29 @@ def get_current_user():
     token = auth_header.split(' ')[1]
     if token.startswith('clerk_auth_'):
         clerk_id = token.replace('clerk_auth_', '')
-        return {'user_id': 9999, 'username': 'Clerk Customer', 'email': 'clerk@store.com', 'role': 'customer', 'clerk_id': clerk_id}
+        # Auto-create or fetch Clerk user record in Neon database
+        try:
+            user_email = request.headers.get('X-Clerk-User-Email') or f"{clerk_id}@clerk.user"
+            user_name = request.headers.get('X-Clerk-User-Name') or f"clerk_{clerk_id[:8]}"
+            user = User.query.filter((User.email == user_email) | (User.username == user_name)).first()
+            if not user:
+                user = User(
+                    username=user_name,
+                    email=user_email,
+                    password_hash=generate_password_hash(secrets.token_hex(16)),
+                    role='customer',
+                    is_verified=True
+                )
+                db.session.add(user)
+                db.session.commit()
+            elif not user.is_verified:
+                user.is_verified = True
+                db.session.commit()
+            return {'user_id': user.id, 'username': user.username, 'email': user.email, 'role': user.role, 'clerk_id': clerk_id}
+        except Exception as e:
+            print("Error syncing Clerk user to database:", e)
+            db.session.rollback()
+            return {'user_id': 9999, 'username': 'Clerk Customer', 'email': 'clerk@store.com', 'role': 'customer', 'clerk_id': clerk_id}
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
         return payload

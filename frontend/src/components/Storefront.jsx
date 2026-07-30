@@ -236,6 +236,8 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (user?.email) headers['X-Clerk-User-Email'] = user.email;
+      if (user?.username || user?.name) headers['X-Clerk-User-Name'] = user.username || user.name;
       const orderPayload = { 
         ...form, 
         items: cartItems.map(({ product, qty }) => ({ product_id: product.id, quantity: qty })),
