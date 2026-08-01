@@ -42,6 +42,78 @@ export default function GSTCompliance({ token }) {
   const [pnlModalError, setPnlModalError] = useState('');
   const [pnlGenerating, setPnlGenerating] = useState(false);
 
+  // AI GST Classifier states
+  const [gstSearchProductName, setGstSearchProductName] = useState('');
+  const [gstSearchCategory, setGstSearchCategory] = useState('');
+  const [gstSearchDescription, setGstSearchDescription] = useState('');
+  const [gstClassifierResult, setGstClassifierResult] = useState(null);
+  const [gstClassifierLoading, setGstClassifierLoading] = useState(false);
+  const [gstCategoriesList, setGstCategoriesList] = useState([]);
+  const [gstConfirming, setGstConfirming] = useState(false);
+
+  const fetchGstCategories = async () => {
+    try {
+      const res = await fetch('/api/gst/categories');
+      if (res.ok) {
+        const data = await res.json();
+        setGstCategoriesList(data);
+      }
+    } catch (err) {
+      console.error('Error loading GST categories:', err);
+    }
+  };
+
+  const handleClassifyProduct = async (e) => {
+    if (e) e.preventDefault();
+    if (!gstSearchProductName && !gstSearchCategory) return;
+    setGstClassifierLoading(true);
+    setGstClassifierResult(null);
+    try {
+      const res = await fetch('/api/gst/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_name: gstSearchProductName,
+          category: gstSearchCategory,
+          description: gstSearchDescription
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGstClassifierResult(data);
+      } else {
+        alert('Failed to classify product');
+      }
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setGstClassifierLoading(false);
+    }
+  };
+
+  const handleConfirmGstMapping = async (confirmData) => {
+    setGstConfirming(true);
+    try {
+      const res = await fetch('/api/gst/confirm-mapping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(confirmData)
+      });
+      if (res.ok) {
+        alert('GST Category & HSN confirmed and saved to database successfully!');
+        fetchGstCategories();
+        handleClassifyProduct();
+      } else {
+        const err = await res.json();
+        alert(`Error: ${err.error}`);
+      }
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setGstConfirming(false);
+    }
+  };
+
   
   // Purchase form inputs
   const [pSupplier, setPSupplier] = useState('');
@@ -158,6 +230,8 @@ export default function GSTCompliance({ token }) {
   useEffect(() => {
     if (activeTab === 'pnl') {
       fetchPnL();
+    } else if (activeTab === 'gst_ai') {
+      fetchGstCategories();
     }
   }, [activeTab]);
 
@@ -478,6 +552,7 @@ export default function GSTCompliance({ token }) {
       <div className="auth-role-tabs" style={{ marginBottom: '2rem', display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '5px' }}>
         <button className={`role-tab-btn ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>Overview</button>
         <button className={`role-tab-btn ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>Business Profile</button>
+        <button className={`role-tab-btn ${activeTab === 'gst_ai' ? 'active' : ''}`} onClick={() => setActiveTab('gst_ai')}>AI GST Classifier</button>
         <button className={`role-tab-btn ${activeTab === 'purchases' ? 'active' : ''}`} onClick={() => setActiveTab('purchases')}>Inward Purchases</button>
         <button className={`role-tab-btn ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => setActiveTab('expenses')}>Operating Expenses</button>
         <button className={`role-tab-btn ${activeTab === 'returns' ? 'active' : ''}`} onClick={() => setActiveTab('returns')}>GST Returns</button>
@@ -767,6 +842,163 @@ export default function GSTCompliance({ token }) {
               </form>
             </div>
           )}
+        </div>
+      )}
+
+      {/* AI GST Classifier & Learning Tab */}
+      {activeTab === 'gst_ai' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div className="glass-panel hover-scale">
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#6366f1' }}>
+              <Shield size={22} /> Rule-Based GST Database & Groq AI Classifier
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+              Queries primary rule-based GST database in Neon PostgreSQL. Unrecognized products trigger Groq AI fallback (`llama-3.3-70b-versatile`) for auto HSN/GST classification with instant admin learning!
+            </p>
+
+            <form onSubmit={handleClassifyProduct} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Product Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Samsung 32-inch Smart TV"
+                  value={gstSearchProductName}
+                  onChange={(e) => setGstSearchProductName(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Category (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. LED Television"
+                  value={gstSearchCategory}
+                  onChange={(e) => setGstSearchCategory(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Description (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Full HD Smart LED TV"
+                  value={gstSearchDescription}
+                  onChange={(e) => setGstSearchDescription(e.target.value)}
+                />
+              </div>
+
+              <button type="submit" className="btn btn-primary" disabled={gstClassifierLoading} style={{ padding: '0.75rem 1.5rem', height: '42px' }}>
+                {gstClassifierLoading ? 'Classifying...' : 'Classify Product'}
+              </button>
+            </form>
+
+            {/* Classification Result Card */}
+            {gstClassifierResult && (
+              <div style={{
+                marginTop: '1.5rem',
+                padding: '1.5rem',
+                borderRadius: '12px',
+                background: gstClassifierResult.found ? 'rgba(16, 185, 129, 0.08)' : 'rgba(99, 102, 241, 0.08)',
+                border: `1px solid ${gstClassifierResult.found ? '#10b981' : '#6366f1'}`
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{
+                      padding: '4px 10px',
+                      borderRadius: '20px',
+                      fontSize: '0.8rem',
+                      fontWeight: '700',
+                      textTextTransform: 'uppercase',
+                      background: gstClassifierResult.source === 'database' ? '#10b981' : '#6366f1',
+                      color: '#fff'
+                    }}>
+                      Source: {gstClassifierResult.source === 'database' ? 'Primary DB (Neon)' : 'Groq AI Fallback'}
+                    </span>
+                    <h3 style={{ margin: 0 }}>{gstClassifierResult.category_name}</h3>
+                  </div>
+
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Confidence Score</span>
+                    <div style={{ fontSize: '1.2rem', fontWeight: '800', color: gstClassifierResult.confidence >= 80 ? '#10b981' : '#f59e0b' }}>
+                      {gstClassifierResult.confidence}%
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '1rem', marginBottom: '1rem', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px' }}>
+                  <div>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>HSN / SAC Code</span>
+                    <div style={{ fontSize: '1.1rem', fontWeight: '700', fontFamily: 'monospace' }}>{gstClassifierResult.hsn_code}</div>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>GST Rate</span>
+                    <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#10b981' }}>{gstClassifierResult.gst_rate}%</div>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Regulatory Reason</span>
+                    <div style={{ fontSize: '0.9rem' }}>{gstClassifierResult.explanation}</div>
+                  </div>
+                </div>
+
+                {/* Admin Learning Save Button */}
+                {(!gstClassifierResult.found || gstClassifierResult.requires_confirmation) && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', paddingTop: '0.5rem', borderTop: '1px border-dashed rgba(255,255,255,0.1)' }}>
+                    <span style={{ fontSize: '0.85rem', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <AlertTriangle size={16} /> Save this classification to Neon DB for future instant lookups without AI calls.
+                    </span>
+
+                    <button
+                      className="btn btn-primary"
+                      disabled={gstConfirming}
+                      onClick={() => handleConfirmGstMapping({
+                        category_name: gstClassifierResult.category_name,
+                        hsn_code: gstClassifierResult.hsn_code,
+                        gst_rate: gstClassifierResult.gst_rate,
+                        keywords: `${gstSearchProductName},${gstSearchCategory}`.toLowerCase(),
+                        description: gstClassifierResult.explanation
+                      })}
+                      style={{ background: '#10b981', border: 'none' }}
+                    >
+                      {gstConfirming ? 'Saving to DB...' : 'Confirm & Save to DB (Admin Learning)'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Stored Rule-based GST Database Table */}
+          <div className="glass-panel hover-scale">
+            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FileSpreadsheet size={20} /> Registered GST Categories in Database ({gstCategoriesList.length})
+            </h3>
+            <table className="audit-table">
+              <thead>
+                <tr>
+                  <th>Category Name</th>
+                  <th>HSN Code</th>
+                  <th>GST Rate</th>
+                  <th>Matching Keywords</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gstCategoriesList.map((cat) => (
+                  <tr key={cat.id}>
+                    <td style={{ fontWeight: '600' }}>{cat.category_name}</td>
+                    <td style={{ fontFamily: 'monospace', fontWeight: '700' }}>{cat.hsn_code}</td>
+                    <td><span className="badge badge-green" style={{ fontSize: '0.85rem' }}>{cat.gst_rate}%</span></td>
+                    <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{cat.keywords || '-'}</td>
+                    <td>
+                      <span className={`badge ${cat.source === 'system' ? 'badge-blue' : 'badge-purple'}`}>
+                        {cat.source === 'system' ? 'System Standard' : 'AI Confirmed'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

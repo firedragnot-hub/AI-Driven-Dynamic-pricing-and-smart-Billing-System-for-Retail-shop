@@ -549,9 +549,9 @@ function MyOrders({ token }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Return request states
+  // Return / Replacement request states
   const [returningOrder, setReturningOrder] = useState(null);
-  const [returnForm, setReturnForm] = useState({ product_id: '', quantity: 1, reason: 'Defective Product' });
+  const [returnForm, setReturnForm] = useState({ return_type: 'Return', product_id: '', quantity: 1, reason: 'Defective / Damaged Product' });
   const [returnError, setReturnError] = useState('');
   const [submittingReturn, setSubmittingReturn] = useState(false);
 
@@ -560,8 +560,15 @@ function MyOrders({ token }) {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
       const res = await fetch('/api/orders', { headers });
-      if (res.ok) { const data = await res.json(); setOrders(data.filter(o => o.sale_type !== 'offline')); }
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+      if (res.ok) { 
+        const data = await res.json(); 
+        setOrders(data.filter(o => o.sale_type !== 'offline')); 
+      }
+    } catch (e) { 
+      console.error(e); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   useEffect(() => {
@@ -571,32 +578,27 @@ function MyOrders({ token }) {
   const handleOpenReturn = (order) => {
     setReturningOrder(order);
     setReturnError('');
-    if (order.items && order.items.length > 0) {
-      setReturnForm({
-        product_id: order.items[0].product_id.toString(),
-        quantity: 1,
-        reason: 'Defective Product'
-      });
-    }
+    setReturnForm({
+      return_type: 'Return',
+      product_id: order.items && order.items.length > 0 ? order.items[0].product_id.toString() : '',
+      quantity: 1,
+      reason: 'Defective / Damaged Product'
+    });
   };
 
   const handleReturnSubmit = async (orderId) => {
-    if (!returnForm.product_id || returnForm.quantity <= 0) {
-      setReturnError('Please select a product and valid quantity.');
-      return;
-    }
     setReturnError('');
     setSubmittingReturn(true);
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const res = await fetch('/api/returns/request', {
+      const res = await fetch(`/api/orders/${orderId}/return-request`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          order_id: orderId,
-          product_id: parseInt(returnForm.product_id),
-          quantity: parseInt(returnForm.quantity),
+          return_type: returnForm.return_type,
+          product_id: returnForm.product_id ? parseInt(returnForm.product_id) : null,
+          quantity: parseInt(returnForm.quantity) || 1,
           reason: returnForm.reason
         })
       });
@@ -604,14 +606,35 @@ function MyOrders({ token }) {
       if (res.ok) {
         setReturningOrder(null);
         fetchOrders();
-        alert('Return request submitted successfully and inventory restocked!');
+        alert(`${returnForm.return_type} request submitted successfully! Status updated to ${data.order?.status || 'Requested'}.`);
       } else {
-        setReturnError(data.error || 'Failed to submit return request.');
+        setReturnError(data.error || 'Failed to submit request.');
       }
     } catch (err) {
       setReturnError(err.message);
     } finally {
       setSubmittingReturn(false);
+    }
+  };
+
+  const handleDownloadInvoice = async (orderId) => {
+    try {
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch(`/api/orders/${orderId}/invoice`, { headers });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Invoice_Order_${orderId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } else {
+        alert("Failed to download invoice.");
+      }
+    } catch (err) {
+      alert("Error downloading invoice.");
     }
   };
 
@@ -621,8 +644,11 @@ function MyOrders({ token }) {
       Processing: { bg: '#dbeafe', color: '#1e40af' }, 
       Shipped: { bg: '#e0f2fe', color: '#0369a1' }, 
       Delivered: { bg: '#dcfce7', color: '#166534' }, 
-      Cancelled: { bg: '#fee2e2', color: '#991b1b' },
+      'Return Requested': { bg: '#fef3c7', color: '#d97706' },
+      'Replacement Requested': { bg: '#fce7f3', color: '#be185d' },
       Returned: { bg: '#f1f5f9', color: '#475569' },
+      Replaced: { bg: '#d1fae5', color: '#065f46' },
+      Cancelled: { bg: '#fee2e2', color: '#991b1b' },
       'Partially Returned': { bg: '#ffedd5', color: '#c2410c' }
     };
     return map[status] || { bg: '#f1f5f9', color: '#475569' };
@@ -644,8 +670,7 @@ function MyOrders({ token }) {
           {orders.map((order) => {
             const s = statusStyle(order.status);
             const orderDate = new Date(order.timestamp);
-            const diffDays = (new Date() - orderDate) / (1000 * 60 * 60 * 24);
-            const isEligibleForReturn = order.status === 'Delivered' && diffDays <= 7;
+            const isDelivered = order.status === 'Delivered';
 
             return (
               <div key={order.id} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
@@ -659,28 +684,55 @@ function MyOrders({ token }) {
                     <span style={{ background: s.bg, color: s.color, fontWeight: 700, padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem' }}>{order.status}</span>
                   </div>
                 </div>
+
                 {order.items && order.items.length > 0 && (
                   <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                       <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{order.items.length} item{order.items.length !== 1 ? 's' : ''}</div>
-                      {isEligibleForReturn && (
+                      
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        {/* Download Invoice Button */}
                         <button 
-                          onClick={() => handleOpenReturn(order)} 
+                          onClick={() => handleDownloadInvoice(order.id)} 
                           style={{ 
-                            background: '#fff', 
-                            border: '1.5px solid #d97706', 
-                            color: '#d97706', 
+                            background: '#f8fafc', 
+                            border: '1.5px solid #cbd5e1', 
+                            color: '#334155', 
                             borderRadius: '8px', 
                             padding: '6px 12px', 
                             fontSize: '0.78rem', 
                             fontWeight: 700, 
-                            cursor: 'pointer' 
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
                           }}
                         >
-                          Return Items
+                          📄 Download Invoice
                         </button>
-                      )}
+
+                        {/* Return / Replace Button */}
+                        {isDelivered && (
+                          <button 
+                            onClick={() => handleOpenReturn(order)} 
+                            style={{ 
+                              background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
+                              border: 'none', 
+                              color: '#fff', 
+                              borderRadius: '8px', 
+                              padding: '6px 12px', 
+                              fontSize: '0.78rem', 
+                              fontWeight: 700, 
+                              cursor: 'pointer',
+                              boxShadow: '0 2px 6px rgba(245,158,11,0.3)'
+                            }}
+                          >
+                            🔄 Return / Replace
+                          </button>
+                        )}
+                      </div>
                     </div>
+
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                       {order.items.map((item) => (
                         <span key={item.id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '3px 8px', fontSize: '0.75rem', color: '#475569' }}>
@@ -696,17 +748,56 @@ function MyOrders({ token }) {
         </div>
       )}
 
+      {/* Return / Replacement Modal */}
       {returningOrder && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '480px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.1rem', color: '#0f172a' }}>Request Return (Order #{returningOrder.id})</h3>
+              <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.1rem', color: '#0f172a' }}>Return or Replace (Order #{returningOrder.id})</h3>
               <button onClick={() => setReturningOrder(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><X size={18} /></button>
             </div>
             {returnError && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px', padding: '10px 14px', color: '#dc2626', fontSize: '0.8rem' }}>{returnError}</div>}
             
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Select Product to Return</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Request Type</label>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setReturnForm({ ...returnForm, return_type: 'Return' })}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '8px',
+                    border: `2px solid ${returnForm.return_type === 'Return' ? '#d97706' : '#e2e8f0'}`,
+                    background: returnForm.return_type === 'Return' ? '#fef3c7' : '#fff',
+                    color: returnForm.return_type === 'Return' ? '#92400e' : '#475569',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔙 Return (Refund)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setReturnForm({ ...returnForm, return_type: 'Replacement' })}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '8px',
+                    border: `2px solid ${returnForm.return_type === 'Replacement' ? '#ec4899' : '#e2e8f0'}`,
+                    background: returnForm.return_type === 'Replacement' ? '#fce7f3' : '#fff',
+                    color: returnForm.return_type === 'Replacement' ? '#be185d' : '#475569',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔄 Replacement
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Select Product</label>
               <select value={returnForm.product_id} onChange={(e) => setReturnForm({ ...returnForm, product_id: e.target.value, quantity: 1 })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem' }}>
                 {returningOrder.items.map(item => (
                   <option key={item.id} value={item.product_id.toString()}>{item.product_name} (Qty: {item.quantity})</option>
@@ -715,31 +806,20 @@ function MyOrders({ token }) {
             </div>
             
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Quantity to Return</label>
-              <input 
-                type="number" 
-                min="1" 
-                max={returningOrder.items.find(item => item.product_id.toString() === returnForm.product_id)?.quantity || 1} 
-                value={returnForm.quantity} 
-                onChange={(e) => setReturnForm({ ...returnForm, quantity: Math.max(1, parseInt(e.target.value) || 1) })} 
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', boxSizing: 'border-box' }} 
-              />
-            </div>
-            
-            <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Reason for Return</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Reason for {returnForm.return_type}</label>
               <select value={returnForm.reason} onChange={(e) => setReturnForm({ ...returnForm, reason: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem' }}>
-                <option value="Defective Product">Defective Product</option>
+                <option value="Defective / Damaged Product">Defective / Damaged Product</option>
                 <option value="Wrong Item Shipped">Wrong Item Shipped</option>
+                <option value="Size or Model Issue">Size or Model Issue</option>
                 <option value="Item not as Described">Item not as Described</option>
                 <option value="No Longer Needed">No Longer Needed</option>
-                <option value="Other">Other</option>
+                <option value="Other Reason">Other Reason</option>
               </select>
             </div>
             
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
               <button onClick={() => handleReturnSubmit(returningOrder.id)} disabled={submittingReturn} className="btn btn-primary" style={{ padding: '11px 20px', flex: 1, fontSize: '0.9rem' }}>
-                {submittingReturn ? 'Submitting...' : 'Submit Request'}
+                {submittingReturn ? 'Submitting Request...' : `Submit ${returnForm.return_type} Request`}
               </button>
               <button onClick={() => setReturningOrder(null)} style={{ padding: '11px 20px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '10px', cursor: 'pointer', fontSize: '0.9rem' }}>Cancel</button>
             </div>

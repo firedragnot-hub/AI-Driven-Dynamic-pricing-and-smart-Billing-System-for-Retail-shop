@@ -166,8 +166,14 @@ export default function OrdersList({ token }) {
         return <span className="badge" style={{ backgroundColor: '#3b82f6', color: '#fff' }}>Shipped</span>;
       case 'Processing':
         return <span className="badge" style={{ backgroundColor: '#8b5cf6', color: '#fff' }}>Processing</span>;
+      case 'Return Requested':
+        return <span className="badge" style={{ backgroundColor: '#f59e0b', color: '#fff' }}>Return Requested</span>;
+      case 'Replacement Requested':
+        return <span className="badge" style={{ backgroundColor: '#ec4899', color: '#fff' }}>Replacement Requested</span>;
       case 'Returned':
         return <span className="badge" style={{ backgroundColor: '#64748b', color: '#fff' }}>Returned</span>;
+      case 'Replaced':
+        return <span className="badge" style={{ backgroundColor: '#10b981', color: '#fff' }}>Replaced</span>;
       case 'Partially Returned':
         return <span className="badge" style={{ backgroundColor: '#f97316', color: '#fff' }}>Partially Returned</span>;
       default:
@@ -441,15 +447,7 @@ export default function OrdersList({ token }) {
       <div className="page-header">
         <div>
           <h1>Order Management System</h1>
-          <p>Fulfill, update status, search, and export customer order receipts</p>
-        </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="btn btn-secondary" onClick={() => handleExport('pdf')}>
-            <Download size={16} /> Export PDF
-          </button>
-          <button className="btn btn-secondary" onClick={() => handleExport('excel')}>
-            <Download size={16} /> Export Excel
-          </button>
+          <p>Fulfill, update status, search, and manage customer order receipts</p>
         </div>
       </div>
 
@@ -480,8 +478,11 @@ export default function OrdersList({ token }) {
             <option value="Processing">Processing</option>
             <option value="Shipped">Shipped</option>
             <option value="Delivered">Delivered</option>
-            <option value="Cancelled">Cancelled</option>
+            <option value="Return Requested">Return Requested</option>
+            <option value="Replacement Requested">Replacement Requested</option>
             <option value="Returned">Returned</option>
+            <option value="Replaced">Replaced</option>
+            <option value="Cancelled">Cancelled</option>
             <option value="Partially Returned">Partially Returned</option>
           </select>
         </div>
@@ -595,14 +596,17 @@ export default function OrdersList({ token }) {
                         value={o.status}
                         onChange={(e) => updateStatus(o.id, e.target.value)}
                         className="form-control"
-                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem', width: '130px', marginBottom: 0 }}
+                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem', width: '150px', marginBottom: 0 }}
                       >
                         <option value="Pending">Pending</option>
                         <option value="Processing">Processing</option>
                         <option value="Shipped">Shipped</option>
                         <option value="Delivered">Delivered</option>
-                        <option value="Cancelled">Cancelled</option>
+                        <option value="Return Requested">Return Requested</option>
+                        <option value="Replacement Requested">Replacement Requested</option>
                         <option value="Returned">Returned</option>
+                        <option value="Replaced">Replaced</option>
+                        <option value="Cancelled">Cancelled</option>
                         <option value="Partially Returned">Partially Returned</option>
                       </select>
                     </td>

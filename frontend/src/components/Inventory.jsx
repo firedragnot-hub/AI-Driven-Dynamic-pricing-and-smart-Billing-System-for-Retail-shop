@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash, PackagePlus, Download } from 'lucide-react';
+import { Plus, Edit, Trash, PackagePlus, Download, Sparkles, AlertTriangle } from 'lucide-react';
 
 export default function Inventory({ products, refreshProducts, token }) {
   useEffect(() => {
@@ -20,6 +20,61 @@ export default function Inventory({ products, refreshProducts, token }) {
   const [gstRate, setGstRate] = useState('18');
   const [description, setDescription] = useState('');
   const [aiGenerating, setAiGenerating] = useState(false);
+
+  // GST Auto-Classifier States
+  const [gstAutoClassifying, setGstAutoClassifying] = useState(false);
+  const [gstClassificationNotice, setGstClassificationNotice] = useState(null);
+
+  const handleAutoDetectGst = async () => {
+    if (!name && !category) {
+      alert("Please enter a Product Name or Category first.");
+      return;
+    }
+    setGstAutoClassifying(true);
+    setGstClassificationNotice(null);
+    try {
+      const res = await fetch('/api/gst/lookup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          product_name: name,
+          category: category,
+          description: description
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        if (data.category_name && !category) {
+          setCategory(data.category_name);
+        }
+        if (data.hsn_code) {
+          setHsnCode(data.hsn_code);
+        }
+        if (data.gst_rate !== undefined) {
+          setGstRate(data.gst_rate.toString());
+        }
+        setGstClassificationNotice({
+          source: data.source,
+          category: data.category_name,
+          hsn: data.hsn_code,
+          rate: data.gst_rate,
+          confidence: data.confidence,
+          requires_confirmation: data.requires_confirmation,
+          explanation: data.explanation
+        });
+      } else {
+        alert("Failed to auto-detect GST rate.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error auto-detecting GST rate.");
+    } finally {
+      setGstAutoClassifying(false);
+    }
+  };
 
   const handleAIDescription = async () => {
     if (!name || !category) {
@@ -59,6 +114,7 @@ export default function Inventory({ products, refreshProducts, token }) {
     setHsnCode('84733099');
     setGstRate('18');
     setDescription('');
+    setGstClassificationNotice(null);
     setModalOpen(true);
   };
 
@@ -72,6 +128,7 @@ export default function Inventory({ products, refreshProducts, token }) {
     setHsnCode((product.hsn_code || '84733099').toString());
     setGstRate((product.gst_rate || 18).toString());
     setDescription(product.description || '');
+    setGstClassificationNotice(null);
     setModalOpen(true);
   };
 
@@ -106,6 +163,21 @@ export default function Inventory({ products, refreshProducts, token }) {
       });
       const data = await res.json();
       if (res.ok) {
+        // Admin Learning: If AI/User auto-detected a GST category, save to GstCategoryMapping database table
+        if (gstClassificationNotice && category && hsnCode && gstRate) {
+          fetch('/api/gst/confirm-mapping', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              category_name: category,
+              hsn_code: hsnCode,
+              gst_rate: parseFloat(gstRate),
+              keywords: `${name},${category}`.toLowerCase(),
+              description: description || `Confirmed rate for ${name}`
+            })
+          }).catch(err => console.error("Admin learning sync error:", err));
+        }
+
         setModalOpen(false);
         refreshProducts();
       } else {
@@ -165,12 +237,6 @@ export default function Inventory({ products, refreshProducts, token }) {
           <p>Manage store stock items, categories, cost bases and retail pricing</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="btn btn-secondary" onClick={() => handleExport('pdf')}>
-            <Download size={16} /> Export PDF
-          </button>
-          <button className="btn btn-secondary" onClick={() => handleExport('excel')}>
-            <Download size={16} /> Export Excel
-          </button>
           <button className="btn btn-primary" onClick={openAddModal}>
             <Plus size={16} /> Add Product
           </button>
@@ -292,7 +358,9 @@ export default function Inventory({ products, refreshProducts, token }) {
 
               <div className="grid-2">
                 <div className="input-group">
-                  <label>HSN Code</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label style={{ margin: 0 }}>HSN Code</label>
+                  </div>
                   <input 
                     type="text" 
                     className="form-control" 
@@ -303,7 +371,29 @@ export default function Inventory({ products, refreshProducts, token }) {
                 </div>
 
                 <div className="input-group">
-                  <label>GST Rate (%)</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label style={{ margin: 0 }}>GST Rate (%)</label>
+                    <button 
+                      type="button" 
+                      onClick={handleAutoDetectGst} 
+                      disabled={gstAutoClassifying}
+                      style={{ 
+                        padding: '3px 8px', 
+                        fontSize: '0.72rem', 
+                        background: 'linear-gradient(135deg, #6366f1, #4f46e5)', 
+                        color: '#fff', 
+                        border: 'none', 
+                        borderRadius: '6px', 
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <Sparkles size={12} /> {gstAutoClassifying ? 'Checking...' : 'Auto-Detect GST'}
+                    </button>
+                  </div>
                   <select 
                     className="form-control" 
                     required
@@ -318,6 +408,34 @@ export default function Inventory({ products, refreshProducts, token }) {
                   </select>
                 </div>
               </div>
+
+              {/* GST Classification Notice */}
+              {gstClassificationNotice && (
+                <div style={{
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  marginBottom: '1rem',
+                  fontSize: '0.82rem',
+                  background: gstClassificationNotice.source === 'database' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                  border: `1px solid ${gstClassificationNotice.source === 'database' ? '#10b981' : '#6366f1'}`,
+                  color: 'var(--text-main)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '4px' }}>
+                    <span>
+                      {gstClassificationNotice.source === 'database' ? '✅ Database Rule Match' : '🤖 AI Recommended Classification'}
+                    </span>
+                    <span style={{ color: gstClassificationNotice.confidence >= 80 ? '#10b981' : '#f59e0b' }}>
+                      Confidence: {gstClassificationNotice.confidence}%
+                    </span>
+                  </div>
+                  <div>
+                    Category: <strong>{gstClassificationNotice.category}</strong> | HSN: <strong>{gstClassificationNotice.hsn}</strong> | Rate: <strong>{gstClassificationNotice.rate}%</strong>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {gstClassificationNotice.explanation}
+                  </div>
+                </div>
+              )}
 
               <div className="input-group">
                 <label>Stock Level</label>

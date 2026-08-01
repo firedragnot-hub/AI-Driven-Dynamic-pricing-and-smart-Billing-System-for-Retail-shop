@@ -1250,7 +1250,28 @@ export default function MLForecast({ token }) {
                 className="btn btn-secondary"
                 style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: 0 }}
               >
-                <FileText size={16} /> Download Purchasing PDF List
+                <Download size={16} /> Export PDF
+              </button>
+              <button 
+                onClick={() => {
+                  if (!budgetResult || !budgetResult.items) return;
+                  let csvContent = "data:text/csv;charset=utf-8,";
+                  csvContent += "Product Name,Suggested Qty,Unit Cost,Total Cost,Expected Margin\n";
+                  budgetResult.items.forEach(item => {
+                    csvContent += `"${item.name}",${item.suggested_qty},${item.cost / item.suggested_qty},${item.cost},${item.expected_margin}\n`;
+                  });
+                  const encodedUri = encodeURI(csvContent);
+                  const link = document.createElement("a");
+                  link.setAttribute("href", encodedUri);
+                  link.setAttribute("download", "ML_Purchasing_Forecast.csv");
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                }}
+                className="btn btn-secondary"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: 0 }}
+              >
+                <Download size={16} /> Export Excel
               </button>
               <button 
                 onClick={() => setShowSupplierModal(true)}

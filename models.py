@@ -117,7 +117,7 @@ class Order(db.Model):
     phone = db.Column(db.String(20), nullable=False)
     address = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
-    status = db.Column(db.String(20), default='Pending', nullable=False, index=True)
+    status = db.Column(db.String(50), default='Pending', nullable=False, index=True)
     total_amount = db.Column(db.Float, nullable=False)
     sale_type = db.Column(db.String(20), default='online', nullable=False) # 'online' or 'offline'
     
@@ -476,10 +476,12 @@ class ReturnLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=True)
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    refund_amount = db.Column(db.Float, nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    refund_amount = db.Column(db.Float, nullable=False, default=0.0)
     reason = db.Column(db.String(255), nullable=True)
+    return_type = db.Column(db.String(20), default='Return', nullable=False) # 'Return' or 'Replacement'
+    status = db.Column(db.String(20), default='Pending', nullable=False) # 'Pending', 'Approved', 'Rejected'
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     product = db.relationship('Product')
@@ -492,11 +494,39 @@ class ReturnLog(db.Model):
             'transaction_id': self.transaction_id,
             'order_id': self.order_id,
             'product_id': self.product_id,
-            'product_name': self.product.name if self.product else 'Unknown Product',
+            'product_name': self.product.name if self.product else 'Order Item',
             'quantity': self.quantity,
             'refund_amount': self.refund_amount,
             'reason': self.reason,
+            'return_type': self.return_type,
+            'status': self.status,
             'timestamp': self.timestamp.isoformat() + 'Z'
+        }
+
+class GstCategoryMapping(db.Model):
+    __tablename__ = 'gst_category_mappings'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    category_name = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    hsn_code = db.Column(db.String(20), nullable=False)
+    gst_rate = db.Column(db.Float, nullable=False) # 0, 5, 12, 18, 28
+    description = db.Column(db.Text, nullable=True)
+    keywords = db.Column(db.Text, nullable=True) # Comma-separated search terms
+    source = db.Column(db.String(30), default='system', nullable=False) # 'system', 'ai_confirmed', 'manual'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'category_name': self.category_name,
+            'hsn_code': self.hsn_code,
+            'gst_rate': self.gst_rate,
+            'description': self.description,
+            'keywords': self.keywords,
+            'source': self.source,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
         }
 
 

@@ -9,7 +9,7 @@ import urllib.request
 import json
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
-from models import db, Product, Transaction, TransactionItem, Order, OrderItem, User, Review, Wishlist, AddressBook, BusinessConfig, Purchase, PurchaseItem, Expense, DynamicPricingPrediction, BudgetPredictionResult, ReturnLog, PurchaseBill, Discrepancy
+from models import db, Product, Transaction, TransactionItem, Order, OrderItem, User, Review, Wishlist, AddressBook, BusinessConfig, Purchase, PurchaseItem, Expense, DynamicPricingPrediction, BudgetPredictionResult, ReturnLog, PurchaseBill, Discrepancy, GstCategoryMapping
 from datetime import datetime, timedelta
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -109,7 +109,6 @@ with app.app_context():
         db.create_all()
     except Exception as e:
         print("Error during db.create_all():", e)
-        
     # PostgreSQL migration helper for password_hash size increase
     if db_url and ("postgresql" in db_url or "postgres" in db_url):
         try:
@@ -118,7 +117,7 @@ with app.app_context():
         except Exception as mig_err:
             db.session.rollback()
             print("Migration warning (password_hash length):", str(mig_err))
-            
+
     try:
         from models import User
         if not User.query.filter_by(username='admin').first():
@@ -148,6 +147,41 @@ with app.app_context():
         db.session.rollback()
         print("Database seeding error:", str(seed_err))
 
+    # Seed Default Rule-based GST Categories & HSN Codes if table is empty
+    try:
+        if GstCategoryMapping.query.count() == 0:
+            print("Seeding rule-based GST category mappings into Neon PostgreSQL...")
+            default_gst_categories = [
+                {"category_name": "LED Television", "hsn_code": "8528", "gst_rate": 18.0, "keywords": "tv,television,smart tv,led tv,oled,qled", "description": "Monitors and television receivers"},
+                {"category_name": "Mobile Phones", "hsn_code": "8517", "gst_rate": 18.0, "keywords": "mobile,smartphone,cell phone,iphone,galaxy", "description": "Telephone sets, smartphones"},
+                {"category_name": "Laptops & Computers", "hsn_code": "8471", "gst_rate": 18.0, "keywords": "laptop,notebook,macbook,pc,desktop,computer", "description": "Automatic data processing machines"},
+                {"category_name": "Computer Peripherals", "hsn_code": "8473", "gst_rate": 18.0, "keywords": "mouse,keyboard,monitor,printer,scanner,ssd,hard drive", "description": "Parts and accessories of computers"},
+                {"category_name": "Air Conditioners", "hsn_code": "8415", "gst_rate": 28.0, "keywords": "ac,air conditioner,split ac,window ac", "description": "Air conditioning machines"},
+                {"category_name": "Refrigerators", "hsn_code": "8418", "gst_rate": 18.0, "keywords": "fridge,refrigerator,deep freezer", "description": "Refrigerators, freezers and other cooling equipment"},
+                {"category_name": "Washing Machines", "hsn_code": "8450", "gst_rate": 18.0, "keywords": "washing machine,washer,dryer", "description": "Household or laundry-type washing machines"},
+                {"category_name": "Audio & Headphones", "hsn_code": "8518", "gst_rate": 18.0, "keywords": "headphone,earphone,airpods,speaker,soundbar", "description": "Microphones, loudspeakers, headphones"},
+                {"category_name": "Packaged Groceries", "hsn_code": "2106", "gst_rate": 5.0, "keywords": "biscuit,snack,spice,sauce,packaged food", "description": "Food preparations"},
+                {"category_name": "Fresh Dairy & Agriculture", "hsn_code": "0401", "gst_rate": 0.0, "keywords": "milk,fresh curd,fresh vegetables,fresh fruit", "description": "Fresh dairy and essential agricultural items"},
+                {"category_name": "Apparel & Garments (<1000)", "hsn_code": "6203", "gst_rate": 5.0, "keywords": "shirt,t-shirt,jeans,trousers,clothing,dress", "description": "Articles of apparel and clothing accessories"},
+                {"category_name": "Footwear", "hsn_code": "6403", "gst_rate": 12.0, "keywords": "shoes,sneakers,sandals,boots,footwear", "description": "Footwear with outer soles of rubber, plastics, leather"},
+                {"category_name": "Luxury Items & Automobiles", "hsn_code": "8703", "gst_rate": 28.0, "keywords": "luxury car,yacht,pan masala", "description": "Motor cars and high luxury goods"}
+            ]
+            for cat in default_gst_categories:
+                mapping = GstCategoryMapping(
+                    category_name=cat["category_name"],
+                    hsn_code=cat["hsn_code"],
+                    gst_rate=cat["gst_rate"],
+                    keywords=cat["keywords"],
+                    description=cat["description"],
+                    source="system"
+                )
+                db.session.add(mapping)
+            db.session.commit()
+            print("Successfully seeded rule-based GST categories!")
+    except Exception as gst_seed_err:
+        db.session.rollback()
+        print("Error seeding GST category mappings:", str(gst_seed_err))
+
     # PostgreSQL migration helper to add missing columns to existing tables
     if db_url and ("postgresql" in db_url or "postgres" in db_url):
         try:
@@ -156,6 +190,9 @@ with app.app_context():
             db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS verified_by VARCHAR(80);"))
             db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS discrepancy_count INTEGER DEFAULT 0;"))
             db.session.execute(db.text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS sale_type VARCHAR(20) DEFAULT 'online';"))
+            db.session.execute(db.text("ALTER TABLE orders ALTER COLUMN status TYPE VARCHAR(50);"))
+            db.session.execute(db.text("ALTER TABLE return_logs ADD COLUMN IF NOT EXISTS return_type VARCHAR(20) DEFAULT 'Return';"))
+            db.session.execute(db.text("ALTER TABLE return_logs ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending';"))
             db.session.execute(db.text("ALTER TABLE return_logs ADD COLUMN IF NOT EXISTS order_id INTEGER REFERENCES orders(id);"))
             db.session.execute(db.text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;"))
             db.session.execute(db.text("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);"))
@@ -1420,12 +1457,67 @@ def update_order_status(order_id):
         
     data = request.get_json() or {}
     status = data.get('status')
-    if status not in ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Partially Returned'):
+    valid_statuses = ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested', 'Replacement Requested', 'Returned', 'Replaced', 'Partially Returned')
+    if status not in valid_statuses:
         return jsonify({'error': f'Invalid status: {status}'}), 400
         
     order.status = status
     db.session.commit()
+
+    # Emit socket update for real-time status sync across portals
+    try:
+        socketio.emit('order_status_updated', order.to_dict())
+    except Exception as e:
+        print("WebSocket status emit error:", e)
+
     return jsonify(order.to_dict()), 200
+
+@app.route('/api/orders/<int:order_id>/return-request', methods=['POST'])
+def create_return_request(order_id):
+    order = Order.query.get(order_id)
+    if not order:
+        return jsonify({'error': 'Order not found'}), 404
+
+    if order.status != 'Delivered':
+        return jsonify({'error': f'Only delivered orders can be returned or replaced. Current status: {order.status}'}), 400
+
+    data = request.get_json() or {}
+    return_type = data.get('return_type', 'Return') # 'Return' or 'Replacement'
+    reason = data.get('reason', 'Defective or incorrect item').strip()
+    product_id = data.get('product_id') # Optional specific product ID
+
+    if return_type not in ('Return', 'Replacement'):
+        return_type = 'Return'
+
+    new_status = 'Return Requested' if return_type == 'Return' else 'Replacement Requested'
+    order.status = new_status
+
+    # Create ReturnLog record
+    return_entry = ReturnLog(
+        order_id=order.id,
+        product_id=product_id if product_id else (order.items[0].product_id if order.items else None),
+        quantity=1,
+        refund_amount=order.total_amount if return_type == 'Return' else 0.0,
+        reason=reason,
+        return_type=return_type,
+        status='Pending'
+    )
+    db.session.add(return_entry)
+    db.session.commit()
+
+    # Real-time WebSocket event dispatch for both customer and owner portals
+    try:
+        socketio.emit('order_status_updated', order.to_dict())
+        socketio.emit('new_return_request', return_entry.to_dict())
+    except Exception as e:
+        print("WebSocket return emit error:", e)
+
+    return jsonify({
+        'message': f'{return_type} request submitted successfully.',
+        'order': order.to_dict(),
+        'return_log': return_entry.to_dict()
+    }), 200
+
 
 @app.route('/api/orders/<int:order_id>', methods=['GET'])
 def get_order_by_id(order_id):
@@ -4339,6 +4431,196 @@ def get_notifications_summary():
         'itr_days': itr_days,
         'ai_summary': ai_msg
     }), 200
+
+# ----------------------------------------------------
+# RULE-BASED GST DATABASE + GROQ AI FALLBACK API
+# ----------------------------------------------------
+
+@app.route('/api/gst/lookup', methods=['POST'])
+def gst_classifier_lookup():
+    """
+    1. Primary: Database lookup by category or product name/keyword in GstCategoryMapping.
+    2. Fallback: Call Groq AI API to classify unknown products into HSN code, GST rate, confidence score.
+    """
+    data = request.get_json() or {}
+    product_name = data.get('product_name', '').strip()
+    category = data.get('category', '').strip()
+    description = data.get('description', '').strip()
+
+    if not product_name and not category:
+        return jsonify({'error': 'Product name or category is required'}), 400
+
+    query_str = (category or product_name).lower()
+    
+    # --- STAGE 1: Primary Rule-based DB Lookup ---
+    # Exact category match
+    match = GstCategoryMapping.query.filter(func.lower(GstCategoryMapping.category_name) == query_str).first()
+    
+    # Keyword/partial match fallback in DB
+    if not match and product_name:
+        all_mappings = GstCategoryMapping.query.all()
+        for item in all_mappings:
+            if item.keywords:
+                keywords = [k.strip().lower() for k in item.keywords.split(',') if k.strip()]
+                if any(kw in product_name.lower() or kw in description.lower() for kw in keywords):
+                    match = item
+                    break
+
+    if match:
+        return jsonify({
+            'found': True,
+            'source': 'database',
+            'category_name': match.category_name,
+            'hsn_code': match.hsn_code,
+            'gst_rate': match.gst_rate,
+            'confidence': 100.0,
+            'requires_confirmation': False,
+            'explanation': 'Exact or keyword match found in primary rule-based database.'
+        }), 200
+
+    # --- STAGE 2: Groq AI Fallback ---
+    groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
+    if not groq_api_key:
+        return jsonify({
+            'found': False,
+            'source': 'fallback_default',
+            'category_name': category or 'General Goods',
+            'hsn_code': '8473',
+            'gst_rate': 18.0,
+            'confidence': 50.0,
+            'requires_confirmation': True,
+            'explanation': 'Groq API key not configured. Applied standard default GST rate 18%.'
+        }), 200
+
+    groq_url = "https://api.groq.com/openai/v1/chat/completions"
+    prompt = (
+        f"You are an expert Indian GST & HSN code classification assistant for a retail POS software.\n"
+        f"Classify the following product:\n"
+        f"Product Name: {product_name}\n"
+        f"Category: {category}\n"
+        f"Description: {description}\n\n"
+        f"Allowed GST rates in India: 0, 5, 12, 18, 28.\n"
+        f"Respond STRICTLY with a valid JSON object matching this schema:\n"
+        f"{{\n"
+        f'  "likely_category": "Standard Indian GST category name",\n'
+        f'  "hsn_code": "4 to 8 digit HSN/SAC code",\n'
+        f'  "gst_rate": numeric_rate (e.g. 18.0),\n'
+        f'  "confidence": confidence_percentage_between_0_and_100,\n'
+        f'  "explanation": "Brief 1-sentence legal/regulatory reason for HSN and GST rate"\n'
+        f"}}\n"
+        f"Do NOT include any markdown formatting outside JSON."
+    )
+
+    payload = {
+        "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip(),
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.2,
+        "max_tokens": 200,
+        "response_format": {"type": "json_object"}
+    }
+
+    try:
+        req = urllib.request.Request(
+            groq_url,
+            data=json.dumps(payload).encode('utf-8'),
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {groq_api_key}',
+                'User-Agent': 'Mozilla/5.0'
+            },
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=5.0) as response:
+            res_data = json.loads(response.read().decode('utf-8'))
+            raw_content = res_data['choices'][0]['message']['content'].strip()
+            ai_res = json.loads(raw_content)
+
+            gst_rate = float(ai_res.get('gst_rate', 18.0))
+            valid_rates = [0.0, 5.0, 12.0, 18.0, 28.0]
+            if gst_rate not in valid_rates:
+                gst_rate = min(valid_rates, key=lambda x: abs(x - gst_rate))
+
+            confidence = float(ai_res.get('confidence', 85.0))
+            requires_confirmation = confidence < 80.0
+
+            return jsonify({
+                'found': False,
+                'source': 'ai',
+                'category_name': ai_res.get('likely_category', category or 'General Goods'),
+                'hsn_code': str(ai_res.get('hsn_code', '8473')),
+                'gst_rate': gst_rate,
+                'confidence': confidence,
+                'requires_confirmation': requires_confirmation,
+                'explanation': ai_res.get('explanation', 'AI classified using standard Indian HSN/GST schedules.')
+            }), 200
+
+    except Exception as err:
+        print("Groq GST AI Classifier Exception:", str(err))
+        return jsonify({
+            'found': False,
+            'source': 'ai_fallback_error',
+            'category_name': category or 'General Goods',
+            'hsn_code': '8473',
+            'gst_rate': 18.0,
+            'confidence': 50.0,
+            'requires_confirmation': True,
+            'explanation': 'AI lookup encountered a temporary issue. Fallback to 18% default rate.'
+        }), 200
+
+@app.route('/api/gst/confirm-mapping', methods=['POST'])
+def confirm_gst_mapping():
+    """
+    Admin Learning: Confirm and save a GST category mapping to the database.
+    Subsequent lookups for the same category or product keywords will be served deterministically from DB without AI calls.
+    """
+    data = request.get_json() or {}
+    category_name = data.get('category_name', '').strip()
+    hsn_code = data.get('hsn_code', '').strip()
+    gst_rate = data.get('gst_rate')
+    keywords = data.get('keywords', '').strip()
+    description = data.get('description', '').strip()
+
+    if not category_name or not hsn_code or gst_rate is None:
+        return jsonify({'error': 'category_name, hsn_code, and gst_rate are required'}), 400
+
+    try:
+        mapping = GstCategoryMapping.query.filter(func.lower(GstCategoryMapping.category_name) == category_name.lower()).first()
+        if not mapping:
+            mapping = GstCategoryMapping(
+                category_name=category_name,
+                hsn_code=hsn_code,
+                gst_rate=float(gst_rate),
+                keywords=keywords,
+                description=description,
+                source='ai_confirmed'
+            )
+            db.session.add(mapping)
+        else:
+            mapping.hsn_code = hsn_code
+            mapping.gst_rate = float(gst_rate)
+            if keywords:
+                mapping.keywords = keywords
+            if description:
+                mapping.description = description
+            mapping.source = 'ai_confirmed'
+
+        db.session.commit()
+        return jsonify({
+            'message': 'GST category mapping confirmed and saved successfully to database.',
+            'mapping': mapping.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/gst/categories', methods=['GET'])
+def list_gst_categories():
+    """
+    List all rule-based GST categories stored in database.
+    """
+    categories = GstCategoryMapping.query.order_by(GstCategoryMapping.category_name.asc()).all()
+    return jsonify([cat.to_dict() for cat in categories]), 200
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)
