@@ -92,23 +92,19 @@ else:
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
-    'pool_recycle': 280
+    'pool_recycle': 280,
+    'pool_size': 5,
+    'max_overflow': 10
 }
 
 db.init_app(app)
 with app.app_context():
-    # Optimize cold start by checking if database is already initialized
-    try:
-        from sqlalchemy import inspect
-        inspector = inspect(db.engine)
-        db_initialized = inspector.has_table("users")
-    except Exception:
-        db_initialized = False
-
-    try:
-        db.create_all()
-    except Exception as e:
-        print("Error during db.create_all():", e)
+    # Cold start optimization for Vercel Serverless Function execution
+    if os.getenv('VERCEL') != '1':
+        try:
+            db.create_all()
+        except Exception as e:
+            print("Error during db.create_all():", e)
     # PostgreSQL migration helper for password_hash size increase
     if db_url and ("postgresql" in db_url or "postgres" in db_url):
         try:
