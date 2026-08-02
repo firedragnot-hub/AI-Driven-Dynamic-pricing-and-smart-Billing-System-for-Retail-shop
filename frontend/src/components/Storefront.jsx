@@ -545,7 +545,7 @@ function OrderSuccess({ order, onContinue }) {
   );
 }
 
-function MyOrders({ token }) {
+function MyOrders({ token, user }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -559,10 +559,13 @@ function MyOrders({ token }) {
     setLoading(true);
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      if (user?.email) headers['X-Clerk-User-Email'] = user.email;
+      if (user?.username || user?.name) headers['X-Clerk-User-Name'] = user.username || user.name;
       const res = await fetch('/api/orders', { headers });
       if (res.ok) { 
         const data = await res.json(); 
-        setOrders(data.filter(o => o.sale_type !== 'offline')); 
+        const orderList = Array.isArray(data) ? data : (data.orders || []);
+        setOrders(orderList.filter(o => o.sale_type !== 'offline')); 
       }
     } catch (e) { 
       console.error(e); 
@@ -1119,9 +1122,9 @@ export default function Storefront({ products, refreshProducts, token, user }) {
       </div>
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem 2rem 4rem' }}>
-        {activeTab === 'orders' && <MyOrders token={token} />}
-        {activeTab === 'addresses' && <MyAddresses token={token} />}
-        {activeTab === 'returns' && <MyReturns token={token} />}
+        {activeTab === 'orders' && <MyOrders token={token} user={user} />}
+        {activeTab === 'addresses' && <MyAddresses token={token} user={user} />}
+        {activeTab === 'returns' && <MyReturns token={token} user={user} />}
         {activeTab === 'shop' && view === 'success' && lastOrder && <OrderSuccess order={lastOrder} onContinue={() => { setView('list'); refreshProducts(); }} />}
         {activeTab === 'shop' && view === 'checkout' && <CheckoutForm cart={cart} products={products} user={user} token={token} onSuccess={handleOrderSuccess} onBack={() => setView('list')} />}
         {activeTab === 'shop' && view === 'list' && (

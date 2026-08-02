@@ -1304,27 +1304,39 @@ def send_order_email_notification(order_id, customer_name, email, phone, address
             except Exception as smtp_err:
                 print(f"[EMAIL DISPATCH WARNING] SMTP send failed: {smtp_err}. Attempting Web3Forms API fallback...")
 
-        # 2. Web3Forms API fallback
+        # 2. Formspree API dispatch (Instant Zero-Setup Delivery)
+        formspree_url = os.getenv("FORMSPREE_ENDPOINT", "https://formspree.io/f/mbdnnrwj")
         try:
+            import ssl
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+
             payload = {
-                "access_key": web3_key,
-                "subject": subject,
-                "from_name": "TEGL Retail Store",
-                "name": customer_name,
-                "email": email,
-                "to_email": owner_email,
+                "_subject": subject,
+                "order_id": f"#{order_id}",
+                "customer_name": customer_name,
+                "customer_email": email,
+                "phone": phone,
+                "delivery_address": address,
+                "total_amount": f"₹{total_amount:.2f}",
+                "items_ordered": items_summary,
                 "message": message_body
             }
             req = urllib.request.Request(
-                "https://api.web3forms.com/submit",
+                formspree_url,
                 data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"}
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                }
             )
-            with urllib.request.urlopen(req, timeout=10) as response:
+            with urllib.request.urlopen(req, timeout=12, context=ssl_context) as response:
                 res_body = response.read().decode('utf-8')
-                print(f"[EMAIL DISPATCH] Web3Forms API response status: {response.status}, response: {res_body}")
+                print(f"[EMAIL DISPATCH SUCCESS] Formspree API response status: {response.status}, response: {res_body}")
         except Exception as err:
-            print(f"[EMAIL DISPATCH ERROR] Failed to send order email via Web3Forms: {err}")
+            print(f"[EMAIL DISPATCH ERROR] Failed to send order email via Formspree: {err}")
 
     threading.Thread(target=run, daemon=True).start()
 
