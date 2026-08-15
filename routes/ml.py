@@ -1,10 +1,30 @@
 from flask import Blueprint, request, jsonify, send_file
-from models import db, Order, Transaction, TransactionItem, Product, Review
+from models import db, Order, Transaction, TransactionItem, Product, Review, DynamicPricingPrediction, BudgetPredictionResult, PurchaseItem, Purchase, Discrepancy, PurchaseBill
 from datetime import datetime
 from extensions import dashboard_cache, ai_cache
 from routes.auth import get_current_user
 import json
-from ml_models import predict_dynamic_price, get_budget_recommendation, explain_demand_prediction, train_models
+import os
+import random
+import pandas as pd
+from sqlalchemy import func
+from ml_models import predict_dynamic_price, predict_demand, train_dynamic_pricing_model, train_demand_prediction_model
+
+def explain_demand_prediction(*args, **kwargs):
+    from app import explain_demand_prediction as fn
+    return fn(*args, **kwargs)
+
+def get_festival_for_month(*args, **kwargs):
+    from app import get_festival_for_month as fn
+    return fn(*args, **kwargs)
+
+def db_strftime(*args, **kwargs):
+    from app import db_strftime as fn
+    return fn(*args, **kwargs)
+
+def parse_bill_pdf(*args, **kwargs):
+    from app import parse_bill_pdf as fn
+    return fn(*args, **kwargs)
 
 ml_bp = Blueprint("ml", __name__)
 
