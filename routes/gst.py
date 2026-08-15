@@ -802,7 +802,7 @@ def gst_classifier_lookup():
     )
 
     payload = {
-        "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip(),
+        "model": os.getenv("GROQ_MODEL", "").strip() or "llama-3.3-70b-versatile",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.2,
         "max_tokens": 200,
