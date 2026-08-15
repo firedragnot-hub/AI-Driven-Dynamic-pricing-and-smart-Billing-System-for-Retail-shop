@@ -1,10 +1,17 @@
 from flask import Blueprint, request, jsonify, send_file
-from models import db, GSTConfig, GSTPurchase, GSTExpense, Transaction, Order
+from models import db, BusinessConfig, Purchase, Expense, Transaction, Order, Product, GstCategoryMapping
 from datetime import datetime
 from extensions import dashboard_cache
 from routes.auth import get_current_user
-from utils import calculate_sales_tax_breakdown
 import os
+
+def calculate_sales_tax_breakdown(*args, **kwargs):
+    from app import calculate_sales_tax_breakdown as fn
+    return fn(*args, **kwargs)
+
+def compute_gst_summary_data(*args, **kwargs):
+    from app import compute_gst_summary_data as fn
+    return fn(*args, **kwargs)
 
 gst_bp = Blueprint("gst", __name__)
 

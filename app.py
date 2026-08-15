@@ -35,6 +35,18 @@ from routes.auth import auth_bp, get_current_user, limiter
 limiter.init_app(app)
 app.register_blueprint(auth_bp)
 
+from routes.gst import gst_bp
+app.register_blueprint(gst_bp)
+
+from routes.ml import ml_bp
+app.register_blueprint(ml_bp)
+
+from routes.orders import orders_bp
+app.register_blueprint(orders_bp)
+
+from routes.products import products_bp
+app.register_blueprint(products_bp)
+
 import threading
 import time
 
