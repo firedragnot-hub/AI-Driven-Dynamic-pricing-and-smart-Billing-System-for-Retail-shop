@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
 const Dashboard = lazy(() => import('./components/Dashboard'));
@@ -10,8 +10,8 @@ const OrdersList = lazy(() => import('./components/OrdersList'));
 const GSTCompliance = lazy(() => import('./components/GSTCompliance'));
 const FinancialDashboard = lazy(() => import('./components/FinancialDashboard'));
 const ReviewsList = lazy(() => import('./components/ReviewsList'));
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';
-import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield, Menu, X } from 'lucide-react';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser, SignIn, SignUp, useClerk } from '@clerk/clerk-react';
+import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield, Menu, X, FileText } from 'lucide-react';
 import './App.css';
 
 // Component for verification email landing page
@@ -101,10 +101,13 @@ export default function App() {
   // Safely access Clerk user state when ClerkProvider is active
   let clerkSignedIn = false;
   let clerkUser = null;
+  let clerkSignOut = null;
   try {
     const clerk = useUser();
     clerkSignedIn = clerk.isSignedIn;
     clerkUser = clerk.user;
+    const { signOut } = useClerk();
+    clerkSignOut = signOut;
   } catch (e) {
     // ClerkProvider is not active in context
   }
@@ -239,6 +242,19 @@ export default function App() {
   const [notifications, setNotifications] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
+  const notifRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [notifRef]);
 
   const fetchNotifications = async () => {
     if (!token) return;
@@ -259,7 +275,7 @@ export default function App() {
   useEffect(() => {
     if (token && user && user.role === 'admin') {
       fetchNotifications();
-      const interval = setInterval(fetchNotifications, 30000);
+      const interval = setInterval(fetchNotifications, 60000);
       return () => clearInterval(interval);
     }
   }, [token, user]);
@@ -270,7 +286,13 @@ export default function App() {
       const res = await fetch('/api/products', { headers });
       if (res.ok) {
         const data = await res.json();
-        setProducts(data);
+        if (Array.isArray(data)) {
+          setProducts(data);
+        } else if (data && Array.isArray(data.products)) {
+          setProducts(data.products);
+        } else {
+          setProducts([]);
+        }
       }
     } catch (e) {
       console.error('Error fetching products:', e);
@@ -459,7 +481,7 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setToken('');
@@ -469,6 +491,15 @@ export default function App() {
     setEmail('');
     setPassword('');
     setAuthError('');
+    
+    if (clerkSignOut) {
+      try {
+        await clerkSignOut();
+      } catch (err) {
+        console.error("Clerk sign-out error:", err);
+      }
+    }
+    
     if (location.pathname.startsWith('/owner')) {
       navigate('/owner/login');
     } else {
@@ -583,6 +614,80 @@ export default function App() {
                 <ChevronRight size={18} />
               </button>
             </form>
+          ) : role === 'customer' ? (
+            <div className="clerk-auth-container" style={{ marginTop: '0.5rem', width: '100%' }}>
+              <SignIn 
+                routing="virtual"
+                appearance={{
+                  variables: {
+                    colorPrimary: '#f59e0b',
+                    colorBackground: 'transparent',
+                    colorText: '#0f172a',
+                    colorTextSecondary: '#475569',
+                    borderRadius: '12px',
+                    fontFamily: 'var(--font-body)',
+                  },
+                  elements: {
+                    cardBox: {
+                      boxShadow: 'none',
+                      border: 'none',
+                      width: '100%',
+                      background: 'transparent',
+                      backgroundColor: 'transparent',
+                    },
+                    card: {
+                      boxShadow: 'none',
+                      border: 'none',
+                      padding: '0',
+                      width: '100%',
+                      background: 'transparent',
+                      backgroundColor: 'transparent',
+                    },
+                    scrollBox: {
+                      background: 'transparent',
+                      backgroundColor: 'transparent',
+                    },
+                    rootBox: {
+                      width: '100%',
+                      background: 'transparent',
+                      backgroundColor: 'transparent',
+                    },
+                    header: {
+                      display: 'none', // Hide default Clerk headers since we show our custom brand header
+                    },
+                    socialButtonsBlockButton: {
+                      border: '1.5px solid var(--border-color)',
+                      borderRadius: '12px',
+                      backgroundColor: 'var(--accent-bg)',
+                    },
+                    formButtonPrimary: {
+                      backgroundColor: 'var(--primary)',
+                      borderRadius: '12px',
+                      fontSize: '0.9rem',
+                      textTransform: 'none',
+                    },
+                    formFieldInput: {
+                      border: '1.5px solid var(--border-color)',
+                      borderRadius: '12px',
+                      backgroundColor: 'var(--accent-bg)',
+                      color: 'var(--text-primary)',
+                      fontFamily: 'var(--font-body)',
+                    },
+                    footer: {
+                      background: 'transparent',
+                      backgroundColor: 'transparent',
+                    },
+                    footerAction: {
+                      background: 'transparent',
+                      backgroundColor: 'transparent',
+                    },
+                    footerActionLink: {
+                      color: 'var(--primary-dark)',
+                    }
+                  }
+                }}
+              />
+            </div>
           ) : (
             <form onSubmit={handleAuth} className="auth-form">
               <h3>{authMode === 'login' ? 'Sign In' : 'Create Account'}</h3>
@@ -628,42 +733,18 @@ export default function App() {
                 {authLoading ? 'Verifying...' : (authMode === 'login' ? 'Login' : 'Sign Up')}
                 <ChevronRight size={18} />
               </button>
-
-              {/* Clerk Authentication Option - Customer Only */}
-              {role === 'customer' && (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', margin: '15px 0' }}>
-                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
-                    <span style={{ padding: '0 10px', fontSize: '0.8rem', color: 'var(--text-muted, #aaa)' }}>OR SIGN IN WITH CLERK</span>
-                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #eee)' }}></div>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
-                    <SignInButton mode="modal">
-                      <button type="button" className="auth-submit-btn" style={{ background: 'var(--secondary, #0f172a)', width: '100%' }}>
-                        Continue with Clerk
-                      </button>
-                    </SignInButton>
-                  </div>
-                </>
-              )}
             </form>
           )}
 
           <div className="auth-footer-toggle" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-            {verificationSent ? null : authMode === 'changePassword' ? (
-              <p><button onClick={() => { setAuthMode('login'); setAuthError(''); }}>Back to Sign In</button></p>
-            ) : (
-              <>
-                {role === 'customer' && authMode === 'login' && (
-                  <p>Don't have an account? <button onClick={() => { setAuthMode('register'); setAuthError(''); setTurnstileToken(''); }}>Create account</button></p>
-                )}
-                {role === 'customer' && authMode === 'register' && (
-                  <p>Already have an account? <button onClick={() => { setAuthMode('login'); setAuthError(''); setTurnstileToken(''); }}>Sign In</button></p>
-                )}
-                {role === 'customer' && (
+            {role === 'admin' && (
+              verificationSent ? null : authMode === 'changePassword' ? (
+                <p><button onClick={() => { setAuthMode('login'); setAuthError(''); }}>Back to Sign In</button></p>
+              ) : (
+                <>
                   <p>Forgot password? <button onClick={() => { setAuthMode('changePassword'); setAuthError(''); }}>Change password</button></p>
-                )}
-              </>
+                </>
+              )
             )}
             
             {/* Switch between Owner and Customer portals */}
@@ -734,17 +815,17 @@ export default function App() {
             <span className="badge-role">Owner Portal</span>
           </div>
           <div className="portal-user-meta" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative' }} ref={notifRef}>
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className={`notif-btn ${showNotifications ? 'active' : ''}`}
               >
                 <Bell size={18} color="var(--primary-dark)" />
-                {notifications && (notifications.pending_orders > 0 || notifications.low_stock > 0) && (
+                {notifications && (notifications.pending_orders > 0 || notifications.low_stock > 0 || notifications.discrepancies > 0) && (
                   <>
                     <span className="notif-pulse-ring" />
                     <span className="notif-badge">
-                      {Math.min(notifications.pending_orders + notifications.low_stock, 99)}
+                      {Math.min(notifications.pending_orders + notifications.low_stock + (notifications.discrepancies || 0), 99)}
                     </span>
                   </>
                 )}
@@ -822,7 +903,7 @@ export default function App() {
                           </p>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                           <div 
                             onClick={() => { setActiveTab('orders'); setShowNotifications(false); }}
                             style={{ 
@@ -874,6 +955,33 @@ export default function App() {
                             </div>
                             <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '3px' }}>
                               Low Stock Items
+                            </div>
+                          </div>
+                          
+                          <div 
+                            onClick={() => { setActiveTab('ml'); setShowNotifications(false); }}
+                            style={{ 
+                              background: notifications.discrepancies > 0 ? '#fef2f2' : '#f8fafc',
+                              border: notifications.discrepancies > 0 ? '1px solid #fecaca' : '1px solid #e2e8f0',
+                              borderRadius: '10px',
+                              padding: '11px 12px',
+                              cursor: 'pointer'
+                            }}
+                            className="hover-scale"
+                          >
+                            <div style={{ marginBottom: '4px' }}>
+                              <FileText size={18} color={notifications.discrepancies > 0 ? "#b91c1c" : "#0f172a"} style={{ strokeWidth: 1.8 }} />
+                            </div>
+                            <div style={{ 
+                              fontSize: '1.4rem', 
+                              fontWeight: '800', 
+                              color: notifications.discrepancies > 0 ? '#b91c1c' : '#0f172a',
+                              lineHeight: 1
+                            }}>
+                              {notifications.discrepancies || 0}
+                            </div>
+                            <div style={{ fontSize: '0.7rem', color: notifications.discrepancies > 0 ? '#b91c1c' : '#64748b', marginTop: '3px' }}>
+                              Bill Issues
                             </div>
                           </div>
                         </div>

@@ -139,7 +139,7 @@ export default function Dashboard({ products, token, setActiveTab }) {
   // Compute metrics
   const totalRevenue = dailySales.reduce((sum, item) => sum + item.revenue, 0);
   const totalTxCount = dailySales.reduce((sum, item) => sum + item.transaction_count, 0);
-  const lowStockProducts = products.filter(p => p.stock_level < 15).length;
+  const lowStockProducts = Array.isArray(products) ? products.filter(p => p.stock_level < 15).length : 0;
 
   // Chart Options
   const commonOptions = {

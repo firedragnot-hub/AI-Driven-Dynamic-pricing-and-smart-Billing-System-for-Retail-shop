@@ -14,7 +14,7 @@ class User(db.Model):
     is_verified = db.Column(db.Boolean, default=False, nullable=False)
     verification_token = db.Column(db.String(255), nullable=True)
     
-    orders = db.relationship('Order', backref='user', lazy=True)
+    orders = db.relationship('Order', backref='user', lazy='selectin')
 
     def to_dict(self):
         return {
@@ -69,7 +69,7 @@ class Transaction(db.Model):
     notes = db.Column(db.Text, nullable=True)
     cashier = db.Column(db.String(80), default='Admin', nullable=True)
     
-    items = db.relationship('TransactionItem', backref='transaction', lazy=True, cascade="all, delete-orphan")
+    items = db.relationship('TransactionItem', backref='transaction', lazy='selectin', cascade="all, delete-orphan")
 
     def to_dict(self):
         return {
@@ -93,7 +93,7 @@ class TransactionItem(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     price_at_sale = db.Column(db.Float, nullable=False)
 
-    product = db.relationship('Product')
+    product = db.relationship('Product', lazy='selectin')
 
     def to_dict(self):
         return {
@@ -121,7 +121,7 @@ class Order(db.Model):
     total_amount = db.Column(db.Float, nullable=False)
     sale_type = db.Column(db.String(20), default='online', nullable=False) # 'online' or 'offline'
     
-    items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
+    items = db.relationship('OrderItem', backref='order', lazy='selectin', cascade="all, delete-orphan")
 
     def to_dict(self):
         return {
@@ -147,7 +147,7 @@ class OrderItem(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     price_at_sale = db.Column(db.Float, nullable=False)
 
-    product = db.relationship('Product')
+    product = db.relationship('Product', lazy='selectin')
 
     def to_dict(self):
         return {
@@ -224,7 +224,7 @@ class Review(db.Model):
     comment = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    product = db.relationship('Product', backref=db.backref('reviews', lazy=True, cascade="all, delete-orphan"))
+    product = db.relationship('Product', backref=db.backref('reviews', lazy='selectin', cascade="all, delete-orphan"))
 
     def to_dict(self):
         return {

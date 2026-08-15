@@ -44,6 +44,8 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
   const [posMode, setPosMode] = useState('billing'); // 'billing' or 'returns'
   const [cameraOpen, setCameraOpen] = useState(false);
   const [transactions, setTransactions] = useState([]);
+  const [txPage, setTxPage] = useState(1);
+  const [txTotalCount, setTxTotalCount] = useState(0);
   const [returnsList, setReturnsList] = useState([]);
   const [searchTxQuery, setSearchTxQuery] = useState('');
   const [selectedTx, setSelectedTx] = useState(null);
@@ -64,13 +66,23 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
     }
   };
 
-  const fetchTxHistory = async () => {
+  const fetchTxHistory = async (isAppend = false) => {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch('/api/transactions', { headers });
+      const res = await fetch(`/api/transactions?page=${txPage}&limit=25`, { headers });
       if (res.ok) {
         const data = await safeFetchJson(res);
-        if (Array.isArray(data)) setTransactions(data);
+        if (data.transactions) {
+          if (isAppend) {
+            setTransactions(prev => {
+              const newTxs = data.transactions.filter(t => !prev.some(p => p.id === t.id));
+              return [...prev, ...newTxs];
+            });
+          } else {
+            setTransactions(data.transactions);
+          }
+          setTxTotalCount(data.total_count);
+        }
       }
     } catch (e) {
       console.error("Error fetching transactions", e);
@@ -92,10 +104,10 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
 
   useEffect(() => {
     if (posMode === 'returns') {
-      fetchTxHistory();
-      fetchReturnsList();
+      fetchTxHistory(txPage > 1);
+      if (txPage === 1) fetchReturnsList();
     }
-  }, [posMode]);
+  }, [posMode, txPage]);
 
   const handleReturnItem = async (transactionId, productId, quantity, reason) => {
     if (!quantity || quantity <= 0) {
@@ -120,7 +132,8 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
       const data = await res.json();
       if (res.ok) {
         alert("Return processed successfully!");
-        fetchTxHistory();
+        setTxPage(1);
+        fetchTxHistory(false);
         fetchReturnsList();
         if (selectedTx && selectedTx.id === transactionId) {
           // Find the updated transaction in the refreshed list
@@ -215,7 +228,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
     window.addEventListener('online', handleOnlineStatus);
     window.addEventListener('offline', handleOnlineStatus);
     
-    // Heartbeat check every 5 seconds
+    // Heartbeat check every 15 seconds
     const interval = setInterval(async () => {
       if (simulatedOffline) {
         setPingStatus('offline');
@@ -232,7 +245,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
       } catch (e) {
         setPingStatus('offline');
       }
-    }, 5000);
+    }, 15000);
 
     return () => {
       window.removeEventListener('online', handleOnlineStatus);
@@ -308,13 +321,13 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
     }
   };
 
-  // Auto Product Refetch every 10 seconds
+  // Auto Product Refetch every 60 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       if (activeOnline) {
         syncInventoryDelta();
       }
-    }, 10000);
+    }, 60000);
     return () => clearInterval(interval);
   }, [activeOnline, lastSyncTime, localProducts]);
 
@@ -1087,6 +1100,22 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
                           </tr>
                         ))
                       }
+                      {transactions.length < txTotalCount && (
+                        <tr ref={(node) => {
+                            if (!node || loading) return;
+                            if (node._observer) node._observer.disconnect();
+                            node._observer = new IntersectionObserver(entries => {
+                              if (entries[0].isIntersecting) {
+                                setTxPage(p => p + 1);
+                              }
+                            }, { threshold: 1.0 });
+                            node._observer.observe(node);
+                          }}>
+                          <td colSpan="6" style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>
+                            Scroll for more
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

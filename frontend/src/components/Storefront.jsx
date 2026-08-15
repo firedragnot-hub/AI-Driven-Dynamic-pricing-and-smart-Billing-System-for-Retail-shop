@@ -1087,9 +1087,16 @@ export default function Storefront({ products, refreshProducts, token, user }) {
   const [lastOrder, setLastOrder] = useState(null);
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('All');
+  const [productPage, setProductPage] = useState(1);
 
   const categories = useMemo(() => { const cats = new Set(products.map((p) => p.category)); return ['All', ...Array.from(cats).sort()]; }, [products]);
   const filtered = useMemo(() => products.filter((p) => { const matchCat = catFilter === 'All' || p.category === catFilter; const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()); return matchCat && matchSearch; }), [products, search, catFilter]);
+  
+  useEffect(() => {
+    setProductPage(1);
+  }, [search, catFilter]);
+  
+  const visibleProducts = useMemo(() => filtered.slice(0, productPage * 25), [filtered, productPage]);
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
 
   const addToCart = (product) => setCart((prev) => { const cur = prev[product.id] || 0; if (cur >= product.stock_level) return prev; return { ...prev, [product.id]: cur + 1 }; });
@@ -1175,9 +1182,27 @@ export default function Storefront({ products, refreshProducts, token, user }) {
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.25rem' }}>
-                {filtered.map((p) => (
+                {visibleProducts.map((p) => (
                   <ProductCard key={p.id} product={p} cartQty={cart[p.id] || 0} onAdd={addToCart} onRemove={removeFromCart} />
                 ))}
+                {/* Infinite Scroll Sentinel */}
+                {visibleProducts.length < filtered.length && (
+                  <div 
+                    style={{ textAlign: 'center', padding: '2rem', gridColumn: '1 / -1' }}
+                    ref={(node) => {
+                      if (!node) return;
+                      if (node._observer) node._observer.disconnect();
+                      node._observer = new IntersectionObserver(entries => {
+                        if (entries[0].isIntersecting) {
+                          setProductPage(p => p + 1);
+                        }
+                      }, { threshold: 1.0 });
+                      node._observer.observe(node);
+                    }}
+                  >
+                    <span style={{ color: '#94a3b8' }}>Loading more...</span>
+                  </div>
+                )}
               </div>
             )}
           </>

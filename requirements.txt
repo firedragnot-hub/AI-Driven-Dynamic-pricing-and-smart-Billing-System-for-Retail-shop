@@ -12,7 +12,7 @@ python-dotenv
 gunicorn
 psycopg2-binary
 pypdf
-flask-socketio
+
 Flask-Limiter
 google-auth
 requests

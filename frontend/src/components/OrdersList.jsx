@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Eye, Printer, Check, X, FileText, Search, ArrowUpDown, Download } from 'lucide-react';
-import { io } from 'socket.io-client';
+
 
 export default function OrdersList({ token }) {
   const [orders, setOrders] = useState([]);
@@ -16,10 +16,10 @@ export default function OrdersList({ token }) {
 
   // Pagination State
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(100);
+  const [limit, setLimit] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (isAppend = false) => {
     setLoading(true);
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -34,7 +34,11 @@ export default function OrdersList({ token }) {
       const res = await fetch(`/api/orders?${params.toString()}`, { headers });
       if (res.ok) {
         const data = await res.json();
-        setOrders(data.orders || []);
+        if (isAppend) {
+          setOrders(prev => [...prev, ...(data.orders || [])]);
+        } else {
+          setOrders(data.orders || []);
+        }
         setTotalCount(data.total_count || 0);
       }
     } catch (e) {
@@ -45,27 +49,17 @@ export default function OrdersList({ token }) {
   };
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(page > 1);
   }, [search, statusFilter, sortBy, saleTypeFilter, page, limit, token]);
 
   useEffect(() => {
-    const socket = io();
-
-    socket.on('connect', () => {
-      console.log('Connected to WebSocket server');
-    });
-
-    socket.on('new_order', (order) => {
-      console.log('New order received via WebSocket:', order);
+    // Poll for new orders every 10 seconds to replace WebSocket for Vercel deployment
+    const pollInterval = setInterval(() => {
       fetchOrders();
-    });
-
-    socket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
-    });
-
+    }, 10000);
+    
     return () => {
-      socket.disconnect();
+      clearInterval(pollInterval);
     };
   }, [search, statusFilter, sortBy, saleTypeFilter, token]);
 
@@ -83,7 +77,7 @@ export default function OrdersList({ token }) {
         body: JSON.stringify({ status: newStatus })
       });
       if (res.ok) {
-        fetchOrders();
+        fetchOrders(false);
       } else {
         const err = await res.json();
         alert(err.error || 'Failed to update status');
@@ -519,7 +513,7 @@ export default function OrdersList({ token }) {
       </div>
 
       <div className="glass-panel">
-        {loading ? (
+        {loading && orders.length === 0 ? (
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -627,62 +621,38 @@ export default function OrdersList({ token }) {
         )}
       </div>
 
-      {/* Pagination Controls */}
+      {/* Infinite Scroll Sentinel */}
+      {orders.length < totalCount && (
+        <div 
+          style={{ textAlign: 'center', padding: '2rem' }}
+          ref={(node) => {
+            if (!node || loading) return;
+            if (node._observer) node._observer.disconnect();
+            node._observer = new IntersectionObserver(entries => {
+              if (entries[0].isIntersecting) {
+                setPage(p => p + 1);
+              }
+            }, { threshold: 1.0 });
+            node._observer.observe(node);
+          }}
+        >
+          {loading ? (
+            <div className="spinner"></div>
+          ) : (
+            <span style={{ color: 'var(--text-muted)' }}>Scroll for more</span>
+          )}
+        </div>
+      )}
+      
+      {/* Footer Info */}
       {!loading && orders.length > 0 && (
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          textAlign: 'center',
           marginTop: '1.5rem',
-          padding: '1.25rem',
-          background: 'rgba(255, 255, 255, 0.05)',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          backdropFilter: 'blur(10px)'
+          color: 'var(--text-muted)',
+          fontSize: '0.9rem'
         }}>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            Showing <strong style={{ color: 'var(--primary)' }}>{Math.min(totalCount, (page - 1) * limit + 1)}</strong> to <strong style={{ color: 'var(--primary)' }}>{Math.min(totalCount, page * limit)}</strong> of <strong style={{ color: 'var(--primary)' }}>{totalCount}</strong> orders
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Page Size:</span>
-            <select
-              value={limit}
-              onChange={e => {
-                setLimit(Number(e.target.value));
-                setPage(1);
-              }}
-              className="form-control"
-              style={{ width: '85px', padding: '0.25rem 0.5rem', marginBottom: 0, fontSize: '0.9rem', height: '35px' }}
-            >
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-              <option value="200">200</option>
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              className="btn btn-secondary"
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', opacity: page === 1 ? 0.5 : 1 }}
-            >
-              Previous
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={() => setPage(p => p + 1)}
-              disabled={page * limit >= totalCount}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', opacity: page * limit >= totalCount ? 0.5 : 1 }}
-            >
-              Next
-            </button>
-          </div>
+          Showing {orders.length} of {totalCount} orders
         </div>
       )}
 

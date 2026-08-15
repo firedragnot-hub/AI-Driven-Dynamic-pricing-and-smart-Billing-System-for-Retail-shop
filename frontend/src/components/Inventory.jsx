@@ -260,7 +260,7 @@ export default function Inventory({ products, refreshProducts, token }) {
               </tr>
             </thead>
             <tbody>
-              {products.map(p => (
+              {[...products].sort((a, b) => a.id - b.id).map(p => (
                 <tr key={p.id}>
                   <td>{p.id}</td>
                   <td style={{ fontWeight: 'bold' }}>{p.name}</td>

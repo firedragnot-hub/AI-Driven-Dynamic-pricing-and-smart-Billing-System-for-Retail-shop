@@ -133,17 +133,22 @@ export default function GSTCompliance({ token }) {
   const [eGstRate, setEGstRate] = useState(18.0);
   const [eItc, setEItc] = useState(true);
 
+  // Per-tab loading states for lazy loading
+  const [purchasesLoading, setPurchasesLoading] = useState(false);
+  const [expensesLoading, setExpensesLoading] = useState(false);
+  const [purchasesFetched, setPurchasesFetched] = useState(false);
+  const [expensesFetched, setExpensesFetched] = useState(false);
+
   const fetchAllData = async () => {
     setLoading(true);
     setError(null);
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
       
-      const [configRes, summaryRes, purchasesRes, expensesRes] = await Promise.all([
+      // Only fetch config + summary on initial load (minimum for Overview tab)
+      const [configRes, summaryRes] = await Promise.all([
         fetch('/api/gst/config', { headers }),
-        fetch('/api/gst/summary', { headers }),
-        fetch('/api/gst/purchases', { headers }),
-        fetch('/api/gst/expenses', { headers })
+        fetch('/api/gst/summary', { headers })
       ]);
 
       if (configRes.ok) {
@@ -160,28 +165,47 @@ export default function GSTCompliance({ token }) {
         throw new Error(`Failed to load summary details (Status: ${summaryRes.status})`);
       }
       
-      if (purchasesRes.ok) {
-        const purchasesData = await purchasesRes.json();
-        setPurchases(purchasesData);
-      } else {
-        throw new Error(`Failed to load purchases details (Status: ${purchasesRes.status})`);
-      }
-      
-      if (expensesRes.ok) {
-        const expensesData = await expensesRes.json();
-        setExpenses(expensesData);
-      } else {
-        throw new Error(`Failed to load expenses details (Status: ${expensesRes.status})`);
-      }
-      
-      // 5. Fetch Returns Details
-      fetchReturnDetails(selectedReturn);
-      
     } catch (e) {
       console.error("Error loading GST data: ", e);
       setError(e.message || "Failed to load compliance data from server.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPurchases = async () => {
+    if (purchasesFetched) return;
+    setPurchasesLoading(true);
+    try {
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch('/api/gst/purchases', { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setPurchases(data);
+        setPurchasesFetched(true);
+      }
+    } catch (e) {
+      console.error('Error loading purchases:', e);
+    } finally {
+      setPurchasesLoading(false);
+    }
+  };
+
+  const fetchExpenses = async () => {
+    if (expensesFetched) return;
+    setExpensesLoading(true);
+    try {
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch('/api/gst/expenses', { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setExpenses(data);
+        setExpensesFetched(true);
+      }
+    } catch (e) {
+      console.error('Error loading expenses:', e);
+    } finally {
+      setExpensesLoading(false);
     }
   };
 
@@ -227,17 +251,27 @@ export default function GSTCompliance({ token }) {
     fetchAllData();
   }, [token]);
 
+  // Lazy-load tab data on tab switch
   useEffect(() => {
     if (activeTab === 'pnl') {
       fetchPnL();
     } else if (activeTab === 'gst_ai') {
       fetchGstCategories();
+    } else if (activeTab === 'purchases') {
+      fetchPurchases();
+    } else if (activeTab === 'expenses') {
+      fetchExpenses();
+    } else if (activeTab === 'returns') {
+      fetchReturnDetails(selectedReturn);
     }
   }, [activeTab]);
 
   useEffect(() => {
-    fetchReturnDetails(selectedReturn);
+    if (activeTab === 'returns') {
+      fetchReturnDetails(selectedReturn);
+    }
   }, [selectedReturn]);
+
 
   const handleConfigSubmit = async (e) => {
     e.preventDefault();
@@ -313,7 +347,9 @@ export default function GSTCompliance({ token }) {
         setPInvoice('');
         setPDate('');
         setPItems([{ product_name: '', hsn_code: '', quantity: 1, price_at_purchase: 0, gst_rate: 18.0 }]);
-        fetchAllData();
+        setPurchasesFetched(false);
+        fetchPurchases();
+        fetchAllData(); // Refresh summary too
       } else {
         const err = await res.json();
         alert(`Error: ${err.error}`);
@@ -357,7 +393,9 @@ export default function GSTCompliance({ token }) {
         setEInvoice('');
         setEDate('');
         setEAmount(0);
-        fetchAllData();
+        setExpensesFetched(false);
+        fetchExpenses();
+        fetchAllData(); // Refresh summary too
       } else {
         const err = await res.json();
         alert(`Error: ${err.error}`);
@@ -379,7 +417,9 @@ export default function GSTCompliance({ token }) {
         headers
       });
       if (res.ok) {
-        fetchAllData();
+        setPurchasesFetched(false);
+        fetchPurchases();
+        fetchAllData(); // Refresh summary too
       }
     } catch (e) {
       console.error(e);
@@ -395,7 +435,9 @@ export default function GSTCompliance({ token }) {
         headers
       });
       if (res.ok) {
-        fetchAllData();
+        setExpensesFetched(false);
+        fetchExpenses();
+        fetchAllData(); // Refresh summary too
       }
     } catch (e) {
       console.error(e);

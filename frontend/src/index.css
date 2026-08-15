@@ -1592,3 +1592,91 @@ h1, h2, h3, h4 {
 @media screen {
   .print-area { display: none !important; }
 }
+
+/* Clerk Custom Styles to Blend with Theme */
+.cl-rootBox {
+  width: 100% !important;
+}
+
+.cl-card {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.cl-header {
+  display: none !important;
+}
+
+.cl-formButtonPrimary {
+  background-color: var(--primary) !important;
+  border-radius: var(--radius-md) !important;
+  font-family: var(--font-body) !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  text-transform: none !important;
+  box-shadow: var(--shadow-xs) !important;
+  transition: var(--transition-fast) !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background-color: var(--primary-dark) !important;
+}
+
+.cl-socialButtonsBlockButton {
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  background-color: var(--accent-bg) !important;
+  font-family: var(--font-body) !important;
+  font-weight: 500 !important;
+  color: var(--text-primary) !important;
+  transition: var(--transition-fast) !important;
+}
+
+.cl-socialButtonsBlockButton:hover {
+  background-color: var(--light) !important;
+}
+
+.cl-formFieldInput {
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  background-color: var(--accent-bg) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-body) !important;
+  transition: var(--transition-fast) !important;
+}
+
+.cl-formFieldInput:focus {
+  border-color: var(--primary) !important;
+  background-color: var(--surface) !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15) !important;
+}
+
+.cl-footerActionLink {
+  color: var(--primary-dark) !important;
+  font-weight: 600 !important;
+}
+
+.cl-footerActionLink:hover {
+  color: var(--primary) !important;
+}
+
+.cl-identityPreviewText {
+  color: var(--text-primary) !important;
+}
+
+.cl-identityPreviewEditButton {
+  color: var(--primary-dark) !important;
+}
+
+.cl-formResendCodeLink {
+  color: var(--primary-dark) !important;
+}
+
+.cl-verificationLink {
+  color: var(--primary-dark) !important;
+}
+

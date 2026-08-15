@@ -1,21 +1,29 @@
 import os
 import psycopg2
 import socket
+from dotenv import load_dotenv
 from app import app, db
 import models
+
+load_dotenv()
 
 # Set default socket timeout to 15 seconds to prevent hanging
 socket.setdefaulttimeout(15)
 
-NEON_URI = "postgresql://neondb_owner:npg_JXzE3RKW1PkF@ep-empty-bird-axkn3eqc-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require"
+# Fetch Neon URI dynamically from the environment
+NEON_URI = os.getenv("DATABASE_URL")
 
 def migrate():
+    if not NEON_URI:
+        print("Error: DATABASE_URL environment variable is not set.")
+        return
+        
     with app.app_context():
-        # Reference current sqlite engine
-        sqlite_engine = db.engine
+        # Explicitly create SQLite engine pointing to the local sqlite database
+        from sqlalchemy import create_engine
+        sqlite_engine = create_engine("sqlite:///retail.db")
 
         # Bind to Postgres (Neon)
-        from sqlalchemy import create_engine
         postgres_engine = create_engine(NEON_URI, connect_args={"connect_timeout": 10})
 
         # Create tables in Neon if they don't exist

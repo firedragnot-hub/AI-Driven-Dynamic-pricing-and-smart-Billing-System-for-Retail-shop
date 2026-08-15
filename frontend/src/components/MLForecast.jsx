@@ -117,6 +117,7 @@ export default function MLForecast({ token }) {
   const [reconciliationData, setReconciliationData] = useState(null);
   const [reconcilingPurchaseId, setReconcilingPurchaseId] = useState(null);
   const [reconcileLoading, setReconcileLoading] = useState(false);
+  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
 
   const handleUploadBill = async (purchaseId, file) => {
     if (!file) return;
@@ -236,6 +237,7 @@ export default function MLForecast({ token }) {
       });
       const data = await res.json();
       if (res.ok) {
+        setIsOrderPlaced(true);
         alert(data.message || 'Order placed successfully!');
         fetchOrderHistory();
       } else {
@@ -343,6 +345,7 @@ export default function MLForecast({ token }) {
     e.preventDefault();
     setBudgetLoading(true);
     setBudgetResult(null);
+    setIsOrderPlaced(false);
     try {
       const headers = {
         'Content-Type': 'application/json'
@@ -1236,51 +1239,61 @@ export default function MLForecast({ token }) {
               </>
             )}
 
-            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-              <button 
-                onClick={handleOrderAll}
-                className="btn btn-primary"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: 0 }}
-                disabled={orderLoading}
-              >
-                <ShoppingBag size={16} /> Order & Restock Recommended Items
-              </button>
-              <button 
-                onClick={handleDownloadPDF}
-                className="btn btn-secondary"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: 0 }}
-              >
-                <Download size={16} /> Export PDF
-              </button>
-              <button 
-                onClick={() => {
-                  if (!budgetResult || !budgetResult.items) return;
-                  let csvContent = "data:text/csv;charset=utf-8,";
-                  csvContent += "Product Name,Suggested Qty,Unit Cost,Total Cost,Expected Margin\n";
-                  budgetResult.items.forEach(item => {
-                    csvContent += `"${item.name}",${item.suggested_qty},${item.cost / item.suggested_qty},${item.cost},${item.expected_margin}\n`;
-                  });
-                  const encodedUri = encodeURI(csvContent);
-                  const link = document.createElement("a");
-                  link.setAttribute("href", encodedUri);
-                  link.setAttribute("download", "ML_Purchasing_Forecast.csv");
-                  document.body.appendChild(link);
-                  link.click();
-                  link.remove();
-                }}
-                className="btn btn-secondary"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: 0 }}
-              >
-                <Download size={16} /> Export Excel
-              </button>
-              <button 
-                onClick={() => setShowSupplierModal(true)}
-                className="btn btn-secondary"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: 0 }}
-              >
-                <Send size={16} /> Send to Supplier
-              </button>
-            </div>
+            {isOrderPlaced ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#ecfdf5', padding: '1.25rem', borderRadius: '12px', color: '#065f46', border: '1px solid #a7f3d0', marginBottom: '1.5rem' }}>
+                <span style={{ fontSize: '1.5rem' }}>✅</span>
+                <div>
+                  <h4 style={{ margin: 0, fontWeight: 'bold' }}>Your order has been placed!</h4>
+                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem' }}>The purchase order is now tracked in your history awaiting the supplier's bill.</p>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={handleOrderAll}
+                  className="btn btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: 0 }}
+                  disabled={orderLoading}
+                >
+                  <ShoppingBag size={16} /> Order & Restock Recommended Items
+                </button>
+                <button 
+                  onClick={handleDownloadPDF}
+                  className="btn btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: 0 }}
+                >
+                  <Download size={16} /> Export PDF
+                </button>
+                <button 
+                  onClick={() => {
+                    if (!budgetResult || !budgetResult.items) return;
+                    let csvContent = "data:text/csv;charset=utf-8,";
+                    csvContent += "Product Name,Suggested Qty,Unit Cost,Total Cost,Expected Margin\n";
+                    budgetResult.items.forEach(item => {
+                      csvContent += `"${item.name}",${item.suggested_qty},${item.cost / item.suggested_qty},${item.cost},${item.expected_margin}\n`;
+                    });
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "ML_Purchasing_Forecast.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                  }}
+                  className="btn btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: 0 }}
+                >
+                  <Download size={16} /> Export Excel
+                </button>
+                <button 
+                  onClick={() => setShowSupplierModal(true)}
+                  className="btn btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: 0 }}
+                >
+                  <Send size={16} /> Send to Supplier
+                </button>
+              </div>
+            )}
 
             <h4>Allocations Breakdown</h4>
             <div className="table-container" style={{ marginTop: '0.75rem' }}>
