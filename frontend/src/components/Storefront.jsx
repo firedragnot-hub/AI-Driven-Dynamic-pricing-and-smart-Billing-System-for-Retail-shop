@@ -204,6 +204,29 @@ const fetchReverseGeocode = async (lat, lon) => {
   return null;
 };
 
+const fetchAutocompleteSuggestions = async (query) => {
+  if (!query || query.trim().length < 3) return [];
+  const apiKey = import.meta.env.VITE_LOCATIONIQ_TOKEN;
+  try {
+    const url = apiKey 
+      ? `https://api.locationiq.com/v1/autocomplete?key=${apiKey}&q=${encodeURIComponent(query)}&limit=5&dedupe=1`
+      : `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      return (data || []).map(item => ({
+        display_name: item.display_name,
+        lat: item.lat,
+        lon: item.lon,
+        address: item.address || {}
+      }));
+    }
+  } catch (err) {
+    console.error("Autocomplete fetch failed:", err);
+  }
+  return [];
+};
+
 function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
   const productMap = useMemo(() => { const m = {}; products.forEach((p) => { m[p.id] = p; }); return m; }, [products]);
   const cartItems = Object.entries(cart).map(([id, qty]) => ({ product: productMap[parseInt(id)], qty })).filter(x => x.product);
@@ -238,8 +261,28 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [cardName, setCardName] = useState('');
-  const [paymentLoading, setPaymentLoading] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const handleAddressChange = async (e) => {
+    const val = e.target.value;
+    setForm(prev => ({ ...prev, address: val }));
+    if (val.trim().length >= 3) {
+      const list = await fetchAutocompleteSuggestions(val);
+      setSuggestions(list);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSelectSuggestion = (sug) => {
+    setForm(prev => ({ ...prev, address: sug.display_name }));
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
 
   const handleDetectLocation = () => {
     if (!navigator.geolocation) {
@@ -418,7 +461,32 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
             </div>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: '12px', top: '14px', color: '#94a3b8' }}><MapPin size={16} /></span>
-              <textarea name="address" value={form.address} onChange={handleChange} placeholder="Full street address, city, state, PIN..." rows={3} style={{ width: '100%', padding: '11px 12px 11px 36px', borderRadius: '10px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} onFocus={(e) => { e.target.style.borderColor = '#eab308'; }} onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; }} />
+              <textarea 
+                name="address" 
+                value={form.address} 
+                onChange={handleAddressChange} 
+                placeholder="Full street address, city, state, PIN (type for suggestions)..." 
+                rows={3} 
+                style={{ width: '100%', padding: '11px 12px 11px 36px', borderRadius: '10px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} 
+                onFocus={(e) => { e.target.style.borderColor = '#eab308'; if (suggestions.length > 0) setShowSuggestions(true); }} 
+                onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; setTimeout(() => setShowSuggestions(false), 250); }} 
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: '#fff', borderRadius: '10px', border: '1.5px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', marginTop: '4px', overflow: 'hidden' }}>
+                  {suggestions.map((sug, idx) => (
+                    <div 
+                      key={idx} 
+                      onMouseDown={() => handleSelectSuggestion(sug)} 
+                      style={{ padding: '10px 14px', fontSize: '0.82rem', color: '#334155', cursor: 'pointer', borderBottom: idx < suggestions.length - 1 ? '1px solid #f1f5f9' : 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#fefce8'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
+                    >
+                      <MapPin size={14} color="#d97706" style={{ flexShrink: 0 }} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sug.display_name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           {/* Payment Method Selector */}
