@@ -71,7 +71,17 @@ function ProductCard({ product, cartQty, onAdd, onRemove }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto' }}>
           <div>
             <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>{fmt(product.current_price)}</div>
-            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px' }}>{inStock ? `${product.stock_level} in stock` : 'Unavailable'}</div>
+            <div style={{ fontSize: '0.72rem', marginTop: '2px' }}>
+              {!inStock ? (
+                <span style={{ color: '#ef4444', fontWeight: 600 }}>Out of stock</span>
+              ) : product.stock_level <= 5 ? (
+                <span style={{ color: '#dc2626', fontWeight: 700 }}>
+                  🔥 Only {product.stock_level} left!
+                </span>
+              ) : (
+                <span style={{ color: '#16a34a', fontWeight: 600 }}>✓ In Stock</span>
+              )}
+            </div>
           </div>
           {inStock && (
             cartQty === 0 ? (
