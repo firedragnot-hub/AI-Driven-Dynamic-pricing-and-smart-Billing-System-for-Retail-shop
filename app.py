@@ -31,6 +31,11 @@ from extensions import dashboard_cache, ai_cache
 app = Flask(__name__)
 CORS(app)
 
+@app.route('/')
+@app.route('/health')
+def health_check():
+    return jsonify({"status": "online", "service": "retail-backend"}), 200
+
 from routes.auth import auth_bp, get_current_user, limiter
 limiter.init_app(app)
 app.register_blueprint(auth_bp)
