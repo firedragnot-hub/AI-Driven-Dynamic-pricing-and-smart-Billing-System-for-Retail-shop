@@ -276,10 +276,25 @@ export default function InvoiceTemplate({ order }) {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '80px', alignItems: 'center' }}>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '100px', alignItems: 'center', position: 'relative' }}>
           <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#374151' }}>For TEGL Electronics Pvt. Ltd.</span>
-          <div style={{ borderBottom: '1px solid #d1d5db', width: '150px', margin: '15px 0 5px 0' }}></div>
-          <span style={{ fontSize: '8.5px', color: '#6b7280' }}>Authorized Signatory</span>
+          <div style={{ position: 'relative', margin: '4px 0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <img 
+              src="/stamp.png" 
+              alt="TEGL Official Stamp" 
+              style={{ 
+                height: '72px', 
+                width: '72px', 
+                objectFit: 'contain', 
+                transform: 'rotate(-7deg)', 
+                opacity: 0.9,
+                mixBlendMode: 'multiply',
+                filter: 'contrast(1.1)'
+              }} 
+            />
+          </div>
+          <div style={{ borderBottom: '1px solid #d1d5db', width: '150px', marginBottom: '4px' }}></div>
+          <span style={{ fontSize: '8.5px', color: '#6b7280', fontWeight: 600 }}>Authorized Signatory & Seal</span>
         </div>
       </div>
     </div>
