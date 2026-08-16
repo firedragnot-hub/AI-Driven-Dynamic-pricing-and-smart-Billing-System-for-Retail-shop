@@ -572,7 +572,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
       const indexInQueue = updatedQueue.findIndex(q => q.uuid === tx.uuid);
       
       try {
-        const res = await fetch('/api/checkout', {
+        const res = await fetch('/api/checkout/offline', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -585,7 +585,9 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
             customer_name: tx.customer_name,
             notes: tx.notes,
             cashier: tx.cashier,
-            discount: tx.discount
+            discount: tx.discount,
+            pos_device_id: localStorage.getItem('posDeviceId') || 'POS-001',
+            is_offline_sync: true
           })
         });
 
@@ -1026,9 +1028,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
                               Resolve
                             </button>
                           )}
-                          <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: '0.75rem', marginBottom: 0 }} onClick={() => setSyncQueue(prev => prev.filter(q => q.uuid !== tx.uuid))}>
-                            Delete
-                          </button>
+
                         </td>
                       </tr>
                     );

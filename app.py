@@ -101,6 +101,8 @@ if db_url:
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+if os.getenv('SUPABASE_DB_URL'):
+    app.config['SQLALCHEMY_BINDS'] = {'supabase': os.getenv('SUPABASE_DB_URL')}
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 280,
@@ -780,7 +782,7 @@ def download_report():
             })
         df = pd.DataFrame(records)
         
-        for o in orders:
+        for o in orders[:200]:
             rows.append([
                 str(o.id),
                 o.customer_name[:15],
@@ -820,35 +822,41 @@ def download_report():
     elif report_type == 'profit':
         title = "PROFITABILITY REPORT"
         headers = ["Date", "Transactions", "Revenue (Rs.)", "Est. Cost (Rs.)", "Net Profit (Rs.)"]
-        txs = Transaction.query.all()
         
         records = []
-        daily_stats = {}
-        for t in txs:
-            d_str = t.timestamp.strftime('%Y-%m-%d')
-            if d_str not in daily_stats:
-                daily_stats[d_str] = {'revenue': 0.0, 'cost': 0.0, 'tx_count': 0}
-            
-            daily_stats[d_str]['revenue'] += t.total_amount
-            daily_stats[d_str]['tx_count'] += 1
-            for item in t.items:
-                cost = (item.product.base_cost if item.product else 0.0) * item.quantity
-                daily_stats[d_str]['cost'] += cost
-                
-        for day, val in sorted(daily_stats.items(), reverse=True):
-            profit = val['revenue'] - val['cost']
+        # Use SQL aggregation instead of loading all transactions + items into Python
+        date_expr = db_strftime('%Y-%m-%d', Transaction.timestamp)
+        daily_revenue = db.session.query(
+            date_expr.label('d'),
+            func.count(Transaction.id).label('tx_count'),
+            func.sum(Transaction.total_amount).label('revenue')
+        ).group_by(date_expr).all()
+        rev_map = {row[0]: {'tx_count': row[1], 'revenue': float(row[2] or 0)} for row in daily_revenue}
+        
+        daily_cost = db.session.query(
+            date_expr.label('d'),
+            func.sum(TransactionItem.quantity * Product.base_cost).label('cost')
+        ).join(TransactionItem, Transaction.id == TransactionItem.transaction_id
+        ).join(Product, TransactionItem.product_id == Product.id
+        ).group_by(date_expr).all()
+        cost_map = {row[0]: float(row[1] or 0) for row in daily_cost}
+        
+        for day in sorted(rev_map.keys(), reverse=True):
+            val = rev_map[day]
+            cost = cost_map.get(day, 0.0)
+            profit = val['revenue'] - cost
             records.append({
                 'Date': day,
                 'Transactions Count': val['tx_count'],
                 'Revenue': round(val['revenue'], 2),
-                'Estimated Cost': round(val['cost'], 2),
+                'Estimated Cost': round(cost, 2),
                 'Estimated Profit': round(profit, 2)
             })
             rows.append([
                 day,
                 str(val['tx_count']),
                 f"{val['revenue']:.2f}",
-                f"{val['cost']:.2f}",
+                f"{cost:.2f}",
                 f"{profit:.2f}"
             ])
         df = pd.DataFrame(records)
@@ -858,9 +866,17 @@ def download_report():
         headers = ["User ID", "Username", "Email", "Role", "Orders Count"]
         users = User.query.all()
         
+        # Batch count orders per user in a single SQL query instead of N+1
+        user_ids = [u.id for u in users]
+        order_counts = db.session.query(
+            Order.user_id,
+            func.count(Order.id)
+        ).filter(Order.user_id.in_(user_ids)).group_by(Order.user_id).all()
+        order_count_map = {row[0]: row[1] for row in order_counts}
+        
         records = []
         for u in users:
-            orders_count = Order.query.filter_by(user_id=u.id).count()
+            orders_count = order_count_map.get(u.id, 0)
             records.append({
                 'User ID': u.id,
                 'Username': u.username,
@@ -1532,7 +1548,6 @@ def support_chat():
     except Exception:
         reply = run_local_fallback(message, user_email)
         return jsonify({"reply": reply, "source": "fallback"}), 200
-00
 
 
 # --- GST & P&L Compliance endpoints ---
@@ -2216,6 +2231,11 @@ def parse_bill_pdf(file_path):
 # --- Smart Alerts Hub (Groq LLM) ---
 @app.route('/api/notifications/summary', methods=['GET'])
 def get_notifications_summary():
+    # Cache for 60s to avoid hitting Groq on every frontend poll
+    cached = dashboard_cache.get('notifications_summary')
+    if cached:
+        return jsonify(cached), 200
+    
     # 1. Gather stats
     pending_orders = Order.query.filter_by(status='Pending').count()
     low_stock = Product.query.filter(Product.stock_level < 5).count()
@@ -2281,13 +2301,15 @@ def get_notifications_summary():
         # Ignore and use fallback
         print("Groq API Call Error:", str(e))
         
-    return jsonify({
+    result = {
         'pending_orders': pending_orders,
         'low_stock': low_stock,
         'gst_days': gst_days,
         'itr_days': itr_days,
         'ai_summary': ai_msg
-    }), 200
+    }
+    dashboard_cache.set('notifications_summary', result)
+    return jsonify(result), 200
 
 # ----------------------------------------------------
 # RULE-BASED GST DATABASE + GROQ AI FALLBACK API

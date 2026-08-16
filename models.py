@@ -530,4 +530,22 @@ class GstCategoryMapping(db.Model):
         }
 
 
+# ── Supabase (Sync Buffer) ──
+class OfflineTransaction(db.Model):
+    __bind_key__ = 'supabase'
+    __tablename__ = 'offline_transactions'
+    id = db.Column(db.Integer, primary_key=True)
+    pos_device_id = db.Column(db.String(50), nullable=False)
+    sync_timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    sync_status = db.Column(db.String(20), default='pending')  # pending, synced, failed
+    transaction_data = db.Column(db.JSON, nullable=False)  # Full transaction payload
+    neon_transaction_id = db.Column(db.Integer, nullable=True)  # Link back to Neon
 
+class OfflineTransactionLog(db.Model):
+    __bind_key__ = 'supabase'
+    __tablename__ = 'offline_transaction_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    offline_transaction_id = db.Column(db.Integer, db.ForeignKey('offline_transactions.id'))
+    event = db.Column(db.String(50))  # 'received', 'processing', 'stock_deducted', 'completed', 'error'
+    message = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

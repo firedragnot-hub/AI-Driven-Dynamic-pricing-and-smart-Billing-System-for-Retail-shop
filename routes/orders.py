@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
-from models import db, Order, Transaction, TransactionItem, ReturnLog, OrderItem, Product
+from models import db, Order, Transaction, TransactionItem, ReturnLog, OrderItem, Product, User, OfflineTransaction, OfflineTransactionLog
+from sqlalchemy import func
 from datetime import datetime, timedelta
 from extensions import dashboard_cache
 from routes.auth import get_current_user
@@ -41,6 +42,8 @@ def checkout():
     total_amount = 0.0
     products_updates = []
     
+    # Resolve all products first
+    resolved_products = []
     for item in items_to_checkout:
         prod_id = item.get('product_id')
         barcode_val = item.get('barcode')
@@ -65,14 +68,24 @@ def checkout():
                 'product_id': product.id,
                 'available_stock': product.stock_level
             }), 409
-            
-        sales_count = db.session.query(func.sum(TransactionItem.quantity)).filter(TransactionItem.product_id == product.id).scalar() or 0
+        resolved_products.append((product, qty))
+    
+    # Batch fetch all sales counts in a single query instead of N+1
+    product_ids = [p.id for p, _ in resolved_products]
+    sales_counts_rows = db.session.query(
+        TransactionItem.product_id,
+        func.sum(TransactionItem.quantity)
+    ).filter(TransactionItem.product_id.in_(product_ids)).group_by(TransactionItem.product_id).all()
+    sales_count_map = {row[0]: int(row[1] or 0) for row in sales_counts_rows}
+    
+    for product, qty in resolved_products:
+        sales_count = sales_count_map.get(product.id, 0)
         price_at_sale = predict_dynamic_price(
             base_cost=product.base_cost,
             stock_level=product.stock_level,
             hour_of_day=hour_of_day,
             day_of_week=day_of_week,
-            sales_count=int(sales_count)
+            sales_count=sales_count
         )
         product.current_price = price_at_sale
         
@@ -134,7 +147,14 @@ def checkout():
 
 @orders_bp.route('/api/transactions', methods=['GET'])
 def get_transactions():
-    txs = Transaction.query.order_by(Transaction.timestamp.desc()).all()
+    page = request.args.get('page', type=int)
+    limit = request.args.get('limit', 100, type=int)
+    query = Transaction.query.order_by(Transaction.timestamp.desc())
+    if page:
+        total = query.count()
+        txs = query.limit(limit).offset((page - 1) * limit).all()
+        return jsonify({'transactions': [tx.to_dict() for tx in txs], 'total': total, 'page': page, 'limit': limit}), 200
+    txs = query.limit(limit).all()
     return jsonify([tx.to_dict() for tx in txs]), 200
 
 @orders_bp.route('/api/returns', methods=['POST'])
@@ -342,6 +362,8 @@ def create_order():
     total_amount = 0.0
     products_updates = []
     
+    # Resolve and validate all products first
+    resolved_products = []
     for item in items_to_order:
         prod_id = item.get('product_id')
         qty = item.get('quantity')
@@ -355,14 +377,24 @@ def create_order():
             
         if product.stock_level < qty:
             return jsonify({'error': f'Insufficient stock for {product.name}. Available: {product.stock_level}'}), 400
-            
-        sales_count = db.session.query(func.sum(TransactionItem.quantity)).filter(TransactionItem.product_id == product.id).scalar() or 0
+        resolved_products.append((product, qty))
+    
+    # Batch fetch all sales counts in a single query
+    product_ids = [p.id for p, _ in resolved_products]
+    sales_counts_rows = db.session.query(
+        TransactionItem.product_id,
+        func.sum(TransactionItem.quantity)
+    ).filter(TransactionItem.product_id.in_(product_ids)).group_by(TransactionItem.product_id).all()
+    sales_count_map = {row[0]: int(row[1] or 0) for row in sales_counts_rows}
+    
+    for product, qty in resolved_products:
+        sales_count = sales_count_map.get(product.id, 0)
         price_at_sale = predict_dynamic_price(
             base_cost=product.base_cost,
             stock_level=product.stock_level,
             hour_of_day=hour_of_day,
             day_of_week=day_of_week,
-            sales_count=int(sales_count)
+            sales_count=sales_count
         )
         product.current_price = price_at_sale
         
@@ -593,3 +625,109 @@ def request_return():
         'order': order.to_dict()
     }), 201
 
+@orders_bp.route('/api/checkout/offline', methods=['POST'])
+def checkout_offline():
+    """
+    Endpoint specifically for offline POS sync.
+    Writes to Supabase (fast), then processes in Neon (source of truth).
+    """
+    data = request.get_json()
+    cart = data.get('items', []) # 'items' from POS.jsx payload
+    pos_device_id = data.get('pos_device_id', 'unknown')
+    
+    # ── Step 1: Fast write to Supabase (sync buffer) ──
+    offline_tx = OfflineTransaction(
+        pos_device_id=pos_device_id,
+        transaction_data=data,
+        sync_status='pending'
+    )
+    db.session.add(offline_tx)
+    # Note: We need to specify the bind for commit. Wait, standard db.session.commit() commits all binds.
+    db.session.commit()
+    
+    # ── Step 2: Process in Neon (source of truth) ──
+    try:
+        from ml_models import predict_dynamic_price
+        now = datetime.now()
+        hour_of_day = now.hour
+        day_of_week = now.weekday()
+        
+        # Create transaction in Neon
+        transaction = Transaction(
+            total_amount=data.get('total_amount', sum(item.get('price_at_sale', 0) * item.get('quantity', 0) for item in cart)),
+            uuid=data.get('uuid'),
+            payment_method=data.get('payment_method', 'Cash'),
+            customer_name=data.get('customer_name', 'Counter Customer'),
+            notes=data.get('notes'),
+            cashier=data.get('cashier', 'Admin')
+        )
+        db.session.add(transaction)
+        
+        # Create corresponding Order for Manage Orders with 'offline' tag
+        db_order = Order(
+            customer_name=transaction.customer_name,
+            email='pos@store.com',
+            phone='0000000000',
+            address='In-Store Counter',
+            timestamp=datetime.utcnow(),
+            total_amount=transaction.total_amount,
+            status='Delivered', # Immediately Completed
+            sale_type='offline'
+        )
+        db.session.add(db_order)
+        db.session.flush()  # Get transaction.id without committing
+        
+        # Deduct stock and create items
+        for item in cart:
+            product = Product.query.get(item['product_id'])
+            if not product or product.stock_level < item['quantity']:
+                raise ValueError(f"Insufficient stock for {item.get('product_id')}")
+            
+            product.stock_level -= item['quantity']
+            tx_item = TransactionItem(
+                transaction_id=transaction.id,
+                product_id=item['product_id'],
+                quantity=item['quantity'],
+                price_at_sale=item.get('price_at_sale', 0)
+            )
+            db.session.add(tx_item)
+            order_item = OrderItem(
+                order_id=db_order.id,
+                product_id=product.id,
+                quantity=item['quantity'],
+                price_at_sale=item.get('price_at_sale', 0)
+            )
+            db.session.add(order_item)
+        
+        db.session.commit()  # This goes to Neon (default bind)
+        
+        # ── Step 3: Update Supabase with success ──
+        offline_tx.sync_status = 'synced'
+        offline_tx.neon_transaction_id = transaction.id
+        db.session.add(offline_tx)
+        db.session.commit()  # Supabase bind
+        
+        return jsonify({
+            'success': True,
+            'id': transaction.id,
+            'offline_sync_id': offline_tx.id
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        
+        # Log failure in Supabase
+        offline_tx.sync_status = 'failed'
+        db.session.add(offline_tx)
+        db.session.commit()
+        
+        # Add error log
+        error_log = OfflineTransactionLog(
+            offline_transaction_id=offline_tx.id,
+            event='error',
+            message=str(e)
+        )
+        db.session.add(error_log)
+        db.session.commit()
+        
+        return jsonify({'success': False, 'error': str(e), 'conflict': 'Insufficient' in str(e)}), 409 if 'Insufficient' in str(e) else 500
