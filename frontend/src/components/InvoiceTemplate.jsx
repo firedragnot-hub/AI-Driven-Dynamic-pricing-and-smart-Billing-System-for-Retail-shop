@@ -103,7 +103,7 @@ export default function InvoiceTemplate({ order }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '3px solid #1d4ed8', paddingBottom: '15px', marginBottom: '20px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/logo.png" alt="TEGL Logo" style={{ height: '40px', width: '40px', objectFit: 'contain' }} />
+            <img src="/logo-white.png" alt="TEGL Logo" style={{ height: '40px', width: '40px', objectFit: 'contain' }} />
             <div>
               <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#1d4ed8', letterSpacing: '1px' }}>TEGL</span>
               <span style={{ fontSize: '10px', color: '#6b7280', borderLeft: '1px solid #d1d5db', marginLeft: '8px', paddingLeft: '8px', textTransform: 'uppercase', fontWeight: 600 }}>Electronics Pvt. Ltd.</span>
