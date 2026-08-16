@@ -1134,8 +1134,11 @@ export default function App() {
           <main className="main-content">
             <Suspense fallback={
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: 'var(--text-muted)' }}>
-                <div style={{ fontSize: '1.8rem', animation: 'spin 1.5s linear infinite' }}>⏳</div>
-                <div style={{ marginTop: '16px', fontSize: '0.9rem', fontWeight: 500 }}>Loading Portal Module...</div>
+                <div className="tegl-t-loader-container">
+                  <div className="tegl-t-loader-ring"></div>
+                  <div className="tegl-t-logo-letter">T</div>
+                </div>
+                <div style={{ marginTop: '16px', fontSize: '0.9rem', fontWeight: 600, color: '#cd7f32' }}>Loading Module...</div>
               </div>
             }>
               {activeTab === 'dashboard' && <Dashboard products={products} token={token} setActiveTab={setActiveTab} />}
@@ -1158,8 +1161,11 @@ export default function App() {
       <div className="loading-screen">
         <div className="hs hs1"></div>
         <div className="hs hs2"></div>
-        <div className="loading-spinner"></div>
-        <p className="loading-text">Loading Smart Retail System...</p>
+        <div className="tegl-t-loader-container">
+          <div className="tegl-t-loader-ring"></div>
+          <div className="tegl-t-logo-letter">T</div>
+        </div>
+        <p className="loading-text" style={{ color: '#cd7f32', letterSpacing: '0.5px' }}>Loading Smart Retail System...</p>
       </div>
     );
   }

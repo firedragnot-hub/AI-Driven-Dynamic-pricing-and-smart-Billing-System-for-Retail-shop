@@ -726,6 +726,62 @@ h1, h2, h3, h4 {
   animation: spin 0.8s linear infinite;
 }
 
+/* Custom TEGL Bronze Gear T-Loader */
+.tegl-t-loader-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tegl-t-loader-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3.5px solid transparent;
+  border-top-color: #cd7f32;
+  border-right-color: #b87333;
+  border-bottom-color: #8c5a2b;
+  border-left-color: #e59866;
+  animation: teglRotate 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  box-shadow: 0 0 15px rgba(205, 127, 50, 0.3);
+}
+
+.tegl-t-loader-ring::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  border: 2.5px dashed #cd7f32;
+  opacity: 0.6;
+  animation: teglRotateReverse 2s linear infinite;
+}
+
+.tegl-t-logo-letter {
+  font-family: 'Poppins', 'Montserrat', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #e59866 0%, #cd7f32 50%, #8c5a2b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(205, 127, 50, 0.4));
+  z-index: 2;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+@keyframes teglRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes teglRotateReverse {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
 .loading-text {
   font-family: var(--font-title);
   font-size: 1rem;
