@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import InvoiceTemplate from './InvoiceTemplate';
 import { ShoppingCart, Search, Package, CheckCircle, Trash2, Plus, Minus, X, Filter, ArrowLeft, ClipboardList, Loader2, MapPin, Phone, Mail, User, CreditCard, ChevronRight } from 'lucide-react';
 
 const fmt = (val) =>
@@ -545,7 +547,7 @@ function OrderSuccess({ order, onContinue }) {
   );
 }
 
-function MyOrders({ token, user }) {
+function MyOrders({ token, user, onPrintInvoice }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -623,23 +625,10 @@ function MyOrders({ token, user }) {
   };
 
   const handleDownloadInvoice = async (orderId) => {
-    try {
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch(`/api/orders/${orderId}/invoice`, { headers });
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Invoice_Order_${orderId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } else {
-        alert("Failed to download invoice.");
-      }
-    } catch (err) {
-      alert("Error downloading invoice.");
+    // Instead of downloading PDF, we just open the HTML print UI to match admin view.
+    const order = orders.find(o => o.id === orderId);
+    if (order && onPrintInvoice) {
+      onPrintInvoice(order);
     }
   };
 
@@ -1119,6 +1108,7 @@ export default function Storefront({ products, refreshProducts, token, user }) {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('All');
   const [productPage, setProductPage] = useState(1);
+  const [activePrintOrder, setActivePrintOrder] = useState(null);
 
   const categories = useMemo(() => { const cats = new Set(products.map((p) => p.category)); return ['All', ...Array.from(cats).sort()]; }, [products]);
   const filtered = useMemo(() => products.filter((p) => { const matchCat = catFilter === 'All' || p.category === catFilter; const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()); return matchCat && matchSearch; }), [products, search, catFilter]);
@@ -1134,6 +1124,14 @@ export default function Storefront({ products, refreshProducts, token, user }) {
   const removeFromCart = (productId) => setCart((prev) => { const cur = prev[productId] || 0; if (cur <= 1) { const next = { ...prev }; delete next[productId]; return next; } return { ...prev, [productId]: cur - 1 }; });
   const removeAllFromCart = (productId) => setCart((prev) => { const next = { ...prev }; delete next[productId]; return next; });
   const handleOrderSuccess = (order) => { setLastOrder(order); setCart({}); setView('success'); setShowCart(false); };
+
+  const handlePrintInvoice = (order) => {
+    setActivePrintOrder(order);
+    setTimeout(() => {
+      window.print();
+      setActivePrintOrder(null);
+    }, 500);
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--light)', position: 'relative' }}>
@@ -1160,7 +1158,7 @@ export default function Storefront({ products, refreshProducts, token, user }) {
       </div>
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem 2rem 4rem' }}>
-        {activeTab === 'orders' && <MyOrders token={token} user={user} />}
+        {activeTab === 'orders' && <MyOrders token={token} user={user} onPrintInvoice={handlePrintInvoice} />}
         {activeTab === 'addresses' && <MyAddresses token={token} user={user} />}
         {activeTab === 'returns' && <MyReturns token={token} user={user} />}
         {activeTab === 'shop' && view === 'success' && lastOrder && <OrderSuccess order={lastOrder} onContinue={() => { setView('list'); refreshProducts(); }} />}
@@ -1245,6 +1243,7 @@ export default function Storefront({ products, refreshProducts, token, user }) {
         @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
+      {activePrintOrder && createPortal(<InvoiceTemplate order={activePrintOrder} />, document.body)}
     </div>
   );
 }
