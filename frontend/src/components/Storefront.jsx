@@ -1138,17 +1138,20 @@ export default function Storefront({ products, refreshProducts, token, user }) {
       {showCart && <CartSidebar cart={cart} products={products} onAdd={addToCart} onRemove={removeFromCart} onRemoveAll={removeAllFromCart} onClose={() => setShowCart(false)} onCheckout={() => { setShowCart(false); setView('checkout'); setActiveTab('shop'); }} />}
 
       <div className="store-nav-strip">
-        <div style={{ display: 'flex', gap: '4px' }}>
-          {[
-            { key: 'shop', label: 'Shop', icon: '🛍️' },
-            { key: 'orders', label: 'My Orders', icon: '📦' },
-            { key: 'addresses', label: 'My Addresses', icon: '📍' },
-            { key: 'returns', label: 'My Returns', icon: '🔄' }
-          ].map(({ key, label, icon }) => (
-            <button key={key} onClick={() => { setActiveTab(key); setView('list'); }} className={`store-tab-btn ${activeTab === key ? 'active' : ''}`}>
-              {icon} {label}
-            </button>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img src="/logo.png" alt="TEGL Logo" style={{ height: '38px', width: '38px', objectFit: 'contain' }} />
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {[
+              { key: 'shop', label: 'Shop', icon: '🛍️' },
+              { key: 'orders', label: 'My Orders', icon: '📦' },
+              { key: 'addresses', label: 'My Addresses', icon: '📍' },
+              { key: 'returns', label: 'My Returns', icon: '🔄' }
+            ].map(({ key, label, icon }) => (
+              <button key={key} onClick={() => { setActiveTab(key); setView('list'); }} className={`store-tab-btn ${activeTab === key ? 'active' : ''}`}>
+                {icon} {label}
+              </button>
+            ))}
+          </div>
         </div>
         {activeTab === 'shop' && view === 'list' && (
           <button onClick={() => setShowCart(true)} className="btn btn-primary" style={{ padding: '0.5rem 1.125rem', fontSize: '0.85rem' }}>
