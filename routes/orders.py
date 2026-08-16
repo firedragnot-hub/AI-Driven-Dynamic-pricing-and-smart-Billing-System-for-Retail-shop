@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app as app
 from models import db, Order, Transaction, TransactionItem, ReturnLog, OrderItem, Product, User, OfflineTransaction, OfflineTransactionLog
 from sqlalchemy import func
 from datetime import datetime, timedelta
@@ -431,15 +431,19 @@ def create_order():
     db.session.commit()
     
     # Send email notification to owner asynchronously
-    send_order_email_notification(
-        order_id=db_order.id,
-        customer_name=customer_name,
-        email=email,
-        phone=phone,
-        address=address,
-        items_summary=items_summary,
-        total_amount=round(total_amount, 2)
-    )
+    try:
+        from app import send_order_email_notification
+        send_order_email_notification(
+            order_id=db_order.id,
+            customer_name=customer_name,
+            email=email,
+            phone=phone,
+            address=address,
+            items_summary=items_summary,
+            total_amount=round(total_amount, 2)
+        )
+    except Exception as e:
+        app.logger.error(f"Failed to send email notification: {e}")
     
     # Emit dynamic socket event for real-time dashboard updates
     try:

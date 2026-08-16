@@ -1236,6 +1236,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
                     <th>Qty Returned</th>
                     <th>Refund Amount</th>
                     <th>Reason</th>
+                    <th>Method</th>
                     <th>Timestamp</th>
                   </tr>
                 </thead>
@@ -1256,6 +1257,7 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
                             {ret.reason}
                           </span>
                         </td>
+                        <td>{ret.return_method || 'Store Drop-off'}</td>
                         <td>{new Date(ret.timestamp).toLocaleString()}</td>
                       </tr>
                     ))

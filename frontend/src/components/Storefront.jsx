@@ -585,7 +585,8 @@ function MyOrders({ token, user }) {
       return_type: 'Return',
       product_id: order.items && order.items.length > 0 ? order.items[0].product_id.toString() : '',
       quantity: 1,
-      reason: 'Defective / Damaged Product'
+      reason: 'Defective / Damaged Product',
+      return_method: 'Online Pickup'
     });
   };
 
@@ -602,7 +603,8 @@ function MyOrders({ token, user }) {
           return_type: returnForm.return_type,
           product_id: returnForm.product_id ? parseInt(returnForm.product_id) : null,
           quantity: parseInt(returnForm.quantity) || 1,
-          reason: returnForm.reason
+          reason: returnForm.reason,
+          return_method: returnForm.return_method
         })
       });
       const data = await res.json();
@@ -808,6 +810,34 @@ function MyOrders({ token, user }) {
               </select>
             </div>
             
+            <div>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Return Method</label>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setReturnForm({ ...returnForm, return_method: 'Store Drop-off' })}
+                  style={{
+                    flex: 1, padding: '10px', borderRadius: '8px', cursor: 'pointer',
+                    border: `2px solid ${returnForm.return_method === 'Store Drop-off' ? '#2563eb' : '#e2e8f0'}`,
+                    background: returnForm.return_method === 'Store Drop-off' ? '#eff6ff' : '#fff',
+                    color: returnForm.return_method === 'Store Drop-off' ? '#1e40af' : '#475569',
+                    fontWeight: '700'
+                  }}
+                >🏪 Store Drop-off</button>
+                <button
+                  type="button"
+                  onClick={() => setReturnForm({ ...returnForm, return_method: 'Online Pickup' })}
+                  style={{
+                    flex: 1, padding: '10px', borderRadius: '8px', cursor: 'pointer',
+                    border: `2px solid ${returnForm.return_method === 'Online Pickup' ? '#16a34a' : '#e2e8f0'}`,
+                    background: returnForm.return_method === 'Online Pickup' ? '#f0fdf4' : '#fff',
+                    color: returnForm.return_method === 'Online Pickup' ? '#166534' : '#475569',
+                    fontWeight: '700'
+                  }}
+                >🚚 Online Pickup</button>
+              </div>
+            </div>
+
             <div>
               <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Reason for {returnForm.return_type}</label>
               <select value={returnForm.reason} onChange={(e) => setReturnForm({ ...returnForm, reason: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem' }}>
@@ -1067,7 +1097,8 @@ function MyReturns({ token }) {
                 </div>
                 {ret.reason && (
                   <div style={{ fontSize: '0.8rem', color: '#64748b', background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '4px' }}>
-                    Reason: <i>{ret.reason}</i>
+                    Reason: <i>{ret.reason}</i><br/>
+                    Method: <b>{ret.return_method || 'Online Pickup'}</b>
                   </div>
                 )}
               </div>

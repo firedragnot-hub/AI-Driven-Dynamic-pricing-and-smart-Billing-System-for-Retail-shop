@@ -481,6 +481,7 @@ class ReturnLog(db.Model):
     refund_amount = db.Column(db.Float, nullable=False, default=0.0)
     reason = db.Column(db.String(255), nullable=True)
     return_type = db.Column(db.String(20), default='Return', nullable=False) # 'Return' or 'Replacement'
+    return_method = db.Column(db.String(50), default='Online Pickup', nullable=False) # 'Store Drop-off' or 'Online Pickup'
     status = db.Column(db.String(20), default='Pending', nullable=False) # 'Pending', 'Approved', 'Rejected'
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
@@ -499,6 +500,7 @@ class ReturnLog(db.Model):
             'refund_amount': self.refund_amount,
             'reason': self.reason,
             'return_type': self.return_type,
+            'return_method': getattr(self, 'return_method', 'Online Pickup'),
             'status': self.status,
             'timestamp': self.timestamp.isoformat() + 'Z'
         }
