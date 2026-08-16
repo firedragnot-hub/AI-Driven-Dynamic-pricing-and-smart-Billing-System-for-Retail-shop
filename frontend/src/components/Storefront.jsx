@@ -176,6 +176,34 @@ function CartSidebar({ cart, products, onAdd, onRemove, onRemoveAll, onClose, on
   );
 }
 
+const fetchReverseGeocode = async (lat, lon) => {
+  const apiKey = import.meta.env.VITE_LOCATIONIQ_TOKEN;
+  try {
+    const url = apiKey 
+      ? `https://us1.locationiq.com/v1/reverse?key=${apiKey}&lat=${lat}&lon=${lon}&format=json`
+      : `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      const addr = data.address || {};
+      const street = [addr.road, addr.suburb, addr.neighbourhood, addr.residential].filter(Boolean).join(', ') || '';
+      const city = addr.city || addr.town || addr.village || addr.county || addr.district || '';
+      const state = addr.state || '';
+      const pincode = addr.postcode || '';
+      return {
+        fullAddress: data.display_name || `${street}${street ? ', ' : ''}${city}${city ? ', ' : ''}${state} ${pincode}`,
+        street: street || data.display_name || '',
+        city,
+        state,
+        pincode
+      };
+    }
+  } catch (err) {
+    console.error("Geocoding fetch failed:", err);
+  }
+  return null;
+};
+
 function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
   const productMap = useMemo(() => { const m = {}; products.forEach((p) => { m[p.id] = p; }); return m; }, [products]);
   const cartItems = Object.entries(cart).map(([id, qty]) => ({ product: productMap[parseInt(id)], qty })).filter(x => x.product);
@@ -211,6 +239,35 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
   const [cardCvv, setCardCvv] = useState('');
   const [cardName, setCardName] = useState('');
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
+
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const result = await fetchReverseGeocode(latitude, longitude);
+        if (result && result.fullAddress) {
+          setForm(prev => ({
+            ...prev,
+            address: result.fullAddress
+          }));
+        } else {
+          alert("Could not determine address. Please enter manually.");
+        }
+        setLocating(false);
+      },
+      (err) => {
+        alert("Location access denied or unavailable. Please enter address manually.");
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   useEffect(() => {
     const fetchSaved = async () => {
@@ -335,7 +392,30 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
             </div>
           ))}
           <div>
-            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Delivery Address</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', margin: 0 }}>Delivery Address</label>
+              <button
+                type="button"
+                onClick={handleDetectLocation}
+                disabled={locating}
+                style={{
+                  background: '#fef3c7',
+                  border: '1px solid #f59e0b',
+                  color: '#92400e',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  cursor: locating ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                {locating ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <MapPin size={12} />}
+                {locating ? 'Detecting...' : '📍 Auto-Detect Location'}
+              </button>
+            </div>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: '12px', top: '14px', color: '#94a3b8' }}><MapPin size={16} /></span>
               <textarea name="address" value={form.address} onChange={handleChange} placeholder="Full street address, city, state, PIN..." rows={3} style={{ width: '100%', padding: '11px 12px 11px 36px', borderRadius: '10px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} onFocus={(e) => { e.target.style.borderColor = '#eab308'; }} onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; }} />
@@ -869,6 +949,37 @@ function MyAddresses({ token }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', address_line: '', city: '', pincode: '' });
   const [error, setError] = useState('');
+  const [locating, setLocating] = useState(false);
+
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const result = await fetchReverseGeocode(latitude, longitude);
+        if (result) {
+          setForm(prev => ({
+            ...prev,
+            address_line: result.street || result.fullAddress,
+            city: result.city || prev.city,
+            pincode: result.pincode || prev.pincode
+          }));
+        } else {
+          alert("Could not determine address. Please enter manually.");
+        }
+        setLocating(false);
+      },
+      (err) => {
+        alert("Location access denied or unavailable.");
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const fetchAddresses = async () => {
     setLoading(true);
@@ -982,7 +1093,30 @@ function MyAddresses({ token }) {
           </div>
 
           <div>
-            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Address Line</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', margin: 0 }}>Address Line</label>
+              <button
+                type="button"
+                onClick={handleDetectLocation}
+                disabled={locating}
+                style={{
+                  background: '#fef3c7',
+                  border: '1px solid #f59e0b',
+                  color: '#92400e',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  cursor: locating ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                {locating ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <MapPin size={12} />}
+                {locating ? 'Detecting...' : '📍 Auto-Detect Location'}
+              </button>
+            </div>
             <input type="text" value={form.address_line} onChange={(e) => setForm({ ...form, address_line: e.target.value })} placeholder="Apartment, Street address" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
