@@ -19,6 +19,11 @@ const catColor = (cat) => {
   return map[cat] || '#6b7280';
 };
 
+const cleanImageUrl = (url) => {
+  if (!url) return '';
+  return url.replace(/\/images\/W\/[^/]+\/images\/I\//, '/images/I/');
+};
+
 function ProductCard({ product, cartQty, onAdd, onRemove }) {
   const [imgError, setImgError] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -42,7 +47,7 @@ function ProductCard({ product, cartQty, onAdd, onRemove }) {
     >
       <div style={{ position: 'relative', height: '190px', backgroundColor: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         {!imgError && product.image_url ? (
-          <img src={product.image_url} alt={product.name} onError={() => setImgError(true)} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', padding: '12px' }} />
+          <img src={cleanImageUrl(product.image_url)} alt={product.name} onError={() => setImgError(true)} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', padding: '12px' }} />
         ) : (
           <div style={{ color: '#cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
             <Package size={44} />
@@ -139,7 +144,7 @@ function CartSidebar({ cart, products, onAdd, onRemove, onRemoveAll, onClose, on
               {cartItems.map(({ product, qty }) => (
                 <div key={product.id} style={{ display: 'flex', gap: '12px', padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', alignItems: 'center' }}>
                   <div style={{ width: '52px', height: '52px', background: '#fff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                    {product.image_url ? <img src={product.image_url} alt={product.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <Package size={22} color="#cbd5e1" />}
+                    {product.image_url ? <img src={cleanImageUrl(product.image_url)} alt={product.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <Package size={22} color="#cbd5e1" />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</div>
@@ -257,6 +262,7 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
   // Payment Integration Mock States
   const [paymentOpt, setPaymentOpt] = useState('cod'); // 'cod' or 'card'
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
