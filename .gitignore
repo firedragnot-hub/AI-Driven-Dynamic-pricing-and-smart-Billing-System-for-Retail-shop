@@ -10,6 +10,8 @@ retail.db
 
 # Environment variables
 .env
+*.env
+render.env
 .venv
 venv/
 ENV/

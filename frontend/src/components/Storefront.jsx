@@ -377,7 +377,7 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
       return; 
     }
     
-    if (paymentOpt === 'card') {
+    if (paymentOpt === 'card' || paymentOpt === 'upi') {
       setShowPaymentModal(true);
     } else {
       executeOrderPlacement();
@@ -492,11 +492,12 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
           {/* Payment Method Selector */}
           <div>
             <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Select Payment Method</label>
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <div 
                 onClick={() => setPaymentOpt('cod')} 
                 style={{ 
                   flex: 1, 
+                  minWidth: '120px',
                   padding: '12px', 
                   borderRadius: '10px', 
                   border: paymentOpt === 'cod' ? '2px solid #eab308' : '1.5px solid #e2e8f0', 
@@ -511,12 +512,34 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
                 }}
               >
                 <input type="radio" checked={paymentOpt === 'cod'} readOnly style={{ accentColor: '#eab308' }} />
-                Cash on Delivery (COD)
+                Cash on Delivery
+              </div>
+              <div 
+                onClick={() => setPaymentOpt('upi')} 
+                style={{ 
+                  flex: 1, 
+                  minWidth: '120px',
+                  padding: '12px', 
+                  borderRadius: '10px', 
+                  border: paymentOpt === 'upi' ? '2px solid #10b981' : '1.5px solid #e2e8f0', 
+                  background: paymentOpt === 'upi' ? '#ecfdf5' : '#fff', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  color: paymentOpt === 'upi' ? '#065f46' : '#475569'
+                }}
+              >
+                <input type="radio" checked={paymentOpt === 'upi'} readOnly style={{ accentColor: '#10b981' }} />
+                UPI QR Code
               </div>
               <div 
                 onClick={() => setPaymentOpt('card')} 
                 style={{ 
                   flex: 1, 
+                  minWidth: '120px',
                   padding: '12px', 
                   borderRadius: '10px', 
                   border: paymentOpt === 'card' ? '2px solid #eab308' : '1.5px solid #e2e8f0', 
@@ -531,7 +554,7 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
                 }}
               >
                 <input type="radio" checked={paymentOpt === 'card'} readOnly style={{ accentColor: '#eab308' }} />
-                Mock Credit Card / UPI
+                Credit Card
               </div>
             </div>
           </div>
@@ -559,122 +582,153 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
         </div>
       </div>
 
-      {/* Mock Payment Gateway Modal Overlay (Stripe Style) */}
+      {/* Mock Payment Gateway Modal Overlay */}
       {showPaymentModal && (
-        <>
-          <div onClick={() => setShowPaymentModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10000 }} />
-          <div 
-            style={{ 
-              position: 'fixed', 
-              top: '50%', 
-              left: '50%', 
-              transform: 'translate(-50%, -50%)', 
-              background: '#fff', 
-              borderRadius: '20px', 
-              boxShadow: '0 15px 50px rgba(0,0,0,0.2)', 
-              zIndex: 10001,
-              width: '420px',
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px'
-            }}
-          >
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: '20px', boxShadow: '0 15px 50px rgba(0,0,0,0.2)', zIndex: 10001, width: '420px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', textAlign: paymentOpt === 'upi' ? 'center' : 'left' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.4rem' }}>💳</span>
-                <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0f172a' }}>Stripe Checkout <span style={{ fontSize: '0.72rem', color: '#94a3b8', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px' }}>Test Mode</span></span>
+                <span style={{ fontSize: '1.4rem' }}>{paymentOpt === 'upi' ? '📱' : '💳'}</span>
+                <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0f172a' }}>
+                  {paymentOpt === 'upi' ? 'UPI Payment QR' : 'Stripe Checkout'}
+                </span>
               </div>
               <button onClick={() => setShowPaymentModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#94a3b8' }}>✕</button>
             </div>
 
-            <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.85rem', color: '#475569' }}>Total to Pay</span>
-              <span style={{ fontWeight: 800, color: '#0f172a' }}>{fmt(subtotal)}</span>
-            </div>
+            {paymentOpt === 'upi' ? (
+              <>
+                <div style={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: '#fff', padding: '14px', borderRadius: '14px' }}>
+                  <div style={{ fontSize: '0.78rem', textTransform: 'uppercase', opacity: 0.9 }}>Amount Due</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{fmt(subtotal)}</div>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>Payee: aman singh (amasingha3639@kotak)</div>
+                </div>
 
-            <form onSubmit={handleMockPaymentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div>
-                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Cardholder Name</label>
-                <input 
-                  type="text" 
-                  value={cardName} 
-                  onChange={e => setCardName(e.target.value)} 
-                  required 
-                  placeholder="John Doe" 
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Card Number</label>
-                <input 
-                  type="text" 
-                  value={cardNumber} 
-                  onChange={e => setCardNumber(e.target.value)} 
-                  required 
-                  placeholder="4242 4242 4242 4242" 
-                  maxLength={19}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Expiration (MM/YY)</label>
-                  <input 
-                    type="text" 
-                    value={cardExpiry} 
-                    onChange={e => setCardExpiry(e.target.value)} 
-                    required 
-                    placeholder="12/28" 
-                    maxLength={5}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
+                <div style={{ background: '#fff', padding: '12px', borderRadius: '16px', border: '2px dashed #10b981', display: 'inline-block', margin: '0 auto' }}>
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&data=${encodeURIComponent(`upi://pay?pa=amasingha3639@kotak&pn=aman%20singh&am=${subtotal.toFixed(2)}&tn=Online%20Store%20Order&cu=INR`)}`} 
+                    alt="UPI QR Code" 
+                    style={{ width: '200px', height: '200px', display: 'block', borderRadius: '8px' }} 
                   />
                 </div>
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>CVV</label>
-                  <input 
-                    type="password" 
-                    value={cardCvv} 
-                    onChange={e => setCardCvv(e.target.value)} 
-                    required 
-                    placeholder="***" 
-                    maxLength={4}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
-                  />
-                </div>
-              </div>
 
-              <button 
-                type="submit" 
-                disabled={paymentLoading} 
-                style={{ 
-                  marginTop: '12px',
-                  width: '100%', 
-                  padding: '14px', 
-                  background: paymentLoading ? '#fde68a' : '#635bff', // Stripe purple style!
-                  color: '#fff', 
-                  border: 'none', 
-                  borderRadius: '10px', 
-                  fontWeight: 800, 
-                  fontSize: '1rem', 
-                  cursor: paymentLoading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px'
-                }}
-              >
-                {paymentLoading ? (
-                  <>Processing Mock Payment...</>
-                ) : (
-                  <>Pay {fmt(subtotal)}</>
-                )}
-              </button>
-            </form>
+                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                  Scan using Google Pay, PhonePe, Paytm, or BHIM to complete payment.
+                </div>
+
+                <button 
+                  type="button" 
+                  disabled={paymentLoading} 
+                  onClick={() => {
+                    setPaymentLoading(true);
+                    setTimeout(() => {
+                      setPaymentLoading(false);
+                      setShowPaymentModal(false);
+                      executeOrderPlacement({ notes: 'Paid via Dynamic UPI QR Code (amasingha3639@kotak)' });
+                    }, 1200);
+                  }}
+                  style={{ 
+                    width: '100%', 
+                    padding: '14px', 
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+                    color: '#fff', 
+                    border: 'none', 
+                    borderRadius: '10px', 
+                    fontWeight: 800, 
+                    fontSize: '1rem', 
+                    cursor: paymentLoading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {paymentLoading ? 'Confirming Payment...' : 'I Have Completed UPI Payment'}
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.85rem', color: '#475569' }}>Total to Pay</span>
+                  <span style={{ fontWeight: 800, color: '#0f172a' }}>{fmt(subtotal)}</span>
+                </div>
+
+                <form onSubmit={handleMockPaymentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Cardholder Name</label>
+                    <input 
+                      type="text" 
+                      value={cardName} 
+                      onChange={e => setCardName(e.target.value)} 
+                      required 
+                      placeholder="John Doe" 
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Card Number</label>
+                    <input 
+                      type="text" 
+                      value={cardNumber} 
+                      onChange={e => setCardNumber(e.target.value)} 
+                      required 
+                      placeholder="4242 4242 4242 4242" 
+                      maxLength={19}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Expiration (MM/YY)</label>
+                      <input 
+                        type="text" 
+                        value={cardExpiry} 
+                        onChange={e => setCardExpiry(e.target.value)} 
+                        required 
+                        placeholder="12/28" 
+                        maxLength={5}
+                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>CVV</label>
+                      <input 
+                        type="password" 
+                        value={cardCvv} 
+                        onChange={e => setCardCvv(e.target.value)} 
+                        required 
+                        placeholder="***" 
+                        maxLength={4}
+                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
+                      />
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={paymentLoading} 
+                    style={{ 
+                      marginTop: '12px',
+                      width: '100%', 
+                      padding: '14px', 
+                      background: paymentLoading ? '#fde68a' : '#635bff',
+                      color: '#fff', 
+                      border: 'none', 
+                      borderRadius: '10px', 
+                      fontWeight: 800, 
+                      fontSize: '1rem', 
+                      cursor: paymentLoading ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    {paymentLoading ? <>Processing Mock Payment...</> : <>Pay {fmt(subtotal)}</>}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShoppingCart, Plus, Minus, Trash, CheckCircle, FileText, Search, 
   Wifi, WifiOff, RefreshCw, Barcode, User, Tag, CreditCard, Clipboard, 
-  Trash2, AlertTriangle, AlertCircle, Play 
+  Trash2, AlertTriangle, AlertCircle, Play, QrCode, Copy, Check, Smartphone 
 } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 
@@ -39,6 +39,13 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
   // Receipt/Checkout Modal
   const [checkoutResult, setCheckoutResult] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Dynamic UPI QR Code States
+  const [upiVpa, setUpiVpa] = useState('amasingha3639@kotak');
+  const [payeeName, setPayeeName] = useState('aman singh');
+  const [showUpiModal, setShowUpiModal] = useState(false);
+  const [copiedUpi, setCopiedUpi] = useState(false);
+  const [editUpiSettings, setEditUpiSettings] = useState(false);
 
   // New Returns & Barcode Scanner States
   const [posMode, setPosMode] = useState('billing'); // 'billing' or 'returns'
@@ -441,9 +448,17 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
   const { subtotal, discountAmount, totalTaxable, totalGst, totalAmount } = calculateCartDetails();
 
   // 4. Checkout handler (Online sync attempt first, fallback to offline)
-  const handleCheckout = async () => {
+  const handleCheckout = async (forceProceed = false) => {
     if (cart.length === 0) return;
+    
+    // Trigger Dynamic UPI QR Modal if payment is UPI and not yet confirmed
+    if (paymentMethod === 'UPI' && !forceProceed) {
+      setShowUpiModal(true);
+      return;
+    }
+
     setLoading(true);
+    setShowUpiModal(false);
 
     const transactionUUID = self.crypto.randomUUID();
     const invoicePayload = {
@@ -939,6 +954,34 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
                     </select>
                   </div>
 
+                  {paymentMethod === 'UPI' && (
+                    <div style={{
+                      background: 'rgba(99, 102, 241, 0.08)',
+                      border: '1px dashed #6366f1',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      marginBottom: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '8px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#6366f1', overflow: 'hidden' }}>
+                        <QrCode size={16} style={{ flexShrink: 0 }} />
+                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>UPI: <b>{upiVpa}</b></span>
+                      </div>
+                      <button 
+                        type="button"
+                        className="btn btn-secondary" 
+                        style={{ padding: '3px 8px', fontSize: '0.72rem', marginBottom: 0, height: 'auto', flexShrink: 0 }}
+                        onClick={() => setShowUpiModal(true)}
+                        disabled={cart.length === 0}
+                      >
+                        Preview QR
+                      </button>
+                    </div>
+                  )}
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.2rem', marginBottom: '1rem', borderTop: '1px dashed var(--panel-border)', paddingTop: '10px' }}>
                     <span>Total Amount:</span>
                     <span>₹{totalAmount.toFixed(2)}</span>
@@ -947,11 +990,25 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
 
                 <button 
                   className="btn btn-primary" 
-                  style={{ width: '100%', height: '42px', fontSize: '1rem' }} 
+                  style={{ 
+                    width: '100%', 
+                    height: '42px', 
+                    fontSize: '1rem',
+                    background: paymentMethod === 'UPI' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : undefined,
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }} 
                   disabled={cart.length === 0 || loading} 
-                  onClick={handleCheckout}
+                  onClick={() => handleCheckout()}
                 >
-                  {loading ? 'Processing...' : activeOnline ? 'Complete Cloud Checkout' : 'Complete Offline Checkout'}
+                  {loading ? 'Processing...' : paymentMethod === 'UPI' ? (
+                    <>
+                      <QrCode size={18} /> Generate UPI QR (₹{totalAmount.toFixed(2)})
+                    </>
+                  ) : activeOnline ? 'Complete Cloud Checkout' : 'Complete Offline Checkout'}
                 </button>
               </div>
             </div>
@@ -1320,6 +1377,173 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
             <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
               <button className="btn btn-secondary" style={{ marginBottom: 0 }} onClick={() => setCameraOpen(false)}>
                 Close Scanner
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dynamic UPI QR Code Modal */}
+      {showUpiModal && (
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
+          <div className="modal-content glass-panel" style={{ maxWidth: '440px', padding: '24px', textAlign: 'center', borderRadius: '20px', background: 'var(--panel-bg, #ffffff)', border: '1px solid var(--panel-border, #e2e8f0)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ background: '#ecfdf5', color: '#059669', padding: '8px', borderRadius: '12px', display: 'flex' }}>
+                  <QrCode size={22} />
+                </div>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Scan to Pay via UPI</h3>
+              </div>
+              <button 
+                type="button"
+                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: 'var(--text-muted)' }}
+                onClick={() => setShowUpiModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Bill Amount Badge */}
+            <div style={{ 
+              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', 
+              color: '#fff', 
+              padding: '14px 16px', 
+              borderRadius: '14px', 
+              marginBottom: '1.2rem',
+              boxShadow: '0 4px 16px rgba(16, 185, 129, 0.25)'
+            }}>
+              <div style={{ fontSize: '0.8rem', opacity: 0.9, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Amount Due</div>
+              <div style={{ fontSize: '2rem', fontWeight: 800, margin: '2px 0' }}>₹{totalAmount.toFixed(2)}</div>
+              <div style={{ fontSize: '0.78rem', opacity: 0.9 }}>Customer: {customerName}</div>
+            </div>
+
+            {/* Dynamic QR Code Image */}
+            {(() => {
+              const upiPayload = `upi://pay?pa=${encodeURIComponent(upiVpa)}&pn=${encodeURIComponent(payeeName)}&am=${totalAmount.toFixed(2)}&tn=${encodeURIComponent('Retail Shop Order')}&cu=INR`;
+              const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=10&data=${encodeURIComponent(upiPayload)}`;
+              return (
+                <div style={{ 
+                  background: '#ffffff', 
+                  padding: '16px', 
+                  borderRadius: '16px', 
+                  border: '2px dashed #10b981', 
+                  display: 'inline-block',
+                  marginBottom: '1rem',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.06)'
+                }}>
+                  <img 
+                    src={qrUrl} 
+                    alt="Dynamic UPI QR Code" 
+                    style={{ width: '210px', height: '210px', display: 'block', borderRadius: '8px' }} 
+                  />
+                </div>
+              );
+            })()}
+
+            {/* Payee Info & Copy */}
+            <div style={{ 
+              background: 'rgba(0,0,0,0.03)', 
+              border: '1px solid var(--panel-border, #e2e8f0)', 
+              borderRadius: '12px', 
+              padding: '10px 14px', 
+              marginBottom: '1rem',
+              fontSize: '0.85rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Payee Name:</span>
+                <span style={{ fontWeight: 600 }}>{payeeName}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-muted)' }}>UPI VPA:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#2563eb' }}>{upiVpa}</span>
+                  <button 
+                    type="button"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: copiedUpi ? '#10b981' : '#64748b' }}
+                    onClick={() => {
+                      navigator.clipboard.writeText(upiVpa);
+                      setCopiedUpi(true);
+                      setTimeout(() => setCopiedUpi(false), 2000);
+                    }}
+                    title="Copy UPI VPA"
+                  >
+                    {copiedUpi ? <Check size={14} /> : <Copy size={14} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* App Badges */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.72rem', background: '#e0f2fe', color: '#0369a1', padding: '4px 10px', borderRadius: '12px', fontWeight: 600 }}>Google Pay</span>
+              <span style={{ fontSize: '0.72rem', background: '#f3e8ff', color: '#7e22ce', padding: '4px 10px', borderRadius: '12px', fontWeight: 600 }}>PhonePe</span>
+              <span style={{ fontSize: '0.72rem', background: '#e0f2fe', color: '#0284c7', padding: '4px 10px', borderRadius: '12px', fontWeight: 600 }}>Paytm</span>
+              <span style={{ fontSize: '0.72rem', background: '#ffedd5', color: '#c2410c', padding: '4px 10px', borderRadius: '12px', fontWeight: 600 }}>BHIM UPI</span>
+            </div>
+
+            {/* Editable UPI Settings */}
+            <div style={{ marginBottom: '1.25rem', textAlign: 'left' }}>
+              <button 
+                type="button"
+                style={{ background: 'none', border: 'none', color: '#6366f1', fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                onClick={() => setEditUpiSettings(!editUpiSettings)}
+              >
+                {editUpiSettings ? "Close UPI Config" : "⚙️ Edit Payee UPI VPA / Name"}
+              </button>
+              {editUpiSettings && (
+                <div style={{ marginTop: '8px', background: 'rgba(99, 102, 241, 0.05)', padding: '12px', borderRadius: '10px', border: '1px dashed #6366f1', fontSize: '0.8rem' }}>
+                  <div style={{ marginBottom: '8px' }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Payee UPI VPA:</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      style={{ padding: '4px 8px', height: '30px', fontSize: '0.82rem', marginBottom: 0 }}
+                      value={upiVpa}
+                      onChange={e => setUpiVpa(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Payee Name:</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      style={{ padding: '4px 8px', height: '30px', fontSize: '0.82rem', marginBottom: 0 }}
+                      value={payeeName}
+                      onChange={e => setPayeeName(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Actions */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button 
+                type="button"
+                className="btn btn-primary" 
+                style={{ 
+                  width: '100%', 
+                  height: '46px', 
+                  fontSize: '1rem', 
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  fontWeight: 600
+                }}
+                onClick={() => handleCheckout(true)}
+              >
+                <CheckCircle size={18} /> Confirm UPI Payment & Complete Bill
+              </button>
+              <button 
+                type="button"
+                className="btn btn-secondary" 
+                style={{ width: '100%', marginBottom: 0 }}
+                onClick={() => setShowUpiModal(false)}
+              >
+                Cancel / Change Payment Method
               </button>
             </div>
           </div>
