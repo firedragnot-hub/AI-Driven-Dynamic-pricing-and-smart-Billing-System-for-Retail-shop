@@ -4,6 +4,45 @@ from datetime import datetime
 from sqlalchemy import func
 from extensions import dashboard_cache
 from routes.auth import get_current_user
+import os
+import urllib.request
+import json
+
+def generate_product_description(product_name):
+    api_key = os.getenv('GROQ_API_KEY')
+    if not api_key:
+        return ""
+        
+    prompt = f"You are a helpful product description assistant. The user wants to add a product named '{product_name}' to their store.\n\nIf you know this product and it is a real product (like a phone, electronics, etc.), provide a short, factual description (under 40 words) listing its main features (e.g. processor, camera, battery, etc.).\n\nIf you do not recognize the product, or it sounds like a generic/fake name, you MUST reply with EXACTLY this string and nothing else: 'It may be a copy so description not available'."
+    
+    payload = {
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [{'role': 'user', 'content': prompt}],
+        'temperature': 0.3,
+        'max_tokens': 100
+    }
+    
+    try:
+        req = urllib.request.Request(
+            'https://api.groq.com/openai/v1/chat/completions',
+            data=json.dumps(payload).encode('utf-8'),
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json'
+            },
+            method='POST'
+        )
+        response = urllib.request.urlopen(req, timeout=5)
+        response_data = json.loads(response.read().decode('utf-8'))
+        content = response_data['choices'][0]['message']['content'].strip()
+        if content.startswith('"') and content.endswith('"'):
+            content = content[1:-1]
+        if content.startswith("'") and content.endswith("'"):
+            content = content[1:-1]
+        return content
+    except Exception as e:
+        print(f"Error generating description: {e}")
+        return ""
 
 products_bp = Blueprint("products", __name__)
 
@@ -33,6 +72,10 @@ def create_product():
     base_cost = float(data['base_cost'])
     current_price = data.get('current_price', round(base_cost * 1.25, 2))
     
+    description = data.get('description', '').strip()
+    if not description:
+        description = generate_product_description(data['name'])
+    
     product = Product(
         name=data['name'],
         category=data['category'],
@@ -41,7 +84,7 @@ def create_product():
         stock_level=int(data['stock_level']),
         hsn_code=data.get('hsn_code', '84733099'),
         gst_rate=float(data.get('gst_rate', 18.0)),
-        description=data.get('description', '')
+        description=description
     )
     db.session.add(product)
     db.session.commit()
@@ -106,11 +149,11 @@ def get_products():
             pass
 
     sales_query = db.session.query(
-        TransactionItem.product_id,
+        Product.category,
         func.sum(TransactionItem.quantity).label('sales_count')
-    ).group_by(TransactionItem.product_id).all()
+    ).join(TransactionItem, Product.id == TransactionItem.product_id).group_by(Product.category).all()
     
-    sales_map = {prod_id: qty for prod_id, qty in sales_query}
+    sales_map = {category: int(qty or 0) for category, qty in sales_query}
     
     now = datetime.now()
     hour_of_day = now.hour
@@ -124,7 +167,7 @@ def get_products():
         
     result = []
     for p in products:
-        sales_count = int(sales_map.get(p.id, 0))
+        sales_count = sales_map.get(p.category, 0)
         predicted = predict_dynamic_price(
             base_cost=p.base_cost,
             stock_level=p.stock_level,

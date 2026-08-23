@@ -56,6 +56,9 @@ def predict_dynamic_price(base_cost, stock_level, hour_of_day, day_of_week, sale
     Predicts the dynamic price for a product.
     If the model doesn't exist, falls back to a heuristic pricing rule.
     """
+    if sales_count == 0:
+        return round(float(base_cost), 2)
+
     # Demand / Sales Count markup: +2% for every 3 sales, capped at 20%
     demand_markup = min(0.20, (sales_count // 3) * 0.02)
 

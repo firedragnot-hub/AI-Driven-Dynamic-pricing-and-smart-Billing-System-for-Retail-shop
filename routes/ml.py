@@ -42,13 +42,21 @@ def get_pricing_recommendations():
     hour_of_day = now.hour
     day_of_week = now.weekday()
     
+    sales_query = db.session.query(
+        Product.category,
+        func.sum(TransactionItem.quantity).label('sales_count')
+    ).join(TransactionItem, Product.id == TransactionItem.product_id).group_by(Product.category).all()
+    sales_map = {category: int(qty or 0) for category, qty in sales_query}
+    
     recommendations = []
     for p in products:
+        sales_count = sales_map.get(p.category, 0)
         suggested = predict_dynamic_price(
             base_cost=p.base_cost,
             stock_level=p.stock_level,
             hour_of_day=hour_of_day,
-            day_of_week=day_of_week
+            day_of_week=day_of_week,
+            sales_count=sales_count
         )
         
         # Build reason

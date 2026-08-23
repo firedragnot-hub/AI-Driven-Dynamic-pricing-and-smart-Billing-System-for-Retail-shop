@@ -71,15 +71,15 @@ def checkout():
         resolved_products.append((product, qty))
     
     # Batch fetch all sales counts in a single query instead of N+1
-    product_ids = [p.id for p, _ in resolved_products]
+    product_categories = list(set([p.category for p, _ in resolved_products]))
     sales_counts_rows = db.session.query(
-        TransactionItem.product_id,
+        Product.category,
         func.sum(TransactionItem.quantity)
-    ).filter(TransactionItem.product_id.in_(product_ids)).group_by(TransactionItem.product_id).all()
+    ).join(TransactionItem, Product.id == TransactionItem.product_id).filter(Product.category.in_(product_categories)).group_by(Product.category).all()
     sales_count_map = {row[0]: int(row[1] or 0) for row in sales_counts_rows}
     
     for product, qty in resolved_products:
-        sales_count = sales_count_map.get(product.id, 0)
+        sales_count = sales_count_map.get(product.category, 0)
         price_at_sale = predict_dynamic_price(
             base_cost=product.base_cost,
             stock_level=product.stock_level,
@@ -374,21 +374,20 @@ def create_order():
         product = Product.query.get(prod_id)
         if not product:
             return jsonify({'error': f'Product with ID {prod_id} not found'}), 404
-            
         if product.stock_level < qty:
             return jsonify({'error': f'Insufficient stock for {product.name}. Available: {product.stock_level}'}), 400
         resolved_products.append((product, qty))
     
     # Batch fetch all sales counts in a single query
-    product_ids = [p.id for p, _ in resolved_products]
+    product_categories = list(set([p.category for p, _ in resolved_products]))
     sales_counts_rows = db.session.query(
-        TransactionItem.product_id,
+        Product.category,
         func.sum(TransactionItem.quantity)
-    ).filter(TransactionItem.product_id.in_(product_ids)).group_by(TransactionItem.product_id).all()
+    ).join(TransactionItem, Product.id == TransactionItem.product_id).filter(Product.category.in_(product_categories)).group_by(Product.category).all()
     sales_count_map = {row[0]: int(row[1] or 0) for row in sales_counts_rows}
     
     for product, qty in resolved_products:
-        sales_count = sales_count_map.get(product.id, 0)
+        sales_count = sales_count_map.get(product.category, 0)
         price_at_sale = predict_dynamic_price(
             base_cost=product.base_cost,
             stock_level=product.stock_level,
