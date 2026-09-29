@@ -11,7 +11,7 @@ const GSTCompliance = lazy(() => import('./components/GSTCompliance'));
 const FinancialDashboard = lazy(() => import('./components/FinancialDashboard'));
 const ReviewsList = lazy(() => import('./components/ReviewsList'));
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser, SignIn, SignUp, useClerk } from '@clerk/clerk-react';
-import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield, Menu, X, FileText } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield, Menu, X, FileText, Eye } from 'lucide-react';
 import './App.css';
 
 // Component for verification email landing page
@@ -273,7 +273,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (token && user && user.role === 'admin') {
+    if (token && user && (user.role === 'admin' || user.role === 'guest')) {
       fetchNotifications();
       const interval = setInterval(fetchNotifications, 60000);
       return () => clearInterval(interval);
@@ -434,7 +434,7 @@ export default function App() {
       setUser(data.user);
       
       // Default tab/path based on role
-      if (data.user.role === 'admin') {
+      if (data.user.role === 'admin' || data.user.role === 'guest') {
         setActiveTab('dashboard');
         navigate('/owner/dashboard');
       } else {
@@ -446,6 +446,24 @@ export default function App() {
     } finally {
       setAuthLoading(false);
     }
+  };
+
+  const handleGuestOwnerLogin = () => {
+    const guestUser = {
+      id: 'guest_owner',
+      username: 'Guest Viewer',
+      email: 'guest@store.local',
+      role: 'guest',
+      is_guest: true,
+      is_verified: true
+    };
+    const guestToken = 'guest_token_' + Date.now();
+    localStorage.setItem('token', guestToken);
+    localStorage.setItem('user', JSON.stringify(guestUser));
+    setToken(guestToken);
+    setUser(guestUser);
+    setActiveTab('dashboard');
+    navigate('/owner/dashboard');
   };
 
 
@@ -733,6 +751,27 @@ export default function App() {
                 {authLoading ? 'Verifying...' : (authMode === 'login' ? 'Login' : 'Sign Up')}
                 <ChevronRight size={18} />
               </button>
+
+              {role === 'admin' && authMode === 'login' && (
+                <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', margin: '0.75rem 0', gap: '0.75rem' }}>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #e2e8f0)' }}></div>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted, #94a3b8)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>or demo access</span>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color, #e2e8f0)' }}></div>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={handleGuestOwnerLogin}
+                    className="auth-guest-btn"
+                  >
+                    <Eye size={17} style={{ color: '#2563eb' }} />
+                    <span>Login as Guest (View Only)</span>
+                  </button>
+                  <p style={{ fontSize: '0.72rem', color: 'var(--text-muted, #64748b)', marginTop: '6px', lineHeight: '1.4' }}>
+                    Explore the full Owner Portal in read-only mode without credentials.
+                  </p>
+                </div>
+              )}
             </form>
           )}
 
@@ -812,7 +851,9 @@ export default function App() {
             </button>
             <img src="/logo.png" alt="TEGL Logo" className="portal-logo-img" />
             <span className="brand-name">TEGL Retail</span>
-            <span className="badge-role">Owner Portal</span>
+            <span className={`badge-role ${user?.role === 'guest' ? 'badge-role-guest' : ''}`}>
+              {user?.role === 'guest' ? 'Guest (Read Only)' : 'Owner Portal'}
+            </span>
           </div>
           <div className="portal-user-meta" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <div style={{ position: 'relative' }} ref={notifRef}>
@@ -1058,13 +1099,39 @@ export default function App() {
                 </div>
               )}
             </div>
-            <div className="user-avatar">{user.username?.charAt(0)?.toUpperCase() || 'U'}</div>
+            <div className="user-avatar" style={user?.role === 'guest' ? { background: '#2563eb' } : {}}>{user.username?.charAt(0)?.toUpperCase() || 'U'}</div>
             <span className="user-welcome">Hello, <b>{user.username}</b></span>
             <button className="logout-btn" onClick={handleLogout}>
               <LogOut size={16} /> Logout
             </button>
           </div>
         </header>
+
+        {/* Guest Mode Informational Banner */}
+        {user?.role === 'guest' && (
+          <div className="guest-notice-banner">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className="guest-notice-badge">Guest Mode</span>
+              <span>You are viewing the Owner Portal in <strong>Read-Only Mode</strong>. You can browse dashboards, inventory, reports, and AI analytics, but cannot modify records or checkout.</span>
+            </div>
+            <button 
+              onClick={handleLogout}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.4)',
+                color: '#fff',
+                padding: '0.3rem 0.75rem',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              Sign In as Owner
+            </button>
+          </div>
+        )}
 
         <div className="app-container">
           {mobileMenuOpen && (
@@ -1142,11 +1209,11 @@ export default function App() {
               </div>
             }>
               {activeTab === 'dashboard' && <Dashboard products={products} token={token} setActiveTab={setActiveTab} />}
-              {activeTab === 'pos' && <POS products={products} refreshProducts={fetchProducts} token={token} />}
-              {activeTab === 'inventory' && <Inventory products={products} refreshProducts={fetchProducts} token={token} />}
-              {activeTab === 'orders' && <OrdersList token={token} />}
-              {activeTab === 'ml' && <MLForecast token={token} />}
-              {activeTab === 'gst' && <GSTCompliance token={token} />}
+              {activeTab === 'pos' && <POS products={products} refreshProducts={fetchProducts} token={token} user={user} />}
+              {activeTab === 'inventory' && <Inventory products={products} refreshProducts={fetchProducts} token={token} user={user} />}
+              {activeTab === 'orders' && <OrdersList token={token} user={user} />}
+              {activeTab === 'ml' && <MLForecast token={token} user={user} />}
+              {activeTab === 'gst' && <GSTCompliance token={token} user={user} />}
               {activeTab === 'finance' && <FinancialDashboard token={token} />}
               {activeTab === 'reviews' && <ReviewsList token={token} />}
             </Suspense>
@@ -1202,7 +1269,7 @@ export default function App() {
         path="/owner/login" 
         element={
           token && user ? (
-            user.role === 'admin' ? <Navigate to="/owner/dashboard" replace /> : <Navigate to="/" replace />
+            (user.role === 'admin' || user.role === 'guest') ? <Navigate to="/owner/dashboard" replace /> : <Navigate to="/" replace />
           ) : (
             renderAuthPage('admin')
           )
@@ -1213,7 +1280,7 @@ export default function App() {
         element={
           !token || !user ? (
             <Navigate to="/owner/login" replace />
-          ) : user.role !== 'admin' ? (
+          ) : (user.role !== 'admin' && user.role !== 'guest') ? (
             <Navigate to="/" replace />
           ) : (
             renderOwnerPortal()

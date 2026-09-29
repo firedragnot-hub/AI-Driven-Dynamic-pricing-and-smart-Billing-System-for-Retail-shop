@@ -27,31 +27,19 @@ ChartJS.register(
 );
 
 // --- Reusable Metric Card Component ---
-const MetricCard = ({ title, value, icon: Icon, iconColor, glowColor, onClick }) => (
+const MetricCard = ({ title, value, icon: Icon, iconColor = 'var(--brand-primary)', glowColor = 'var(--brand-primary-light)', onClick }) => (
   <div 
-    className="chart-card hover-scale" 
+    className="ui-stat-card cursor-pointer" 
     onClick={onClick}
-    style={{ 
-      padding: '24px', 
-      flex: 1, 
-      borderTop: `4px solid ${iconColor}`, 
-      position: 'relative', 
-      overflow: 'hidden',
-      cursor: onClick ? 'pointer' : 'default',
-    }}
+    style={{ '--card-accent': iconColor }}
   >
-    <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.1, color: iconColor }}>
-      <Icon size={100} />
-    </div>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-      <h4 style={{ fontSize: '0.95rem', color: 'var(--text-muted)', fontWeight: 600 }}>{title}</h4>
-      <div style={{ color: iconColor, backgroundColor: glowColor, padding: '8px', borderRadius: '12px' }}>
-        <Icon size={20} />
+    <div className="ui-stat-header">
+      <span className="ui-stat-title">{title}</span>
+      <div className="ui-stat-icon-wrap" style={{ color: iconColor, backgroundColor: glowColor }}>
+        <Icon size={18} />
       </div>
     </div>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-      <span style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-word' }}>{value}</span>
-    </div>
+    <div className="ui-stat-value tabular-nums">{value}</div>
   </div>
 );
 

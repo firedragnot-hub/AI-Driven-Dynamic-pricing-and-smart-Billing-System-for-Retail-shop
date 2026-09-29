@@ -7,7 +7,8 @@ import {
 import { Html5Qrcode } from 'html5-qrcode';
 
 
-export default function POS({ products: onlineProducts, refreshProducts, token }) {
+export default function POS({ products: onlineProducts, refreshProducts, token, user }) {
+  const isReadOnly = user?.is_guest || user?.role === 'guest';
   // Connection State
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [simulatedOffline, setSimulatedOffline] = useState(false);
@@ -117,6 +118,10 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
   }, [posMode, txPage]);
 
   const handleReturnItem = async (transactionId, productId, quantity, reason) => {
+    if (isReadOnly) {
+      alert("Guest Mode: Processing returns and stock changes is disabled.");
+      return;
+    }
     if (!quantity || quantity <= 0) {
       alert("Invalid return quantity");
       return;
@@ -449,6 +454,10 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
 
   // 4. Checkout handler (Online sync attempt first, fallback to offline)
   const handleCheckout = async (forceProceed = false) => {
+    if (isReadOnly) {
+      alert("Guest Mode: Recording sales and modifying inventory is disabled. Log in as Store Owner to checkout.");
+      return;
+    }
     if (cart.length === 0) return;
     
     // Trigger Dynamic UPI QR Modal if payment is UPI and not yet confirmed
@@ -994,17 +1003,19 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
                     width: '100%', 
                     height: '42px', 
                     fontSize: '1rem',
-                    background: paymentMethod === 'UPI' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : undefined,
+                    background: isReadOnly ? '#94a3b8' : paymentMethod === 'UPI' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : undefined,
                     border: 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '8px'
+                    gap: '8px',
+                    cursor: isReadOnly ? 'not-allowed' : 'pointer'
                   }} 
-                  disabled={cart.length === 0 || loading} 
+                  disabled={cart.length === 0 || loading || isReadOnly} 
                   onClick={() => handleCheckout()}
+                  title={isReadOnly ? 'Guest mode: Checkout disabled' : ''}
                 >
-                  {loading ? 'Processing...' : paymentMethod === 'UPI' ? (
+                  {isReadOnly ? 'Checkout Disabled (Guest Mode)' : loading ? 'Processing...' : paymentMethod === 'UPI' ? (
                     <>
                       <QrCode size={18} /> Generate UPI QR (₹{totalAmount.toFixed(2)})
                     </>
@@ -1255,10 +1266,12 @@ export default function POS({ products: onlineProducts, refreshProducts, token }
                                 </select>
                                 <button 
                                   className="btn btn-danger"
-                                  style={{ padding: '6px 10px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                                  style={{ padding: '6px 10px', fontSize: '0.8rem', whiteSpace: 'nowrap', opacity: isReadOnly ? 0.6 : 1, cursor: isReadOnly ? 'not-allowed' : 'pointer' }}
+                                  disabled={isReadOnly}
+                                  title={isReadOnly ? 'Guest mode: Returns disabled' : ''}
                                   onClick={() => handleReturnItem(selectedTx.id, item.product_id, returnQty, returnReason)}
                                 >
-                                  Return
+                                  {isReadOnly ? 'Disabled' : 'Return'}
                                 </button>
                               </div>
                             ) : (

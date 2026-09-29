@@ -106,7 +106,7 @@ if db_url:
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-if os.getenv('SUPABASE_DB_URL'):
+if os.getenv('SUPABASE_DB_URL') and 'supabase.co' not in os.getenv('SUPABASE_DB_URL'):
     app.config['SQLALCHEMY_BINDS'] = {'supabase': os.getenv('SUPABASE_DB_URL')}
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,

@@ -4,7 +4,8 @@ import InvoiceTemplate from './InvoiceTemplate';
 import { Eye, Printer, Check, X, FileText, Search, ArrowUpDown, Download } from 'lucide-react';
 
 
-export default function OrdersList({ token }) {
+export default function OrdersList({ token, user }) {
+  const isReadOnly = user?.is_guest || user?.role === 'guest';
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activePrintOrder, setActivePrintOrder] = useState(null);
@@ -154,25 +155,22 @@ export default function OrdersList({ token }) {
     switch (status) {
       case 'Delivered':
       case 'Completed':
-        return <span className="badge badge-success">{status}</span>;
+        return <span className="ui-badge ui-badge-success ui-badge-sm"><Check size={11} /> {status}</span>;
       case 'Cancelled':
-        return <span className="badge badge-danger">Cancelled</span>;
+        return <span className="ui-badge ui-badge-error ui-badge-sm"><X size={11} /> Cancelled</span>;
       case 'Shipped':
-        return <span className="badge" style={{ backgroundColor: '#3b82f6', color: '#fff' }}>Shipped</span>;
+        return <span className="ui-badge ui-badge-info ui-badge-sm">Shipped</span>;
       case 'Processing':
-        return <span className="badge" style={{ backgroundColor: '#8b5cf6', color: '#fff' }}>Processing</span>;
+        return <span className="ui-badge ui-badge-primary ui-badge-sm">Processing</span>;
       case 'Return Requested':
-        return <span className="badge" style={{ backgroundColor: '#f59e0b', color: '#fff' }}>Return Requested</span>;
       case 'Replacement Requested':
-        return <span className="badge" style={{ backgroundColor: '#ec4899', color: '#fff' }}>Replacement Requested</span>;
-      case 'Returned':
-        return <span className="badge" style={{ backgroundColor: '#64748b', color: '#fff' }}>Returned</span>;
-      case 'Replaced':
-        return <span className="badge" style={{ backgroundColor: '#10b981', color: '#fff' }}>Replaced</span>;
       case 'Partially Returned':
-        return <span className="badge" style={{ backgroundColor: '#f97316', color: '#fff' }}>Partially Returned</span>;
+        return <span className="ui-badge ui-badge-warning ui-badge-sm">{status}</span>;
+      case 'Returned':
+      case 'Replaced':
+        return <span className="ui-badge ui-badge-neutral ui-badge-sm">{status}</span>;
       default:
-        return <span className="badge badge-warning">Pending</span>;
+        return <span className="ui-badge ui-badge-warning ui-badge-sm">Pending</span>;
     }
   };
 
@@ -336,7 +334,9 @@ export default function OrdersList({ token }) {
                         value={o.status}
                         onChange={(e) => updateStatus(o.id, e.target.value)}
                         className="form-control"
-                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem', width: '150px', marginBottom: 0 }}
+                        disabled={isReadOnly}
+                        title={isReadOnly ? 'Guest mode: Read-only' : 'Change order status'}
+                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem', width: '150px', marginBottom: 0, opacity: isReadOnly ? 0.7 : 1, cursor: isReadOnly ? 'not-allowed' : 'pointer' }}
                       >
                         <option value="Pending">Pending</option>
                         <option value="Processing">Processing</option>

@@ -5,7 +5,8 @@ import {
   Sparkles, Cpu, Database, Search, Tag, Copy, Check, BookOpen
 } from 'lucide-react';
 
-export default function GSTCompliance({ token }) {
+export default function GSTCompliance({ token, user }) {
+  const isReadOnly = user?.is_guest || user?.role === 'guest';
   const [activeTab, setActiveTab] = useState('overview');
   const [summary, setSummary] = useState(null);
   const [pnl, setPnl] = useState(null);
@@ -278,6 +279,10 @@ export default function GSTCompliance({ token }) {
 
   const handleConfigSubmit = async (e) => {
     e.preventDefault();
+    if (isReadOnly) {
+      alert("Guest Mode: Modifying GST business configuration is disabled.");
+      return;
+    }
     setSavingConfig(true);
     try {
       const headers = token ? { 

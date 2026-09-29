@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash, PackagePlus, Download, Sparkles, AlertTriangle } from 'lucide-react';
 
-export default function Inventory({ products, refreshProducts, token }) {
+export default function Inventory({ products, refreshProducts, token, user }) {
+  const isReadOnly = user?.is_guest || user?.role === 'guest';
   useEffect(() => {
     if (refreshProducts) {
       refreshProducts();
@@ -229,69 +230,122 @@ export default function Inventory({ products, refreshProducts, token }) {
     }
   };
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+
+  const categories = ['All', ...new Set((products || []).map(p => p.category).filter(Boolean))];
+
+  const filteredProducts = (products || []).filter(p => {
+    const matchesCategory = categoryFilter === 'All' || p.category === categoryFilter;
+    const matchesSearch = !searchTerm || 
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.hsn_code && p.hsn_code.includes(searchTerm)) ||
+      (p.barcode && p.barcode.includes(searchTerm));
+    return matchesCategory && matchesSearch;
+  });
+
   return (
     <div>
       <div className="page-header">
         <div>
           <h1>Inventory Management</h1>
-          <p>Manage store stock items, categories, cost bases and retail pricing</p>
+          <p>Real-time stock control, automated GST categorization, and catalog pricing</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="btn btn-primary" onClick={openAddModal}>
-            <Plus size={16} /> Add Product
-          </button>
+          {!isReadOnly && (
+            <button className="ui-btn ui-btn-primary" onClick={openAddModal}>
+              <Plus size={16} /> Add Product
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="glass-panel">
+      <div className="ui-card" style={{ marginBottom: '1.5rem', padding: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <input 
+          type="text" 
+          placeholder="Search by name, HSN, or barcode..." 
+          className="ui-input" 
+          style={{ flex: 1, minWidth: '220px' }}
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+        />
+        <select 
+          className="ui-input" 
+          style={{ width: '180px' }}
+          value={categoryFilter}
+          onChange={e => setCategoryFilter(e.target.value)}
+        >
+          {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+        </select>
+      </div>
+
+      <div className="ui-card">
         <div className="table-container">
           <table className="custom-table">
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Name</th>
+                <th>Product Name</th>
                 <th>Category</th>
                 <th>HSN Code</th>
                 <th>Base Cost</th>
                 <th>Retail Price</th>
                 <th>GST Rate</th>
-                <th>Stock Level</th>
-                <th>Actions</th>
+                <th>Stock Status</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {[...products].sort((a, b) => a.id - b.id).map(p => (
-                <tr key={p.id}>
-                  <td>{p.id}</td>
-                  <td style={{ fontWeight: 'bold' }}>{p.name}</td>
-                  <td>
-                    <span className="badge badge-success" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      {p.category}
-                    </span>
-                  </td>
-                  <td><code style={{ fontSize: '0.85rem', background: 'rgba(0,0,0,0.03)', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>{p.hsn_code || 'N/A'}</code></td>
-                  <td>₹{p.base_cost.toFixed(2)}</td>
-                  <td>₹{p.current_price.toFixed(2)}</td>
-                  <td><span className="badge badge-warning" style={{ background: 'rgba(246, 166, 35, 0.1)', color: '#d17c00' }}>{p.gst_rate}%</span></td>
-                  <td>
-                    {p.stock_level < 15 ? (
-                      <span style={{ color: '#f43f5e', fontWeight: 'bold' }}>{p.stock_level} (Low)</span>
-                    ) : (
-                      <span>{p.stock_level}</span>
-                    )}
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button className="btn-icon" onClick={() => openEditModal(p)}>
-                        <Edit size={14} />
-                      </button>
-                      <button className="btn-icon" style={{ color: '#f43f5e' }} onClick={() => handleDelete(p.id)}>
-                        <Trash size={14} />
-                      </button>
+              {filteredProducts.length === 0 ? (
+                <tr>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                    <div className="ui-empty-state" style={{ border: 'none', padding: '1rem' }}>
+                      <p style={{ color: 'var(--text-muted)' }}>No inventory products match your search.</p>
                     </div>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                [...filteredProducts].sort((a, b) => a.id - b.id).map(p => (
+                  <tr key={p.id}>
+                    <td className="tabular-nums" style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>#{p.id}</td>
+                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p.name}</td>
+                    <td>
+                      <span className="ui-badge ui-badge-neutral ui-badge-sm">
+                        {p.category}
+                      </span>
+                    </td>
+                    <td><code style={{ fontSize: '0.82rem', background: 'var(--bg-surface-subtle)', padding: '0.2rem 0.45rem', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>{p.hsn_code || 'N/A'}</code></td>
+                    <td className="tabular-nums">₹{p.base_cost.toFixed(2)}</td>
+                    <td className="tabular-nums" style={{ fontWeight: 700 }}>₹{p.current_price.toFixed(2)}</td>
+                    <td><span className="ui-badge ui-badge-warning ui-badge-sm">{p.gst_rate}%</span></td>
+                    <td>
+                      {p.stock_level === 0 ? (
+                        <span className="ui-badge ui-badge-error ui-badge-sm">Out of Stock</span>
+                      ) : p.stock_level < 15 ? (
+                        <span className="ui-badge ui-badge-warning ui-badge-sm">{p.stock_level} (Low)</span>
+                      ) : (
+                        <span className="ui-badge ui-badge-success ui-badge-sm">{p.stock_level} In Stock</span>
+                      )}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                        {isReadOnly ? (
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '0.25rem 0.5rem' }}>View Only</span>
+                        ) : (
+                          <>
+                            <button className="ui-btn ui-btn-secondary ui-btn-sm" onClick={() => openEditModal(p)} title="Edit product">
+                              <Edit size={14} />
+                            </button>
+                            <button className="ui-btn ui-btn-secondary ui-btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(p.id)} title="Delete product">
+                              <Trash size={14} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

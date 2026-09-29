@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrainCircuit, Calendar, Play, CheckCircle, IndianRupee, Clock, ArrowRight, DollarSign, Package, AlertCircle, FileText, Send, ShoppingBag, X, Download } from 'lucide-react';
 
-export default function MLForecast({ token }) {
+export default function MLForecast({ token, user }) {
+  const isReadOnly = user?.is_guest || user?.role === 'guest';
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [demandResult, setDemandResult] = useState(null);
   const [demandLoading, setDemandLoading] = useState(false);
@@ -120,6 +121,10 @@ export default function MLForecast({ token }) {
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
 
   const handleUploadBill = async (purchaseId, file) => {
+    if (isReadOnly) {
+      alert("Guest Mode: Uploading and verifying vendor bills is disabled.");
+      return;
+    }
     if (!file) return;
     setReconcileLoading(true);
     setReconcilingPurchaseId(purchaseId);
@@ -214,6 +219,10 @@ export default function MLForecast({ token }) {
   };
 
   const handleOrderAll = async () => {
+    if (isReadOnly) {
+      alert("Guest Mode: Purchasing and restocking items is disabled.");
+      return;
+    }
     if (!budgetResult || !budgetResult.items) return;
     if (!window.confirm(`Are you sure you want to purchase and restock all ${budgetResult.recommended_quantity} recommended items?`)) return;
     
