@@ -4,8 +4,7 @@ import InvoiceTemplate from './InvoiceTemplate';
 import { Eye, Printer, Check, X, FileText, Search, ArrowUpDown, Download } from 'lucide-react';
 
 
-export default function OrdersList({ token, user }) {
-  const isReadOnly = user?.is_guest || user?.role === 'guest';
+export default function OrdersList({ token }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activePrintOrder, setActivePrintOrder] = useState(null);
@@ -334,9 +333,7 @@ export default function OrdersList({ token, user }) {
                         value={o.status}
                         onChange={(e) => updateStatus(o.id, e.target.value)}
                         className="form-control"
-                        disabled={isReadOnly}
-                        title={isReadOnly ? 'Guest mode: Read-only' : 'Change order status'}
-                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem', width: '150px', marginBottom: 0, opacity: isReadOnly ? 0.7 : 1, cursor: isReadOnly ? 'not-allowed' : 'pointer' }}
+                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem', width: '150px', marginBottom: 0 }}
                       >
                         <option value="Pending">Pending</option>
                         <option value="Processing">Processing</option>

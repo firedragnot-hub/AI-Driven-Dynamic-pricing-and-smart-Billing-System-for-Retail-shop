@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash, PackagePlus, Download, Sparkles, AlertTriangle } from 'lucide-react';
 
-export default function Inventory({ products, refreshProducts, token, user }) {
-  const isReadOnly = user?.is_guest || user?.role === 'guest';
+export default function Inventory({ products, refreshProducts, token }) {
   useEffect(() => {
     if (refreshProducts) {
       refreshProducts();
@@ -252,11 +251,9 @@ export default function Inventory({ products, refreshProducts, token, user }) {
           <p>Real-time stock control, automated GST categorization, and catalog pricing</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          {!isReadOnly && (
-            <button className="ui-btn ui-btn-primary" onClick={openAddModal}>
-              <Plus size={16} /> Add Product
-            </button>
-          )}
+          <button className="ui-btn ui-btn-primary" onClick={openAddModal}>
+            <Plus size={16} /> Add Product
+          </button>
         </div>
       </div>
 
@@ -329,18 +326,12 @@ export default function Inventory({ products, refreshProducts, token, user }) {
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
-                        {isReadOnly ? (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '0.25rem 0.5rem' }}>View Only</span>
-                        ) : (
-                          <>
-                            <button className="ui-btn ui-btn-secondary ui-btn-sm" onClick={() => openEditModal(p)} title="Edit product">
-                              <Edit size={14} />
-                            </button>
-                            <button className="ui-btn ui-btn-secondary ui-btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(p.id)} title="Delete product">
-                              <Trash size={14} />
-                            </button>
-                          </>
-                        )}
+                        <button className="ui-btn ui-btn-secondary ui-btn-sm" onClick={() => openEditModal(p)} title="Edit product">
+                          <Edit size={14} />
+                        </button>
+                        <button className="ui-btn ui-btn-secondary ui-btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(p.id)} title="Delete product">
+                          <Trash size={14} />
+                        </button>
                       </div>
                     </td>
                   </tr>

@@ -7,8 +7,7 @@ import {
 import { Html5Qrcode } from 'html5-qrcode';
 
 
-export default function POS({ products: onlineProducts, refreshProducts, token, user }) {
-  const isReadOnly = user?.is_guest || user?.role === 'guest';
+export default function POS({ products: onlineProducts, refreshProducts, token }) {
   // Connection State
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [simulatedOffline, setSimulatedOffline] = useState(false);
@@ -118,10 +117,6 @@ export default function POS({ products: onlineProducts, refreshProducts, token, 
   }, [posMode, txPage]);
 
   const handleReturnItem = async (transactionId, productId, quantity, reason) => {
-    if (isReadOnly) {
-      alert("Guest Mode: Processing returns and stock changes is disabled.");
-      return;
-    }
     if (!quantity || quantity <= 0) {
       alert("Invalid return quantity");
       return;
@@ -454,10 +449,6 @@ export default function POS({ products: onlineProducts, refreshProducts, token, 
 
   // 4. Checkout handler (Online sync attempt first, fallback to offline)
   const handleCheckout = async (forceProceed = false) => {
-    if (isReadOnly) {
-      alert("Guest Mode: Recording sales and modifying inventory is disabled. Log in as Store Owner to checkout.");
-      return;
-    }
     if (cart.length === 0) return;
     
     // Trigger Dynamic UPI QR Modal if payment is UPI and not yet confirmed
@@ -1003,19 +994,17 @@ export default function POS({ products: onlineProducts, refreshProducts, token, 
                     width: '100%', 
                     height: '42px', 
                     fontSize: '1rem',
-                    background: isReadOnly ? '#94a3b8' : paymentMethod === 'UPI' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : undefined,
+                    background: paymentMethod === 'UPI' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : undefined,
                     border: 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '8px',
-                    cursor: isReadOnly ? 'not-allowed' : 'pointer'
+                    gap: '8px'
                   }} 
-                  disabled={cart.length === 0 || loading || isReadOnly} 
+                  disabled={cart.length === 0 || loading} 
                   onClick={() => handleCheckout()}
-                  title={isReadOnly ? 'Guest mode: Checkout disabled' : ''}
                 >
-                  {isReadOnly ? 'Checkout Disabled (Guest Mode)' : loading ? 'Processing...' : paymentMethod === 'UPI' ? (
+                  {loading ? 'Processing...' : paymentMethod === 'UPI' ? (
                     <>
                       <QrCode size={18} /> Generate UPI QR (₹{totalAmount.toFixed(2)})
                     </>
