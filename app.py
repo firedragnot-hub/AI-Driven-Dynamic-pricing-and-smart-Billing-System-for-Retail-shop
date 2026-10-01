@@ -32,7 +32,7 @@ app = Flask(__name__)
 
 # Allow CORS from Vercel frontend and localhost dev
 _allowed_origins = [
-    "https://ai-driven-dynamic-pricing-and-smart-billing.vercel.app",
+    "https://teglretail.vercel.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]

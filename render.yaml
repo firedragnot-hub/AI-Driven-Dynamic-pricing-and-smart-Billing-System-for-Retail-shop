@@ -29,4 +29,4 @@ services:
       - key: OWNER_EMAIL
         sync: false
       - key: FRONTEND_URL
-        value: https://ai-driven-dynamic-pricing-and-smart-billing.vercel.app
+        value: https://teglretail.vercel.app

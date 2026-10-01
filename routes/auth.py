@@ -140,7 +140,7 @@ def register():
     
     # Send mock verification email
     if not is_verified:
-        frontend_url = os.getenv("FRONTEND_URL", "https://ai-driven-dynamic-pricing-and-smart-billing.vercel.app")
+        frontend_url = os.getenv("FRONTEND_URL", "https://teglretail.vercel.app")
         verify_link = f"{frontend_url.rstrip('/')}/verify-email?token={verification_token}"
         print(f"\n==================================================")
         print(f"[EMAIL DISPATCH]")
@@ -250,7 +250,7 @@ def resend_verification():
     user.verification_token = new_token
     db.session.commit()
     
-    frontend_url = os.getenv("FRONTEND_URL", "https://ai-driven-dynamic-pricing-and-smart-billing.vercel.app")
+    frontend_url = os.getenv("FRONTEND_URL", "https://teglretail.vercel.app")
     verify_link = f"{frontend_url.rstrip('/')}/verify-email?token={new_token}"
     print(f"\n==================================================")
     print(f"[EMAIL DISPATCH - RESEND]")
