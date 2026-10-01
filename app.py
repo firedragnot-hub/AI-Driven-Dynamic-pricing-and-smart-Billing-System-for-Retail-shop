@@ -121,106 +121,108 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 db.init_app(app)
 with app.app_context():
-    # Cold start optimization for Vercel Serverless Function execution
+    # In Vercel serverless environment, database schema and seeding are already completed.
+    # Running multiple synchronous ALTER TABLE / queries on every invocation causes cold-start timeouts (FUNCTION_INVOCATION_FAILED).
     if os.getenv('VERCEL') != '1':
         try:
             db.create_all()
         except Exception as e:
             print("Error during db.create_all():", e)
-    # PostgreSQL migration helper for password_hash size increase
-    if db_url and ("postgresql" in db_url or "postgres" in db_url):
+
+        # PostgreSQL migration helper for password_hash size increase
+        if db_url and ("postgresql" in db_url or "postgres" in db_url):
+            try:
+                db.session.execute(db.text("ALTER TABLE users ALTER COLUMN password_hash TYPE VARCHAR(255);"))
+                db.session.commit()
+            except Exception as mig_err:
+                db.session.rollback()
+                print("Migration warning (password_hash length):", str(mig_err))
+
         try:
-            db.session.execute(db.text("ALTER TABLE users ALTER COLUMN password_hash TYPE VARCHAR(255);"))
-            db.session.commit()
-        except Exception as mig_err:
-            db.session.rollback()
-            print("Migration warning (password_hash length):", str(mig_err))
-
-    try:
-        from models import User
-        if not User.query.filter_by(username='admin').first():
-            print("Admin user not found. Seeding default admin user...")
-            from werkzeug.security import generate_password_hash
-            admin = User(
-                username='admin',
-                email='admin@retail.com',
-                password_hash=generate_password_hash('adminpassword'),
-                role='admin',
-                is_verified=True
-            )
-            db.session.add(admin)
-        if not User.query.filter_by(username='customer').first():
-            print("Customer user not found. Seeding default customer user...")
-            from werkzeug.security import generate_password_hash
-            customer = User(
-                username='customer',
-                email='customer@retail.com',
-                password_hash=generate_password_hash('customerpassword'),
-                role='customer',
-                is_verified=True
-            )
-            db.session.add(customer)
-        db.session.commit()
-    except Exception as seed_err:
-        db.session.rollback()
-        print("Database seeding error:", str(seed_err))
-
-    # Seed Default Rule-based GST Categories & HSN Codes if table is empty
-    try:
-        if GstCategoryMapping.query.count() == 0:
-            print("Seeding rule-based GST category mappings into Neon PostgreSQL...")
-            default_gst_categories = [
-                {"category_name": "LED Television", "hsn_code": "8528", "gst_rate": 18.0, "keywords": "tv,television,smart tv,led tv,oled,qled", "description": "Monitors and television receivers"},
-                {"category_name": "Mobile Phones", "hsn_code": "8517", "gst_rate": 18.0, "keywords": "mobile,smartphone,cell phone,iphone,galaxy", "description": "Telephone sets, smartphones"},
-                {"category_name": "Laptops & Computers", "hsn_code": "8471", "gst_rate": 18.0, "keywords": "laptop,notebook,macbook,pc,desktop,computer", "description": "Automatic data processing machines"},
-                {"category_name": "Computer Peripherals", "hsn_code": "8473", "gst_rate": 18.0, "keywords": "mouse,keyboard,monitor,printer,scanner,ssd,hard drive", "description": "Parts and accessories of computers"},
-                {"category_name": "Air Conditioners", "hsn_code": "8415", "gst_rate": 28.0, "keywords": "ac,air conditioner,split ac,window ac", "description": "Air conditioning machines"},
-                {"category_name": "Refrigerators", "hsn_code": "8418", "gst_rate": 18.0, "keywords": "fridge,refrigerator,deep freezer", "description": "Refrigerators, freezers and other cooling equipment"},
-                {"category_name": "Washing Machines", "hsn_code": "8450", "gst_rate": 18.0, "keywords": "washing machine,washer,dryer", "description": "Household or laundry-type washing machines"},
-                {"category_name": "Audio & Headphones", "hsn_code": "8518", "gst_rate": 18.0, "keywords": "headphone,earphone,airpods,speaker,soundbar", "description": "Microphones, loudspeakers, headphones"},
-                {"category_name": "Packaged Groceries", "hsn_code": "2106", "gst_rate": 5.0, "keywords": "biscuit,snack,spice,sauce,packaged food", "description": "Food preparations"},
-                {"category_name": "Fresh Dairy & Agriculture", "hsn_code": "0401", "gst_rate": 0.0, "keywords": "milk,fresh curd,fresh vegetables,fresh fruit", "description": "Fresh dairy and essential agricultural items"},
-                {"category_name": "Apparel & Garments (<1000)", "hsn_code": "6203", "gst_rate": 5.0, "keywords": "shirt,t-shirt,jeans,trousers,clothing,dress", "description": "Articles of apparel and clothing accessories"},
-                {"category_name": "Footwear", "hsn_code": "6403", "gst_rate": 12.0, "keywords": "shoes,sneakers,sandals,boots,footwear", "description": "Footwear with outer soles of rubber, plastics, leather"},
-                {"category_name": "Luxury Items & Automobiles", "hsn_code": "8703", "gst_rate": 28.0, "keywords": "luxury car,yacht,pan masala", "description": "Motor cars and high luxury goods"}
-            ]
-            for cat in default_gst_categories:
-                mapping = GstCategoryMapping(
-                    category_name=cat["category_name"],
-                    hsn_code=cat["hsn_code"],
-                    gst_rate=cat["gst_rate"],
-                    keywords=cat["keywords"],
-                    description=cat["description"],
-                    source="system"
+            from models import User
+            if not User.query.filter_by(username='admin').first():
+                print("Admin user not found. Seeding default admin user...")
+                from werkzeug.security import generate_password_hash
+                admin = User(
+                    username='admin',
+                    email='admin@retail.com',
+                    password_hash=generate_password_hash('adminpassword'),
+                    role='admin',
+                    is_verified=True
                 )
-                db.session.add(mapping)
+                db.session.add(admin)
+            if not User.query.filter_by(username='customer').first():
+                print("Customer user not found. Seeding default customer user...")
+                from werkzeug.security import generate_password_hash
+                customer = User(
+                    username='customer',
+                    email='customer@retail.com',
+                    password_hash=generate_password_hash('customerpassword'),
+                    role='customer',
+                    is_verified=True
+                )
+                db.session.add(customer)
             db.session.commit()
-            print("Successfully seeded rule-based GST categories!")
-    except Exception as gst_seed_err:
-        db.session.rollback()
-        print("Error seeding GST category mappings:", str(gst_seed_err))
-
-    # PostgreSQL migration helper to add missing columns to existing tables
-    if db_url and ("postgresql" in db_url or "postgres" in db_url):
-        try:
-            db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS verification_status VARCHAR(30) DEFAULT 'Pending Receipt';"))
-            db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP;"))
-            db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS verified_by VARCHAR(80);"))
-            db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS discrepancy_count INTEGER DEFAULT 0;"))
-            db.session.execute(db.text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS sale_type VARCHAR(20) DEFAULT 'online';"))
-            db.session.execute(db.text("ALTER TABLE orders ALTER COLUMN status TYPE VARCHAR(50);"))
-            db.session.execute(db.text("ALTER TABLE return_logs ADD COLUMN IF NOT EXISTS return_type VARCHAR(20) DEFAULT 'Return';"))
-            db.session.execute(db.text("ALTER TABLE return_logs ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending';"))
-            db.session.execute(db.text("ALTER TABLE return_logs ADD COLUMN IF NOT EXISTS order_id INTEGER REFERENCES orders(id);"))
-            db.session.execute(db.text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;"))
-            db.session.execute(db.text("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);"))
-            db.session.execute(db.text("UPDATE users SET is_verified = TRUE WHERE is_verified IS NULL OR username IN ('admin', 'customer');"))
-            db.session.execute(db.text("ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT;"))
-            db.session.commit()
-            print("PostgreSQL migrations applied successfully!")
-        except Exception as alter_err:
+        except Exception as seed_err:
             db.session.rollback()
-            print("Migration column addition error:", str(alter_err))
+            print("Database seeding error:", str(seed_err))
+
+        # Seed Default Rule-based GST Categories & HSN Codes if table is empty
+        try:
+            if GstCategoryMapping.query.count() == 0:
+                print("Seeding rule-based GST category mappings into Neon PostgreSQL...")
+                default_gst_categories = [
+                    {"category_name": "LED Television", "hsn_code": "8528", "gst_rate": 18.0, "keywords": "tv,television,smart tv,led tv,oled,qled", "description": "Monitors and television receivers"},
+                    {"category_name": "Mobile Phones", "hsn_code": "8517", "gst_rate": 18.0, "keywords": "mobile,smartphone,cell phone,iphone,galaxy", "description": "Telephone sets, smartphones"},
+                    {"category_name": "Laptops & Computers", "hsn_code": "8471", "gst_rate": 18.0, "keywords": "laptop,notebook,macbook,pc,desktop,computer", "description": "Automatic data processing machines"},
+                    {"category_name": "Computer Peripherals", "hsn_code": "8473", "gst_rate": 18.0, "keywords": "mouse,keyboard,monitor,printer,scanner,ssd,hard drive", "description": "Parts and accessories of computers"},
+                    {"category_name": "Air Conditioners", "hsn_code": "8415", "gst_rate": 28.0, "keywords": "ac,air conditioner,split ac,window ac", "description": "Air conditioning machines"},
+                    {"category_name": "Refrigerators", "hsn_code": "8418", "gst_rate": 18.0, "keywords": "fridge,refrigerator,deep freezer", "description": "Refrigerators, freezers and other cooling equipment"},
+                    {"category_name": "Washing Machines", "hsn_code": "8450", "gst_rate": 18.0, "keywords": "washing machine,washer,dryer", "description": "Household or laundry-type washing machines"},
+                    {"category_name": "Audio & Headphones", "hsn_code": "8518", "gst_rate": 18.0, "keywords": "headphone,earphone,airpods,speaker,soundbar", "description": "Microphones, loudspeakers, headphones"},
+                    {"category_name": "Packaged Groceries", "hsn_code": "2106", "gst_rate": 5.0, "keywords": "biscuit,snack,spice,sauce,packaged food", "description": "Food preparations"},
+                    {"category_name": "Fresh Dairy & Agriculture", "hsn_code": "0401", "gst_rate": 0.0, "keywords": "milk,fresh curd,fresh vegetables,fresh fruit", "description": "Fresh dairy and essential agricultural items"},
+                    {"category_name": "Apparel & Garments (<1000)", "hsn_code": "6203", "gst_rate": 5.0, "keywords": "shirt,t-shirt,jeans,trousers,clothing,dress", "description": "Articles of apparel and clothing accessories"},
+                    {"category_name": "Footwear", "hsn_code": "6403", "gst_rate": 12.0, "keywords": "shoes,sneakers,sandals,boots,footwear", "description": "Footwear with outer soles of rubber, plastics, leather"},
+                    {"category_name": "Luxury Items & Automobiles", "hsn_code": "8703", "gst_rate": 28.0, "keywords": "luxury car,yacht,pan masala", "description": "Motor cars and high luxury goods"}
+                ]
+                for cat in default_gst_categories:
+                    mapping = GstCategoryMapping(
+                        category_name=cat["category_name"],
+                        hsn_code=cat["hsn_code"],
+                        gst_rate=cat["gst_rate"],
+                        keywords=cat["keywords"],
+                        description=cat["description"],
+                        source="system"
+                    )
+                    db.session.add(mapping)
+                db.session.commit()
+                print("Successfully seeded rule-based GST categories!")
+        except Exception as gst_seed_err:
+            db.session.rollback()
+            print("Error seeding GST category mappings:", str(gst_seed_err))
+
+        # PostgreSQL migration helper to add missing columns to existing tables
+        if db_url and ("postgresql" in db_url or "postgres" in db_url):
+            try:
+                db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS verification_status VARCHAR(30) DEFAULT 'Pending Receipt';"))
+                db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP;"))
+                db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS verified_by VARCHAR(80);"))
+                db.session.execute(db.text("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS discrepancy_count INTEGER DEFAULT 0;"))
+                db.session.execute(db.text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS sale_type VARCHAR(20) DEFAULT 'online';"))
+                db.session.execute(db.text("ALTER TABLE orders ALTER COLUMN status TYPE VARCHAR(50);"))
+                db.session.execute(db.text("ALTER TABLE return_logs ADD COLUMN IF NOT EXISTS return_type VARCHAR(20) DEFAULT 'Return';"))
+                db.session.execute(db.text("ALTER TABLE return_logs ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending';"))
+                db.session.execute(db.text("ALTER TABLE return_logs ADD COLUMN IF NOT EXISTS order_id INTEGER REFERENCES orders(id);"))
+                db.session.execute(db.text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;"))
+                db.session.execute(db.text("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);"))
+                db.session.execute(db.text("UPDATE users SET is_verified = TRUE WHERE is_verified IS NULL OR username IN ('admin', 'customer');"))
+                db.session.execute(db.text("ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT;"))
+                db.session.commit()
+                print("PostgreSQL migrations applied successfully!")
+            except Exception as alter_err:
+                db.session.rollback()
+                print("Migration column addition error:", str(alter_err))
 
     # Migration helper to add missing columns to purchases (SQLite only)
     if not db_url or "sqlite" in db_url:
