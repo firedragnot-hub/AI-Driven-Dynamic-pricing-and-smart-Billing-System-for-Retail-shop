@@ -11,8 +11,10 @@ openpyxl
 python-dotenv
 gunicorn
 psycopg2-binary
+psycopg[binary]
 pypdf
 
 Flask-Limiter
 google-auth
 requests
+

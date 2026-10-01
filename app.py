@@ -101,13 +101,17 @@ elif not db_url and os.getenv('VERCEL') == '1':
 
 if db_url:
     if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif db_url.startswith("postgresql://"):
+        db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 if os.getenv('SUPABASE_DB_URL') and 'supabase.co' not in os.getenv('SUPABASE_DB_URL'):
     app.config['SQLALCHEMY_BINDS'] = {'supabase': os.getenv('SUPABASE_DB_URL')}
+else:
+    app.config['SQLALCHEMY_BINDS'] = {'supabase': app.config['SQLALCHEMY_DATABASE_URI']}
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 280,
