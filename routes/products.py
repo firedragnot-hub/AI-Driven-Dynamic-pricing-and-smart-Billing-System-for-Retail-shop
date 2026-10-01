@@ -188,19 +188,16 @@ def get_products():
             
         final_price = round(predicted * (1 + fluctuation), 2)
         # Ensure we never sell below base cost + 5% markup
-        p.current_price = max(round(p.base_cost * 1.05, 2), final_price)
-        
-        db.session.add(p)
+        calculated_price = max(round(p.base_cost * 1.05, 2), final_price)
         
         d = p.to_dict()
+        d['current_price'] = calculated_price
         d['sales_count'] = sales_count
         
         ratings = [r.rating for r in p.reviews] if hasattr(p, 'reviews') else []
         d['avg_rating'] = round(sum(ratings) / len(ratings), 1) if ratings else 4.0
         d['total_reviews'] = len(ratings)
         result.append(d)
-        
-    db.session.commit()
     
     if since_str is not None:
         return jsonify({
