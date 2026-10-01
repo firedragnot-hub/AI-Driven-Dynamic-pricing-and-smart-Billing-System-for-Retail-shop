@@ -29,7 +29,19 @@ def db_strftime(fmt, column):
 from extensions import dashboard_cache, ai_cache
 
 app = Flask(__name__)
-CORS(app)
+
+# Allow CORS from Vercel frontend and localhost dev
+_allowed_origins = [
+    "https://ai-driven-dynamic-pricing-and-smart-billing.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+# Also allow any custom FRONTEND_URL env var (e.g. for preview deployments)
+_extra = os.getenv("FRONTEND_URL", "").strip()
+if _extra and _extra not in _allowed_origins:
+    _allowed_origins.append(_extra)
+
+CORS(app, origins=_allowed_origins, supports_credentials=True)
 
 @app.route('/')
 @app.route('/health')
@@ -52,39 +64,11 @@ app.register_blueprint(orders_bp)
 from routes.products import products_bp
 app.register_blueprint(products_bp)
 
-import threading
-import time
-
-class SimpleCache:
-    def __init__(self, ttl=60):
-        self.ttl = ttl
-        self.data = {}
-        self.lock = threading.Lock()
-
-    def get(self, key):
-        with self.lock:
-            if key in self.data:
-                val, expires = self.data[key]
-                if time.time() < expires:
-                    return val
-                else:
-                    del self.data[key]
-            return None
-
-    def set(self, key, value):
-        with self.lock:
-            self.data[key] = (value, time.time() + self.ttl)
-
-    def clear(self):
-        with self.lock:
-            self.data.clear()
-
-dashboard_cache = SimpleCache(ttl=60)
-
 from sqlalchemy import event
 @event.listens_for(db.session, 'after_commit')
 def clear_dashboard_cache(session):
     dashboard_cache.clear()
+
 
 # Configure SQLite database
 if os.getenv('VERCEL') == '1':
@@ -2312,11 +2296,18 @@ def get_notifications_summary():
         # Ignore and use fallback
         print("Groq API Call Error:", str(e))
         
+    # Count purchase bill discrepancies (bills with unresolved issues)
+    try:
+        discrepancies_count = Discrepancy.query.filter_by(status='Open').count() if hasattr(Discrepancy, 'status') else Discrepancy.query.count()
+    except Exception:
+        discrepancies_count = 0
+
     result = {
         'pending_orders': pending_orders,
         'low_stock': low_stock,
         'gst_days': gst_days,
         'itr_days': itr_days,
+        'discrepancies': discrepancies_count,
         'ai_summary': ai_msg
     }
     dashboard_cache.set('notifications_summary', result)

@@ -268,7 +268,9 @@ export default function App() {
     if (!token) return;
     setNotifLoading(true);
     try {
-      const res = await fetch('/api/notifications/summary');
+      const res = await fetch('/api/notifications/summary', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       if (res.ok) {
         const data = await res.json();
         setNotifications(data);

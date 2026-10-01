@@ -2,6 +2,7 @@ import os
 import jwt
 import secrets
 import urllib.request
+import urllib.parse
 import json
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
@@ -139,11 +140,13 @@ def register():
     
     # Send mock verification email
     if not is_verified:
+        frontend_url = os.getenv("FRONTEND_URL", "https://ai-driven-dynamic-pricing-and-smart-billing.vercel.app")
+        verify_link = f"{frontend_url.rstrip('/')}/verify-email?token={verification_token}"
         print(f"\n==================================================")
-        print(f"[MOCK EMAIL DISPATCH]")
+        print(f"[EMAIL DISPATCH]")
         print(f"To: {email}")
         print(f"Subject: Verify your TEGL Retail Account")
-        print(f"Verification Link: http://localhost:5173/verify-email?token={verification_token}")
+        print(f"Verification Link: {verify_link}")
         print(f"==================================================\n")
     
     return jsonify(user.to_dict()), 201
@@ -247,11 +250,13 @@ def resend_verification():
     user.verification_token = new_token
     db.session.commit()
     
+    frontend_url = os.getenv("FRONTEND_URL", "https://ai-driven-dynamic-pricing-and-smart-billing.vercel.app")
+    verify_link = f"{frontend_url.rstrip('/')}/verify-email?token={new_token}"
     print(f"\n==================================================")
-    print(f"[MOCK EMAIL DISPATCH - RESEND]")
+    print(f"[EMAIL DISPATCH - RESEND]")
     print(f"To: {email}")
     print(f"Subject: Verify your TEGL Retail Account")
-    print(f"Verification Link: http://localhost:5173/verify-email?token={new_token}")
+    print(f"Verification Link: {verify_link}")
     print(f"==================================================\n")
     
     return jsonify({'message': 'If the email exists, a new verification link has been sent.'}), 200
