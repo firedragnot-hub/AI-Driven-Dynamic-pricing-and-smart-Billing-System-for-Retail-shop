@@ -186,8 +186,8 @@ const fetchReverseGeocode = async (lat, lon) => {
   try {
     const url = apiKey 
       ? `https://us1.locationiq.com/v1/reverse?key=${apiKey}&lat=${lat}&lon=${lon}&format=json`
-      : `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
-    const res = await fetch(url);
+      : `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&email=tegl@example.com`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
     if (res.ok) {
       const data = await res.json();
       const addr = data.address || {};
@@ -215,8 +215,8 @@ const fetchAutocompleteSuggestions = async (query) => {
   try {
     const url = apiKey 
       ? `https://api.locationiq.com/v1/autocomplete?key=${apiKey}&q=${encodeURIComponent(query)}&limit=5&dedupe=1`
-      : `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`;
-    const res = await fetch(url);
+      : `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&email=tegl@example.com`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
     if (res.ok) {
       const data = await res.json();
       return (data || []).map(item => ({
@@ -1383,7 +1383,12 @@ export default function Storefront({ products, refreshProducts, token, user }) {
   const [activePrintOrder, setActivePrintOrder] = useState(null);
 
   const categories = useMemo(() => { const cats = new Set(products.map((p) => p.category)); return ['All', ...Array.from(cats).sort()]; }, [products]);
-  const filtered = useMemo(() => products.filter((p) => { const matchCat = catFilter === 'All' || p.category === catFilter; const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()); return matchCat && matchSearch; }), [products, search, catFilter]);
+  const filtered = useMemo(() => products.filter((p) => { 
+    if (p.stock_level <= 0) return false;
+    const matchCat = catFilter === 'All' || p.category === catFilter; 
+    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()); 
+    return matchCat && matchSearch; 
+  }), [products, search, catFilter]);
   
   useEffect(() => {
     setProductPage(1);
