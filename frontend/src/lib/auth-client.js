@@ -1,8 +1,5 @@
-import { createAuthClient } from "better-auth/react";
-
-export const authClient = createAuthClient({
-    // If you are developing locally, it uses localhost. On Vercel, it uses your deployed URL.
-    baseURL: typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-        ? "http://localhost:5173" 
-        : "https://ai-driven-dynamic-pricing-and-smart-billing-system-9ola10gaw.vercel.app"
-});
+// Auth client placeholder - not actively used.
+// Customer auth: Clerk (@clerk/clerk-react)
+// Owner auth: email/password via Render backend (/api/auth/login)
+// This file exists for backward compatibility only.
+export const authClient = null;
