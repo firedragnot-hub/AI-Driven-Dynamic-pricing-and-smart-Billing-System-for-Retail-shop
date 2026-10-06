@@ -72,8 +72,31 @@ def get_current_user():
         clerk_id = token.replace('clerk_auth_', '')
         # Auto-create or fetch Clerk user record in Neon database
         try:
-            user_email = request.headers.get('X-Clerk-User-Email') or f"{clerk_id}@clerk.user"
-            user_name = request.headers.get('X-Clerk-User-Name') or f"clerk_{clerk_id[:8]}"
+            clerk_secret = os.getenv("CLERK_SECRET_KEY")
+            user_email = request.headers.get('X-Clerk-User-Email')
+            user_name = request.headers.get('X-Clerk-User-Name')
+
+            # If headers are missing details and CLERK_SECRET_KEY is configured, query Clerk REST API
+            if (not user_email or not user_name) and clerk_secret and clerk_id.startswith('user_'):
+                try:
+                    clerk_req = urllib.request.Request(
+                        f"https://api.clerk.com/v1/users/{clerk_id}",
+                        headers={"Authorization": f"Bearer {clerk_secret}"}
+                    )
+                    with urllib.request.urlopen(clerk_req, timeout=4) as resp:
+                        if resp.status == 200:
+                            clerk_data = json.loads(resp.read().decode())
+                            if not user_email and clerk_data.get('email_addresses'):
+                                user_email = clerk_data['email_addresses'][0].get('email_address')
+                            if not user_name:
+                                full_name = f"{clerk_data.get('first_name', '')} {clerk_data.get('last_name', '')}".strip()
+                                user_name = full_name or clerk_data.get('username')
+                except Exception as clerk_err:
+                    print("Clerk API user lookup note:", clerk_err)
+
+            user_email = user_email or f"{clerk_id}@clerk.user"
+            user_name = user_name or f"clerk_{clerk_id[:8]}"
+
             user = User.query.filter((User.email == user_email) | (User.username == user_name)).first()
             if not user:
                 user = User(

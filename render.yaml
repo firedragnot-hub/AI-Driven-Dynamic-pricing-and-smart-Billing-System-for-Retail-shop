@@ -28,5 +28,7 @@ services:
         sync: false
       - key: OWNER_EMAIL
         sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
       - key: FRONTEND_URL
         value: https://teglretail.vercel.app

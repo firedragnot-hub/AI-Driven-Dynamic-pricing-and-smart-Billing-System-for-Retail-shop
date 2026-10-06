@@ -11,7 +11,7 @@ const GSTCompliance = lazy(() => import('./components/GSTCompliance'));
 const FinancialDashboard = lazy(() => import('./components/FinancialDashboard'));
 const ReviewsList = lazy(() => import('./components/ReviewsList'));
 import { useUser, SignIn, useClerk } from '@clerk/clerk-react';
-import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield, Menu, X, FileText, Eye, Check, Copy } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield, Menu, X, FileText, Eye, EyeOff, Check, Copy } from 'lucide-react';
 import './App.css';
 
 // Check if Clerk key is valid (duplicated here for use in components)
@@ -158,6 +158,7 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
@@ -566,27 +567,28 @@ export default function App() {
         </div>
 
         <div className="auth-panel">
-        <div className="auth-card">
-          <div className="auth-logo">
-            <img src="/logo.png" alt="TEGL Logo" className="portal-logo-img" style={{ height: '48px' }} />
+          <div className="auth-card">
+            <div className="auth-logo">
+            <div className="auth-logo-badge">
+              <img src="/logo.png" alt="TEGL Logo" className="portal-logo-img" />
+            </div>
             <h2>TEGL Retail Solutions</h2>
-            <p>{role === 'admin' ? 'Owner Portal Login' : 'Customer Shop Sign In'}</p>
+            <p className="auth-subtitle">{role === 'admin' ? 'Owner Portal Login' : 'Customer Shop Sign In'}</p>
           </div>
 
-
           {verificationSent ? (
-            <div className="auth-form" style={{ textAlign: 'center' }}>
+            <div className="auth-form-clean" style={{ textAlign: 'center', padding: '10px 0' }}>
               <div style={{ fontSize: '2.5rem', color: '#ffb703', marginBottom: '15px' }}>✉</div>
               <h3>Verify Your Email</h3>
               <p style={{ fontSize: '0.9rem', color: 'var(--text-muted, #666)', marginBottom: '15px' }}>
                 A verification link has been sent to <strong>{unverifiedEmail}</strong>. Please check your inbox and verify your email before logging in.
               </p>
               {resendSuccess && <div style={{ color: '#2ec4b6', fontSize: '0.85rem', marginBottom: '10px' }}>{resendSuccess}</div>}
-              {authError && <div className="auth-error-msg" style={{ marginBottom: '10px' }}>{authError}</div>}
+              {authError && <div className="auth-error-msg">{authError}</div>}
               <button 
                 type="button" 
                 onClick={handleResendVerification} 
-                className="auth-submit-btn" 
+                className="auth-continue-btn" 
                 style={{ width: '100%', marginBottom: '10px' }}
                 disabled={authLoading}
               >
@@ -595,55 +597,85 @@ export default function App() {
               <button 
                 type="button" 
                 onClick={() => { setVerificationSent(false); setAuthError(''); setResendSuccess(''); }}
-                className="auth-submit-btn"
-                style={{ width: '100%', background: 'transparent', border: '1px solid var(--border-color, #eee)', color: 'var(--text-color, #333)' }}
+                className="auth-continue-btn" 
+                style={{ width: '100%', background: 'transparent', border: '1.5px solid var(--border-color, #eee)', color: 'var(--text-color, #333)', boxShadow: 'none' }}
               >
                 Back to Sign In
               </button>
             </div>
           ) : authMode === 'changePassword' ? (
-            <form onSubmit={handlePasswordChange} className="auth-form">
-              <h3>Change Password</h3>
-              
+            <form onSubmit={handlePasswordChange} className="auth-form-clean">
               {authError && <div className="auth-error-msg">{authError}</div>}
               
-              <div className="form-group-iconic">
-                <User size={18} className="input-icon" />
+              <div className="auth-field-group">
+                <label className="auth-field-label">Username or Email</label>
                 <input 
                   type="text" 
-                  placeholder="Username or Email" 
+                  className="auth-clean-input"
+                  placeholder="Enter username or email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required 
                 />
               </div>
 
-              <div className="form-group-iconic">
-                <Lock size={18} className="input-icon" />
-                <input 
-                  type="password" 
-                  placeholder="Old Password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required 
-                />
+              <div className="auth-field-group">
+                <label className="auth-field-label">Old Password</label>
+                <div className="auth-input-relative">
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    className="auth-clean-input auth-password-input"
+                    placeholder="Enter old password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required 
+                  />
+                  <button 
+                    type="button" 
+                    className="auth-eye-toggle" 
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
-              <div className="form-group-iconic">
-                <Lock size={18} className="input-icon" />
-                <input 
-                  type="password" 
-                  placeholder="New Password" 
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required 
-                />
+              <div className="auth-field-group">
+                <label className="auth-field-label">New Password</label>
+                <div className="auth-input-relative">
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    className="auth-clean-input auth-password-input"
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required 
+                  />
+                  <button 
+                    type="button" 
+                    className="auth-eye-toggle" 
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
-              <button type="submit" className="auth-submit-btn" disabled={authLoading}>
-                {authLoading ? 'Updating...' : 'Change Password'}
-                <ChevronRight size={18} />
+              <button type="submit" className="auth-continue-btn" disabled={authLoading}>
+                {authLoading ? 'Updating...' : <><span>Change Password</span> <span className="auth-btn-arrow">▶</span></>}
               </button>
+
+              <p className="auth-switch-text">
+                <button 
+                  type="button" 
+                  className="auth-switch-link" 
+                  onClick={() => { setAuthMode('login'); setAuthError(''); }}
+                >
+                  Back to Sign In
+                </button>
+              </p>
             </form>
           ) : role === 'customer' ? (
             <div className="clerk-auth-container" style={{ marginTop: '0.5rem', width: '100%' }}>
@@ -691,7 +723,7 @@ export default function App() {
                       socialButtonsBlockButton: {
                         border: '1.5px solid var(--border-color)',
                         borderRadius: '12px',
-                        backgroundColor: 'var(--accent-bg)',
+                        backgroundColor: '#ffffff',
                       },
                       formButtonPrimary: {
                         backgroundColor: 'var(--primary)',
@@ -702,7 +734,7 @@ export default function App() {
                       formFieldInput: {
                         border: '1.5px solid var(--border-color)',
                         borderRadius: '12px',
-                        backgroundColor: 'var(--accent-bg)',
+                        backgroundColor: '#f1f5f9',
                         color: 'var(--text-primary)',
                         fontFamily: 'var(--font-body)',
                       },
@@ -728,81 +760,165 @@ export default function App() {
               )}
             </div>
           ) : (
-            <form onSubmit={handleAuth} className="auth-form">
-              <h3>{authMode === 'login' ? 'Sign In' : 'Create Account'}</h3>
-              
-              {authError && <div className="auth-error-msg">{authError}</div>}
-              
-              {authMode === 'register' && (
-                <div className="form-group-iconic">
-                  <User size={18} className="input-icon" />
+            <div style={{ width: '100%' }}>
+              {authMode === 'login' && (
+                <>
+                  <div className="auth-social-wrapper">
+                    <div id="google-signin-btn" className="google-gsi-slot"></div>
+                    <button
+                      type="button"
+                      className="auth-google-btn"
+                      onClick={() => {
+                        const gsiBtn = document.querySelector('#google-signin-btn div[role=button]');
+                        if (gsiBtn) {
+                          gsiBtn.click();
+                        } else if (window.google?.accounts?.id) {
+                          window.google.accounts.id.prompt();
+                        } else {
+                          setAuthError('Google Sign-In is initializing. Please enter credentials below.');
+                        }
+                      }}
+                    >
+                      <svg className="google-svg" viewBox="0 0 24 24" width="18" height="18">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                      </svg>
+                      <span>Continue with Google</span>
+                    </button>
+                  </div>
+
+                  <div className="auth-divider">
+                    <span>or</span>
+                  </div>
+                </>
+              )}
+
+              <form onSubmit={handleAuth} className="auth-form-clean">
+                {authError && <div className="auth-error-msg">{authError}</div>}
+                
+                {authMode === 'register' && (
+                  <div className="auth-field-group">
+                    <label className="auth-field-label">Username</label>
+                    <input 
+                      type="text" 
+                      className="auth-clean-input"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required 
+                    />
+                  </div>
+                )}
+
+                <div className="auth-field-group">
+                  <label className="auth-field-label">
+                    {authMode === 'login' ? 'Email address or username' : 'Email Address'}
+                  </label>
                   <input 
-                    type="text" 
-                    placeholder="Username" 
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    type={authMode === 'login' ? 'text' : 'email'} 
+                    className="auth-clean-input"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required 
                   />
                 </div>
-              )}
 
-              <div className="form-group-iconic">
-                {authMode === 'login' ? <User size={18} className="input-icon" /> : <Mail size={18} className="input-icon" />}
-                <input 
-                  type={authMode === 'login' ? 'text' : 'email'} 
-                  placeholder={authMode === 'login' ? 'Username or Email' : 'Email Address'} 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required 
-                />
-              </div>
+                <div className="auth-field-group">
+                  <div className="auth-field-header">
+                    <label className="auth-field-label">Password</label>
+                    {authMode === 'login' && (
+                      <button 
+                        type="button" 
+                        className="auth-forgot-link" 
+                        onClick={() => { setAuthMode('changePassword'); setAuthError(''); }}
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                  <div className="auth-input-relative">
+                    <input 
+                      type={showPassword ? 'text' : 'password'} 
+                      className="auth-clean-input auth-password-input"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required 
+                    />
+                    <button 
+                      type="button" 
+                      className="auth-eye-toggle" 
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
 
-              <div className="form-group-iconic">
-                <Lock size={18} className="input-icon" />
-                <input 
-                  type="password" 
-                  placeholder="Password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required 
-                />
-              </div>
+                {import.meta.env.VITE_TURNSTILE_SITE_KEY && (
+                  <div id="turnstile-container" style={{ margin: '8px 0', display: 'flex', justifyContent: 'center' }}></div>
+                )}
 
-              <button type="submit" className="auth-submit-btn" disabled={authLoading}>
-                {authLoading ? 'Verifying...' : (authMode === 'login' ? 'Login' : 'Sign Up')}
-                <ChevronRight size={18} />
-              </button>
+                <button type="submit" className="auth-continue-btn" disabled={authLoading}>
+                  {authLoading ? 'Verifying...' : (
+                    <>
+                      <span>Continue</span>
+                      <span className="auth-btn-arrow">▶</span>
+                    </>
+                  )}
+                </button>
 
-
-            </form>
+                <p className="auth-switch-text">
+                  {authMode === 'login' ? (
+                    <>
+                      Don't have an account?{' '}
+                      <button 
+                        type="button" 
+                        className="auth-switch-link" 
+                        onClick={() => { setAuthMode('register'); setAuthError(''); }}
+                      >
+                        Sign up
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{' '}
+                      <button 
+                        type="button" 
+                        className="auth-switch-link" 
+                        onClick={() => { setAuthMode('login'); setAuthError(''); }}
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
+                </p>
+              </form>
+            </div>
           )}
 
-          <div className="auth-footer-toggle" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-            {role === 'admin' && (
-              verificationSent ? null : authMode === 'changePassword' ? (
-                <p><button onClick={() => { setAuthMode('login'); setAuthError(''); }}>Back to Sign In</button></p>
-              ) : (
-                <>
-                  <p>Forgot password? <button onClick={() => { setAuthMode('changePassword'); setAuthError(''); }}>Change password</button></p>
-                </>
-              )
-            )}
-            
-            {/* Switch between Owner and Customer portals */}
+          <div className="auth-footer-shop-switch">
             {role === 'customer' ? (
-              <p style={{ marginTop: '8px', borderTop: '1px solid var(--border-color, #eee)', paddingTop: '8px' }}>
-                Are you a store owner? <button type="button" onClick={() => { navigate('/owner/login'); setAuthError(''); setAuthMode('login'); setVerificationSent(false); setTurnstileToken(''); }}>Go to Owner Portal</button>
+              <p>
+                Are you a store owner?{' '}
+                <button type="button" onClick={() => { navigate('/owner/login'); setAuthError(''); setAuthMode('login'); setVerificationSent(false); setTurnstileToken(''); }}>
+                  Go to Owner Portal
+                </button>
               </p>
             ) : (
-              <p style={{ marginTop: '8px', borderTop: '1px solid var(--border-color, #eee)', paddingTop: '8px' }}>
-                Want to shop instead? <button type="button" onClick={() => { navigate('/login'); setAuthError(''); setAuthMode('login'); setVerificationSent(false); setTurnstileToken(''); }}>Go to Customer Shop</button>
+              <p>
+                Want to shop instead?{' '}
+                <button type="button" onClick={() => { navigate('/login'); setAuthError(''); setAuthMode('login'); setVerificationSent(false); setTurnstileToken(''); }}>
+                  Go to Customer Shop
+                </button>
               </p>
             )}
           </div>
         </div>
-        </div>
       </div>
-    );
+    </div>
+  );
   };
 
   const renderCustomerPortal = () => {
