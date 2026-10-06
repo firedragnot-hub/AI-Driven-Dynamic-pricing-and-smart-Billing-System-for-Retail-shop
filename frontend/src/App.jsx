@@ -10,9 +10,36 @@ const OrdersList = lazy(() => import('./components/OrdersList'));
 const GSTCompliance = lazy(() => import('./components/GSTCompliance'));
 const FinancialDashboard = lazy(() => import('./components/FinancialDashboard'));
 const ReviewsList = lazy(() => import('./components/ReviewsList'));
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser, SignIn, SignUp, useClerk } from '@clerk/clerk-react';
+import { useUser, SignIn, useClerk } from '@clerk/clerk-react';
 import { LayoutDashboard, ShoppingCart, Package, BrainCircuit, ClipboardList, Store, LogOut, User, Lock, Mail, ChevronRight, Landmark, BarChart3, Bell, MessageSquare, Calendar, AlertTriangle, Sparkles, TrendingUp, Shield, Menu, X, FileText, Eye, Check, Copy } from 'lucide-react';
 import './App.css';
+
+// Check if Clerk key is valid (duplicated here for use in components)
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const isValidClerkKey = PUBLISHABLE_KEY && PUBLISHABLE_KEY.startsWith('pk_') && !PUBLISHABLE_KEY.includes('...');
+
+/**
+ * ClerkSync — must be rendered INSIDE ClerkProvider.
+ * It calls Clerk hooks unconditionally (as required by React rules)
+ * and syncs the signed-in Clerk user into local app state.
+ */
+function ClerkSync({ onClerkAuth, onClerkSignOut }) {
+  const { isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
+
+  useEffect(() => {
+    // Expose the signOut function up to the parent
+    onClerkSignOut(signOut);
+  }, [signOut]);
+
+  useEffect(() => {
+    if (isSignedIn && user) {
+      onClerkAuth(user);
+    }
+  }, [isSignedIn, user]);
+
+  return null; // purely side-effect component
+}
 
 // Component for verification email landing page
 function EmailVerification() {
@@ -98,23 +125,13 @@ export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
 
-  // Safely access Clerk user state when ClerkProvider is active
-  let clerkSignedIn = false;
-  let clerkUser = null;
-  let clerkSignOut = null;
-  try {
-    const clerk = useUser();
-    clerkSignedIn = clerk.isSignedIn;
-    clerkUser = clerk.user;
-    const { signOut } = useClerk();
-    clerkSignOut = signOut;
-  } catch (e) {
-    // ClerkProvider is not active in context
-  }
+  // clerkSignOut is set by ClerkSync once ClerkProvider mounts
+  const clerkSignOutRef = useRef(null);
+  const clerkSignOut = clerkSignOutRef.current;
 
-  // Sync Clerk authentication directly to customer portal
-  useEffect(() => {
-    if (clerkSignedIn && clerkUser && (!token || !user)) {
+  // Called by ClerkSync when Clerk detects an authenticated user
+  const handleClerkAuth = (clerkUser) => {
+    if (!token || !user) {
       const customerUser = {
         id: clerkUser.id,
         username: clerkUser.fullName || clerkUser.firstName || clerkUser.primaryEmailAddress?.emailAddress?.split('@')[0] || 'Customer',
@@ -128,7 +145,11 @@ export default function App() {
       setUser(customerUser);
       navigate('/');
     }
-  }, [clerkSignedIn, clerkUser, token, user]);
+  };
+
+  const handleClerkSignOutRef = (signOutFn) => {
+    clerkSignOutRef.current = signOutFn;
+  };
   
   // Auth Form State
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register' or 'changePassword'
@@ -502,9 +523,9 @@ export default function App() {
     setPassword('');
     setAuthError('');
     
-    if (clerkSignOut) {
+    if (clerkSignOutRef.current) {
       try {
-        await clerkSignOut();
+        await clerkSignOutRef.current();
       } catch (err) {
         console.error("Clerk sign-out error:", err);
       }
@@ -626,77 +647,85 @@ export default function App() {
             </form>
           ) : role === 'customer' ? (
             <div className="clerk-auth-container" style={{ marginTop: '0.5rem', width: '100%' }}>
-              <SignIn 
-                routing="virtual"
-                appearance={{
-                  variables: {
-                    colorPrimary: '#f59e0b',
-                    colorBackground: 'transparent',
-                    colorText: '#0f172a',
-                    colorTextSecondary: '#475569',
-                    borderRadius: '12px',
-                    fontFamily: 'var(--font-body)',
-                  },
-                  elements: {
-                    cardBox: {
-                      boxShadow: 'none',
-                      border: 'none',
-                      width: '100%',
-                      background: 'transparent',
-                      backgroundColor: 'transparent',
-                    },
-                    card: {
-                      boxShadow: 'none',
-                      border: 'none',
-                      padding: '0',
-                      width: '100%',
-                      background: 'transparent',
-                      backgroundColor: 'transparent',
-                    },
-                    scrollBox: {
-                      background: 'transparent',
-                      backgroundColor: 'transparent',
-                    },
-                    rootBox: {
-                      width: '100%',
-                      background: 'transparent',
-                      backgroundColor: 'transparent',
-                    },
-                    header: {
-                      display: 'none', // Hide default Clerk headers since we show our custom brand header
-                    },
-                    socialButtonsBlockButton: {
-                      border: '1.5px solid var(--border-color)',
+              {isValidClerkKey ? (
+                <SignIn
+                  routing="hash"
+                  forceRedirectUrl="/"
+                  appearance={{
+                    variables: {
+                      colorPrimary: '#f59e0b',
+                      colorBackground: 'transparent',
+                      colorText: '#0f172a',
+                      colorTextSecondary: '#475569',
                       borderRadius: '12px',
-                      backgroundColor: 'var(--accent-bg)',
-                    },
-                    formButtonPrimary: {
-                      backgroundColor: 'var(--primary)',
-                      borderRadius: '12px',
-                      fontSize: '0.9rem',
-                      textTransform: 'none',
-                    },
-                    formFieldInput: {
-                      border: '1.5px solid var(--border-color)',
-                      borderRadius: '12px',
-                      backgroundColor: 'var(--accent-bg)',
-                      color: 'var(--text-primary)',
                       fontFamily: 'var(--font-body)',
                     },
-                    footer: {
-                      background: 'transparent',
-                      backgroundColor: 'transparent',
-                    },
-                    footerAction: {
-                      background: 'transparent',
-                      backgroundColor: 'transparent',
-                    },
-                    footerActionLink: {
-                      color: 'var(--primary-dark)',
+                    elements: {
+                      cardBox: {
+                        boxShadow: 'none',
+                        border: 'none',
+                        width: '100%',
+                        background: 'transparent',
+                        backgroundColor: 'transparent',
+                      },
+                      card: {
+                        boxShadow: 'none',
+                        border: 'none',
+                        padding: '0',
+                        width: '100%',
+                        background: 'transparent',
+                        backgroundColor: 'transparent',
+                      },
+                      scrollBox: {
+                        background: 'transparent',
+                        backgroundColor: 'transparent',
+                      },
+                      rootBox: {
+                        width: '100%',
+                        background: 'transparent',
+                        backgroundColor: 'transparent',
+                      },
+                      header: {
+                        display: 'none',
+                      },
+                      socialButtonsBlockButton: {
+                        border: '1.5px solid var(--border-color)',
+                        borderRadius: '12px',
+                        backgroundColor: 'var(--accent-bg)',
+                      },
+                      formButtonPrimary: {
+                        backgroundColor: 'var(--primary)',
+                        borderRadius: '12px',
+                        fontSize: '0.9rem',
+                        textTransform: 'none',
+                      },
+                      formFieldInput: {
+                        border: '1.5px solid var(--border-color)',
+                        borderRadius: '12px',
+                        backgroundColor: 'var(--accent-bg)',
+                        color: 'var(--text-primary)',
+                        fontFamily: 'var(--font-body)',
+                      },
+                      footer: {
+                        background: 'transparent',
+                        backgroundColor: 'transparent',
+                      },
+                      footerAction: {
+                        background: 'transparent',
+                        backgroundColor: 'transparent',
+                      },
+                      footerActionLink: {
+                        color: 'var(--primary-dark)',
+                      }
                     }
-                  }
-                }}
-              />
+                  }}
+                />
+              ) : (
+                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
+                  <p style={{ fontSize: '0.85rem' }}>⚠️ Clerk authentication is not configured.</p>
+                  <p style={{ fontSize: '0.8rem', marginTop: '6px' }}>Please set <code>VITE_CLERK_PUBLISHABLE_KEY</code> in your <code>.env</code> file.</p>
+                </div>
+              )}
             </div>
           ) : (
             <form onSubmit={handleAuth} className="auth-form">
@@ -744,44 +773,7 @@ export default function App() {
                 <ChevronRight size={18} />
               </button>
 
-              {role === 'admin' && authMode === 'login' && (
-                <div className="demo-creds-card">
-                  <div className="demo-creds-header">
-                    <span className="demo-creds-title">
-                      <Sparkles size={15} color="#16a34a" /> Resume & Portfolio Demo Access
-                    </span>
-                    <span className="demo-creds-badge">Reviewer Key</span>
-                  </div>
-                  <p className="demo-creds-desc">
-                    Evaluating this project for hiring or assessment? Use these pre-configured administrator credentials to unlock and test all owner dashboards, ML models, and billing features:
-                  </p>
-                  <div className="demo-creds-grid">
-                    <div className="demo-cred-row">
-                      <span className="demo-cred-label">Username</span>
-                      <code className="demo-cred-val">admin</code>
-                    </div>
-                    <div className="demo-cred-row">
-                      <span className="demo-cred-label">Password</span>
-                      <code className="demo-cred-val">adminpassword</code>
-                    </div>
-                  </div>
-                  <button 
-                    type="button" 
-                    onClick={handleFillAdminCreds}
-                    className="demo-fill-btn"
-                  >
-                    {copiedCreds ? (
-                      <>
-                        <Check size={14} /> Credentials Filled!
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={14} /> One-Click Fill Demo Credentials
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
+
             </form>
           )}
 
@@ -1220,58 +1212,67 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/verify-email" element={<EmailVerification />} />
-      {/* Customer Routes */}
-      <Route 
-        path="/login" 
-        element={
-          token && user ? (
-            user.role === 'admin' ? <Navigate to="/owner/dashboard" replace /> : <Navigate to="/" replace />
-          ) : (
-            renderAuthPage('customer')
-          )
-        } 
-      />
-      <Route 
-        path="/" 
-        element={
-          !token || !user ? (
-            <Navigate to="/login" replace />
-          ) : user.role === 'admin' ? (
-            <Navigate to="/owner/dashboard" replace />
-          ) : (
-            renderCustomerPortal()
-          )
-        } 
-      />
+    <>
+      {/* ClerkSync lives inside ClerkProvider (via main.jsx) and syncs auth state */}
+      {isValidClerkKey && (
+        <ClerkSync
+          onClerkAuth={handleClerkAuth}
+          onClerkSignOut={handleClerkSignOutRef}
+        />
+      )}
+      <Routes>
+        <Route path="/verify-email" element={<EmailVerification />} />
+        {/* Customer Routes */}
+        <Route
+          path="/login"
+          element={
+            token && user ? (
+              user.role === 'admin' ? <Navigate to="/owner/dashboard" replace /> : <Navigate to="/" replace />
+            ) : (
+              renderAuthPage('customer')
+            )
+          }
+        />
+        <Route
+          path="/"
+          element={
+            !token || !user ? (
+              <Navigate to="/login" replace />
+            ) : user.role === 'admin' ? (
+              <Navigate to="/owner/dashboard" replace />
+            ) : (
+              renderCustomerPortal()
+            )
+          }
+        />
 
-      {/* Owner Routes */}
-      <Route 
-        path="/owner/login" 
-        element={
-          token && user ? (
-            user.role === 'admin' ? <Navigate to="/owner/dashboard" replace /> : <Navigate to="/" replace />
-          ) : (
-            renderAuthPage('admin')
-          )
-        } 
-      />
-      <Route 
-        path="/owner/dashboard" 
-        element={
-          !token || !user ? (
-            <Navigate to="/owner/login" replace />
-          ) : user.role !== 'admin' ? (
-            <Navigate to="/" replace />
-          ) : (
-            renderOwnerPortal()
-          )
-        } 
-      />
+        {/* Owner Routes */}
+        <Route
+          path="/owner/login"
+          element={
+            token && user ? (
+              user.role === 'admin' ? <Navigate to="/owner/dashboard" replace /> : <Navigate to="/" replace />
+            ) : (
+              renderAuthPage('admin')
+            )
+          }
+        />
+        <Route
+          path="/owner/dashboard"
+          element={
+            !token || !user ? (
+              <Navigate to="/owner/login" replace />
+            ) : user.role !== 'admin' ? (
+              <Navigate to="/" replace />
+            ) : (
+              renderOwnerPortal()
+            )
+          }
+        />
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
