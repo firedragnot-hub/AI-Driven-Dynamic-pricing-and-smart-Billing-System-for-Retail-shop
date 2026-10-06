@@ -569,12 +569,12 @@ export default function App() {
         <div className="auth-panel">
           <div className="auth-card">
             <div className="auth-logo">
-            <div className="auth-logo-badge">
-              <img src="/logo.png" alt="TEGL Logo" className="portal-logo-img" />
+              <div className="auth-logo-badge">
+                <img src="/logo.png" alt="TEGL Logo" className="portal-logo-img" />
+              </div>
+              <h2>TEGL Retail Solutions</h2>
+              <p className="auth-subtitle">{role === 'admin' ? 'Owner Portal Login' : 'Customer Shop Sign In'}</p>
             </div>
-            <h2>TEGL Retail Solutions</h2>
-            <p className="auth-subtitle">{role === 'admin' ? 'Owner Portal Login' : 'Customer Shop Sign In'}</p>
-          </div>
 
           {verificationSent ? (
             <div className="auth-form-clean" style={{ textAlign: 'center', padding: '10px 0' }}>
