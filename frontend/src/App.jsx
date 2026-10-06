@@ -595,49 +595,22 @@ export default function App() {
             <div className="clerk-auth-container" style={{ marginTop: '0.5rem', width: '100%' }}>
               {isValidClerkKey ? (
                 <SignIn
-                  routing="hash"
+                  routing="path"
+                  path="/login"
                   forceRedirectUrl="/"
                   appearance={{
                     variables: {
                       colorPrimary: '#f59e0b',
-                      colorBackground: 'transparent',
                       colorText: '#0f172a',
                       colorTextSecondary: '#475569',
                       borderRadius: '12px',
                       fontFamily: 'var(--font-body)',
                     },
                     elements: {
-                      cardBox: {
-                        boxShadow: 'none',
-                        border: 'none',
-                        width: '100%',
-                        background: 'transparent',
-                        backgroundColor: 'transparent',
-                      },
                       card: {
                         boxShadow: 'none',
                         border: 'none',
-                        padding: '0',
                         width: '100%',
-                        background: 'transparent',
-                        backgroundColor: 'transparent',
-                      },
-                      scrollBox: {
-                        background: 'transparent',
-                        backgroundColor: 'transparent',
-                      },
-                      rootBox: {
-                        width: '100%',
-                        background: 'transparent',
-                        backgroundColor: 'transparent',
-                      },
-                      header: {
-                        display: 'none',
-                      },
-                      socialButtonsBlockButton: {
-                        border: '1.5px solid var(--border-color)',
-                        borderRadius: '12px',
-                        backgroundColor: '#ffffff',
                       },
                       formButtonPrimary: {
                         backgroundColor: 'var(--primary)',
@@ -651,17 +624,6 @@ export default function App() {
                         backgroundColor: '#f1f5f9',
                         color: 'var(--text-primary)',
                         fontFamily: 'var(--font-body)',
-                      },
-                      footer: {
-                        background: 'transparent',
-                        backgroundColor: 'transparent',
-                      },
-                      footerAction: {
-                        background: 'transparent',
-                        backgroundColor: 'transparent',
-                      },
-                      footerActionLink: {
-                        color: 'var(--primary-dark)',
                       }
                     }
                   }}
