@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import InvoiceTemplate from './InvoiceTemplate';
 import { ShoppingCart, Search, Package, CheckCircle, Trash2, Plus, Minus, X, Filter, ArrowLeft, ClipboardList, Loader2, MapPin, Phone, Mail, User, CreditCard, ChevronRight } from 'lucide-react';
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 const fmt = (val) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(val);
@@ -596,7 +597,7 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '1.4rem' }}>{paymentOpt === 'upi' ? '📱' : '💳'}</span>
                 <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0f172a' }}>
-                  {paymentOpt === 'upi' ? 'UPI Payment QR' : 'Stripe Checkout'}
+                  {paymentOpt === 'upi' ? 'UPI Payment QR' : paymentOpt === 'card' ? 'PayPal Checkout' : 'Stripe Checkout'}
                 </span>
               </div>
               <button onClick={() => setShowPaymentModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#94a3b8' }}>✕</button>
@@ -649,89 +650,31 @@ function CheckoutForm({ cart, products, user, token, onSuccess, onBack }) {
                 </button>
               </>
             ) : (
-              <>
-                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <PayPalScriptProvider options={{ "client-id": "BAAf9dGYYij_GrmJsS7k_OPTipCrDdzgrKql55otqtQnAPeFJ9MHiwUnc8nHNkqB5oiZX6dLdIvphSrH6E", currency: "USD" }}>
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <span style={{ fontSize: '0.85rem', color: '#475569' }}>Total to Pay</span>
                   <span style={{ fontWeight: 800, color: '#0f172a' }}>{fmt(subtotal)}</span>
                 </div>
-
-                <form onSubmit={handleMockPaymentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Cardholder Name</label>
-                    <input 
-                      type="text" 
-                      value={cardName} 
-                      onChange={e => setCardName(e.target.value)} 
-                      required 
-                      placeholder="John Doe" 
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Card Number</label>
-                    <input 
-                      type="text" 
-                      value={cardNumber} 
-                      onChange={e => setCardNumber(e.target.value)} 
-                      required 
-                      placeholder="4242 4242 4242 4242" 
-                      maxLength={19}
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
-                    />
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Expiration (MM/YY)</label>
-                      <input 
-                        type="text" 
-                        value={cardExpiry} 
-                        onChange={e => setCardExpiry(e.target.value)} 
-                        required 
-                        placeholder="12/28" 
-                        maxLength={5}
-                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>CVV</label>
-                      <input 
-                        type="password" 
-                        value={cardCvv} 
-                        onChange={e => setCardCvv(e.target.value)} 
-                        required 
-                        placeholder="***" 
-                        maxLength={4}
-                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #e2e8f0', outline: 'none', boxSizing: 'border-box' }} 
-                      />
-                    </div>
-                  </div>
-
-                  <button 
-                    type="submit" 
-                    disabled={paymentLoading} 
-                    style={{ 
-                      marginTop: '12px',
-                      width: '100%', 
-                      padding: '14px', 
-                      background: paymentLoading ? '#fde68a' : '#635bff',
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: '10px', 
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      cursor: paymentLoading ? 'not-allowed' : 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    {paymentLoading ? <>Processing Mock Payment...</> : <>Pay {fmt(subtotal)}</>}
-                  </button>
-                </form>
-              </>
+                <PayPalButtons 
+                  createOrder={(data, actions) => {
+                    return actions.order.create({
+                      purchase_units: [
+                        {
+                          amount: {
+                            value: (subtotal / 83).toFixed(2), // Rough conversion to USD for sandbox
+                          },
+                        },
+                      ],
+                    });
+                  }}
+                  onApprove={(data, actions) => {
+                    return actions.order.capture().then((details) => {
+                      setShowPaymentModal(false);
+                      executeOrderPlacement({ notes: 'Paid via PayPal Sandbox' });
+                    });
+                  }}
+                />
+              </PayPalScriptProvider>
             )}
           </div>
         </div>
