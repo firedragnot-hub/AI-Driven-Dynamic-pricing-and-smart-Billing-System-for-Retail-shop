@@ -9,6 +9,17 @@ export default function Inventory({ products, refreshProducts, token }) {
   }, []);
   const [modalOpen, setModalOpen] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
+
+  useEffect(() => {
+    if (modalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [modalOpen]);
   
   // Form State
   const [name, setName] = useState('');

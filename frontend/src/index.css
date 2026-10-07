@@ -730,6 +730,8 @@ h1, h2, h3, h4 {
   padding: 2rem;
   box-shadow: var(--shadow-lg);
   animation: fadeInUp 0.3s ease;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 @keyframes fadeIn {
